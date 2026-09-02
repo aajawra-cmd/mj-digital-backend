@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Lead Capture</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7fe; color: #333; }
+
+        /* Login Modal Overlay */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-card { background: #fff; padding: 30px; border-radius: 12px; width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; }
+        .login-card h2 { margin-bottom: 20px; color: #002b5b; }
+        .login-card input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+        .login-card button { width: 100%; padding: 12px; background: #002b5b; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        /* Dashboard Interface */
+        .dashboard { display: none; }
+        .header { background-color: #002b5b; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card h3 { font-size: 13px; color: #666; text-transform: uppercase; margin-bottom: 8px; }
+        .card .number { font-size: 28px; font-weight: bold; color: #002b5b; }
+
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
+        .search-box input { padding: 10px 15px; border: 1px solid #ccc; border-radius: 6px; width: 280px; }
+
+        .btn { padding: 10px 18px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; padding: 6px 12px; font-size: 12px; }
+        .btn-logout { background-color: #e63946; color: white; margin-left: 10px; }
+
+        .table-card { background: #fff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 14px 18px; border-bottom: 1px solid #edf2f7; font-size: 14px; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 12px; }
+        tr:hover { background-color: #f8fafc; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; background-color: #e2e8f0; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Security Login Screen -->
+    <div id="loginOverlay">
+        <div class="login-card">
+            <h2>Admin Login</h2>
+            <input type="text" id="adminUser" placeholder="Username (admin)">
+            <input type="password" id="adminPass" placeholder="Password (admin123)">
+            <button onclick="handleLogin()">Login to Dashboard</button>
+            <p id="loginError" style="color:red; margin-top:10px; font-size:13px;"></p>
+        </div>
+    </div>
+
+    <!-- 2. Main Admin Dashboard Area -->
+    <div id="dashboardArea" class="dashboard">
+        <div class="header">
+            <h1>📊 Lead Management Dashboard</h1>
+            <div>
+                <button class="btn btn-success" onclick="fetchLeads()">🔄 Refresh</button>
+                <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="stats-grid">
+                <div class="card">
+                    <h3>Total Leads</h3>
+                    <div class="number" id="totalLeadsCount">0</div>
+                </div>
+                <div class="card">
+                    <h3>Today's Leads</h3>
+                    <div class="number" id="todayLeadsCount">0</div>
+                </div>
+            </div>
+
+            <div class="toolbar">
+                <div class="search-box">
+                    <input type="text" id="searchInput" onkeyup="filterLeads()" placeholder="Search by name, email, or service...">
+                </div>
+                <button class="btn btn-success" onclick="exportToCSV()">📥 Export Excel (CSV)</button>
+            </div>
+
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Client Name</th>
+                            <th>Email Address</th>
+                            <th>Phone</th>
+                            <th>Service</th>
+                            <th>Message</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allLeadsData = [];
+
+        // Check if session token exists
+        window.onload = () => {
+            if (localStorage.getItem('adminToken')) {
+                showDashboard();
+            }
+        };
+
+        // Handle Login API
+        async function handleLogin() {
+            const username = document.getElementById('adminUser').value;
+            const password = document.getElementById('adminPass').value;
+            const errDiv = document.getElementById('loginError');
+
+            try {
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('adminToken', data.token);
+                    showDashboard();
+                } else {
+                    errDiv.innerText = data.message;
+                }
+            } catch (err) {
+                errDiv.innerText = "Connection error!";
+            }
+        }
+
+        function showDashboard() {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('dashboardArea').style.display = 'block';
+            fetchLeads();
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('adminToken');
+            location.reload();
+        }
+
+        // Fetch Leads
+        async function fetchLeads() {
+            const tbody = document.getElementById('leadsTableBody');
+            try {
+                const res = await fetch('/api/leads');
+                allLeadsData = await res.json();
+                renderDashboard(allLeadsData);
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:red;">Error loading leads.</td></tr>';
+            }
+        }
+
+        function renderDashboard(leads) {
+            const tbody = document.getElementById('leadsTableBody');
+            document.getElementById('totalLeadsCount').innerText = leads.length;
+
+            const todayStr = new Date().toDateString();
+            const todayLeads = leads.filter(l => new Date(l.createdAt).toDateString() === todayStr);
+            document.getElementById('todayLeadsCount').innerText = todayLeads.length;
+
+            if (leads.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">No records found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = leads.map(l => `
+                <tr>
+                    <td>${new Date(l.createdAt).toLocaleString()}</td>
+                    <td><strong>${escapeHtml(l.name)}</strong></td>
+                    <td><a href="mailto:${escapeHtml(l.email)}">${escapeHtml(l.email)}</a></td>
+                    <td><a href="tel:${escapeHtml(l.phone)}">${escapeHtml(l.phone)}</a></td>
+                    <td><span class="badge">${escapeHtml(l.service)}</span></td>
+                    <td>${escapeHtml(l.message || '-')}</td>
+                    <td><button class="btn btn-danger" onclick="deleteLead('${l._id}')">Delete</button></td>
+                </tr>
+            `).join('');
+        }
+
+        // Live Search Filter
+        function filterLeads() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allLeadsData.filter(l =>
+                l.name.toLowerCase().includes(query) ||
+                l.email.toLowerCase().includes(query) ||
+                l.service.toLowerCase().includes(query) ||
+                l.phone.toLowerCase().includes(query)
+            );
+            renderDashboard(filtered);
+        }
+
+        // Delete Single Lead
+        async function deleteLead(id) {
+            if (!confirm("Are you sure you want to delete this lead?")) return;
+            try {
+                const res = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) fetchLeads();
+            } catch (err) {
+                alert("Error deleting lead");
+            }
+        }
+
+        // Export Data to CSV
+        function exportToCSV() {
+            if (allLeadsData.length === 0) return alert("No data to export");
+            let csv = "Date,Name,Email,Phone,Service,Message\n";
+            allLeadsData.forEach(l => {
+                csv += `"${new Date(l.createdAt).toLocaleString()}","${l.name}","${l.email}","${l.phone}","${l.service}","${(l.message || '').replace(/"/g, '""')}"\n`;
+            });
+            const link = document.createElement("a");
+            link.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+            link.download = `Leads_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        }
+
+        function escapeHtml(text) {
+            return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
+        }
+    </script>
+</body>
+</html>
