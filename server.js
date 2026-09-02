@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.static(__dirname));
 
 // MongoDB Connection Link
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://aajawra_db_user:hk42lwxtS0Fey3JQ@mj.qwqplci.mongodb.net/leadDB?retryWrites=true&w=majority&appName=MJ";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://aajawra_db_user:fN0NHScso0r2SM51@mj.qwqplci.mongodb.net/leadDB?retryWrites=true&w=majority&appName=MJ";
 
 mongoose.connect(MONGO_URI, {
     serverSelectionTimeoutMS: 5000
