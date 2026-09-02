@@ -2,19 +2,20 @@ const express = require('express');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
-app.use(express.static('.'));
+app.use(express.static(__dirname));
 
-// MongoDB Connection Link with Timeout Control
-const MONGO_URI = "mongodb+srv://aajawra_db_user:hk42lwxtS0Fey3JQ@mj.qwqplci.mongodb.net/leadDB?retryWrites=true&w=majority&appName=MJ";
+// MongoDB Connection Link
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://aajawra_db_user:hk42lwxtS0Fey3JQ@mj.qwqplci.mongodb.net/leadDB?retryWrites=true&w=majority&appName=MJ";
 
 mongoose.connect(MONGO_URI, {
-    serverSelectionTimeoutMS: 5000 // 5 sec se zyaada wait nahi karega
+    serverSelectionTimeoutMS: 5000
 })
 .then(() => console.log('✅ MongoDB Connected Successfully'))
 .catch(err => {
@@ -42,10 +43,23 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// --- HTML PAGE ROUTES (Aapke code me ye missing the) ---
+
+// 1. Home Page Route (index.html serve karega)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// 2. Admin Page Route (admin.html serve karega)
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// --- API ROUTES ---
+
 // Submit Route
 app.post('/api/leads/submit', async (req, res) => {
     try {
-        // Agar DB ready nahi hai toh buffering rukwane ke liye check
         if (mongoose.connection.readyState !== 1) {
             return res.status(503).json({ 
                 success: false, 
@@ -92,11 +106,11 @@ app.get('/api/leads', async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 });
+
 // Admin Login Route
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
     
-    // Aap apna Admin Username aur Password yahan set kar sakte hain:
     if (username === 'admin' && password === 'admin123') {
         res.json({ success: true, token: 'admin-secret-token-123' });
     } else {
@@ -105,4 +119,4 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
