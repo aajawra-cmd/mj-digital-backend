@@ -57,39 +57,40 @@ app.get('/admin', (req, res) => {
 
 // --- API ROUTES ---
 
-// Submit Route
+// Submit Route (Optimized for Fast Response)
 app.post('/api/leads/submit', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
             return res.status(503).json({ 
                 success: false, 
-                message: "Database connected nahi hai. Terminal me error check karein." 
+                message: "Database connected nahi hai." 
             });
         }
 
         const { name, email, phone, service, message } = req.body;
         const newLead = new Lead({ name, email, phone, service, message });
+        
+        // 1. Database me turant save karein
         await newLead.save();
 
-        try {
-            await transporter.sendMail({
+        // 2. Client ko instant success response bhej dein (No Waiting)
+        res.json({ success: true, message: 'Lead saved successfully!' });
+
+        // 3. Emails background me silently send hongi
+        Promise.all([
+            transporter.sendMail({
                 from: process.env.EMAIL_USER,
                 to: process.env.ADMIN_EMAIL,
                 subject: `🚨 New Lead: ${name}`,
                 html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Phone:</strong> ${phone}</p><p><strong>Service:</strong> ${service}</p><p><strong>Message:</strong> ${message}</p>`
-            });
-
-            await transporter.sendMail({
+            }),
+            transporter.sendMail({
                 from: process.env.EMAIL_USER,
                 to: email,
                 subject: `Thank you for contacting us, ${name}!`,
                 html: `<p>Hi ${name},</p><p>We received your request for <strong>${service}</strong>.</p>`
-            });
-        } catch (mailError) {
-            console.log('⚠️ Lead saved, Email failed:', mailError.message);
-        }
-
-        res.json({ success: true, message: 'Lead saved successfully!' });
+            })
+        ]).catch(mailErr => console.log('⚠️ Background Email Error:', mailErr.message));
 
     } catch (error) {
         console.error('❌ Server Error:', error);
