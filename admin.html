@@ -2,157 +2,265 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MJ Digital - Category Wise Admin Console</title>
+    <!-- FontAwesome & Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; }
-        .card { border-radius: 10px; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        body { background-color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .admin-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .category-tab-btn { border-radius: 20px; font-weight: 600; padding: 8px 18px; }
+        .category-tab-btn.active { background-color: #4f46e5 !important; color: white !important; }
     </style>
 </head>
 <body>
-    <div class="container py-4">
-        <h2 class="mb-4">Admin Dashboard</h2>
 
-        <!-- Add Item Form -->
-        <div class="card p-4 mb-5">
-            <h4>Add New Product / Travel Package</h4>
-            <form id="itemForm" class="row g-3 mt-1">
-                <div class="col-md-4">
-                    <label class="form-label">Category</label>
-                    <select id="category" class="form-select" required>
-                        <option value="Product">Product</option>
-                        <option value="Package">Travel Package</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Title / Name</label>
-                    <input type="text" id="title" class="form-control" placeholder="e.g. Manali Tour Package" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Price</label>
-                    <input type="text" id="price" class="form-control" placeholder="e.g. ₹9,999" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Duration (For Packages)</label>
-                    <input type="text" id="duration" class="form-control" placeholder="e.g. 3 Days / 2 Nights">
-                </div>
-                <div class="col-md-8">
-                    <label class="form-label">Image URL</label>
-                    <input type="url" id="imageUrl" class="form-control" placeholder="https://example.com/image.jpg" required>
-                </div>
-                <div class="col-12">
-                    <label class="form-label">Description</label>
-                    <textarea id="description" class="form-control" rows="2" placeholder="Details..."></textarea>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Add Item</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Manage Items -->
-        <div class="card p-4 mb-5">
-            <h4>Added Products & Packages</h4>
-            <div class="table-responsive mt-3">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Title</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Duration</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="itemsTable"></tbody>
-                </table>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Content -->
+        <main class="col-12 px-md-4 py-4">
+            
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
+                <h1 class="h3 fw-bold text-dark"><i class="fa-solid fa-sliders text-primary me-2"></i>MJ Digital Admin Portal</h1>
+                <a href="/" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill"><i class="fa-solid fa-globe me-1"></i> View Live Site</a>
             </div>
-        </div>
 
-        <!-- Leads Section -->
-        <div class="card p-4">
-            <h4>Customer Leads</h4>
-            <div class="table-responsive mt-3">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Name</th><th>Email</th><th>Phone</th><th>Service</th><th>Message</th><th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leadsTable"></tbody>
-                </table>
+            <!-- Add / Edit Item Form Card -->
+            <div class="card admin-card p-4 mb-4 bg-white">
+                <h4 class="fw-bold mb-3" id="formTitle"><i class="fa-solid fa-circle-plus text-success me-2"></i>Add New Product / Package</h4>
+                
+                <div id="adminAlert"></div>
+
+                <form id="itemForm">
+                    <input type="hidden" id="itemId">
+                    <div class="row g-3">
+                        <!-- Select Category -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Select Category *</label>
+                            <select id="itemCategory" class="form-select" required>
+                                <option value="" selected disabled>-- Select Category --</option>
+                                <option value="Travel">Travel Package</option>
+                                <option value="Mobile">Mobile & Accessories</option>
+                                <option value="Fashion">Fashion & Apparel</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Service">Digital Service</option>
+                                <option value="Home">Home Essentials</option>
+                            </select>
+                        </div>
+
+                        <!-- Item Title -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Item / Package Title *</label>
+                            <input type="text" id="itemTitle" class="form-control" placeholder="e.g. iPhone 15 Pro / Goa 4D/3N Tour" required>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Price / Rate *</label>
+                            <input type="text" id="itemPrice" class="form-control" placeholder="e.g. ₹69,999 or ₹12,500" required>
+                        </div>
+
+                        <!-- Image URL -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Image URL *</label>
+                            <input type="url" id="itemImageUrl" class="form-control" placeholder="https://images.unsplash.com/..." required>
+                        </div>
+
+                        <!-- Duration / Spec -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Duration / Spec / Sub-title (Optional)</label>
+                            <input type="text" id="itemDuration" class="form-control" placeholder="e.g. 5 Days / 4 Nights OR 256GB Storage">
+                        </div>
+
+                        <!-- Full Description -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Full Description & Details</label>
+                            <textarea id="itemDescription" class="form-control" rows="3" placeholder="Enter complete specifications, itinerary details, features, inclusions..."></textarea>
+                        </div>
+
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" id="saveBtn" class="btn btn-primary fw-bold px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Save Item</button>
+                            <button type="button" id="cancelBtn" class="btn btn-secondary d-none" onclick="resetAdminForm()">Cancel Edit</button>
+                        </div>
+                    </div>
+                </form>
             </div>
-        </div>
+
+            <!-- Category Wise Filter Tabs -->
+            <div class="d-flex flex-wrap gap-2 mb-4 align-items-center bg-white p-3 rounded-4 shadow-sm">
+                <span class="fw-bold text-muted me-2"><i class="fa-solid fa-filter me-1"></i> Filter Category:</span>
+                <button class="btn btn-outline-primary category-tab-btn active" onclick="filterAdminItems('All', event)">All Items</button>
+                <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Travel', event)"><i class="fa-solid fa-plane me-1"></i> Travel</button>
+                <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Mobile', event)"><i class="fa-solid fa-mobile me-1"></i> Mobile</button>
+                <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Fashion', event)"><i class="fa-solid fa-shirt me-1"></i> Fashion</button>
+                <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Electronics', event)"><i class="fa-solid fa-laptop me-1"></i> Electronics</button>
+                <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Service', event)"><i class="fa-solid fa-headset me-1"></i> Service</button>
+                <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Home', event)"><i class="fa-solid fa-house me-1"></i> Home</button>
+            </div>
+
+            <!-- Dynamic Items Table -->
+            <div class="card admin-card p-4 bg-white">
+                <h4 class="fw-bold mb-3"><i class="fa-solid fa-list text-primary me-2"></i>Catalog Items Inventory</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Image</th>
+                                <th>Category</th>
+                                <th>Title</th>
+                                <th>Price</th>
+                                <th>Duration / Spec</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminItemsTable">
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">Loading catalog data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
     </div>
+</div>
 
-    <script>
-        async function loadData() {
-            // Load Items
-            const resItems = await fetch('/api/items');
-            const items = await resItems.json();
-            const itemsTable = document.getElementById('itemsTable');
-            itemsTable.innerHTML = items.map(item => `
-                <tr>
-                    <td><img src="${item.imageUrl}" width="60" height="60" style="object-fit:cover; border-radius:5px;"></td>
-                    <td>${item.title}</td>
-                    <td><span class="badge bg-${item.category === 'Package' ? 'success' : 'info'}">${item.category}</span></td>
-                    <td>${item.price}</td>
-                    <td>${item.duration || 'N/A'}</td>
-                    <td><button class="btn btn-danger btn-sm" onclick="deleteItem('${item._id}')">Delete</button></td>
-                </tr>
-            `).join('');
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-            // Load Leads
-            const resLeads = await fetch('/api/leads');
-            const leads = await resLeads.json();
-            const leadsTable = document.getElementById('leadsTable');
-            leadsTable.innerHTML = leads.map(lead => `
-                <tr>
-                    <td>${lead.name}</td>
-                    <td>${lead.email}</td>
-                    <td>${lead.phone}</td>
-                    <td>${lead.service}</td>
-                    <td>${lead.message || ''}</td>
-                    <td><button class="btn btn-danger btn-sm" onclick="deleteLead('${lead._id}')">Delete</button></td>
-                </tr>
-            `).join('');
+<script>
+    let allAdminItems = [];
+    let currentFilter = 'All';
+
+    // Fetch Items List
+    async function loadAdminItems() {
+        try {
+            const res = await fetch('/api/items');
+            allAdminItems = await res.json();
+            renderAdminTable(allAdminItems);
+        } catch (err) {
+            document.getElementById('adminItemsTable').innerHTML = `<tr><td colspan="6" class="text-center text-danger">Failed to fetch catalog items.</td></tr>`;
+        }
+    }
+
+    // Render Table Based on Selected Category
+    function renderAdminTable(items) {
+        const tbody = document.getElementById('adminItemsTable');
+        
+        let filtered = items;
+        if (currentFilter !== 'All') {
+            filtered = items.filter(item => item.category.toLowerCase() === currentFilter.toLowerCase());
         }
 
-        document.getElementById('itemForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const payload = {
-                category: document.getElementById('category').value,
-                title: document.getElementById('title').value,
-                price: document.getElementById('price').value,
-                duration: document.getElementById('duration').value,
-                imageUrl: document.getElementById('imageUrl').value,
-                description: document.getElementById('description').value
-            };
-            await fetch('/api/items', {
-                method: 'POST',
+        if (!filtered || filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No items found in Category: <strong>${currentFilter}</strong></td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(item => `
+            <tr>
+                <td><img src="${item.imageUrl}" width="60" height="40" class="rounded object-fit-cover" onerror="this.src='https://via.placeholder.com/60x40';"></td>
+                <td><span class="badge bg-primary px-3 py-2 rounded-pill">${item.category}</span></td>
+                <td class="fw-bold text-dark">${item.title}</td>
+                <td class="fw-semibold text-success">${item.price}</td>
+                <td class="small text-muted">${item.duration || '-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-warning me-1" onclick="editItem('${item._id}')"><i class="fa-solid fa-pen"></i> Edit</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('${item._id}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Filter Button Trigger
+    function filterAdminItems(cat, evt) {
+        currentFilter = cat;
+        document.querySelectorAll('.category-tab-btn').forEach(btn => btn.classList.remove('active'));
+        if (evt) evt.target.classList.add('active');
+        renderAdminTable(allAdminItems);
+    }
+
+    // Edit Item
+    function editItem(id) {
+        const item = allAdminItems.find(i => i._id === id);
+        if (!item) return;
+
+        document.getElementById('itemId').value = item._id;
+        document.getElementById('itemCategory').value = item.category;
+        document.getElementById('itemTitle').value = item.title;
+        document.getElementById('itemPrice').value = item.price;
+        document.getElementById('itemImageUrl').value = item.imageUrl;
+        document.getElementById('itemDuration').value = item.duration || '';
+        document.getElementById('itemDescription').value = item.description || '';
+
+        document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-warning me-2"></i>Edit Item (${item.title})`;
+        document.getElementById('cancelBtn').classList.remove('d-none');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Reset Form
+    function resetAdminForm() {
+        document.getElementById('itemId').value = '';
+        document.getElementById('itemForm').reset();
+        document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-circle-plus text-success me-2"></i>Add New Product / Package`;
+        document.getElementById('cancelBtn').classList.add('d-none');
+    }
+
+    // Form Submit (Add / Update)
+    document.getElementById('itemForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const alertBox = document.getElementById('adminAlert');
+        const id = document.getElementById('itemId').value;
+
+        const payload = {
+            category: document.getElementById('itemCategory').value,
+            title: document.getElementById('itemTitle').value,
+            price: document.getElementById('itemPrice').value,
+            imageUrl: document.getElementById('itemImageUrl').value,
+            duration: document.getElementById('itemDuration').value,
+            description: document.getElementById('itemDescription').value
+        };
+
+        const url = id ? `/api/items/${id}` : '/api/items';
+        const method = id ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            document.getElementById('itemForm').reset();
-            loadData();
-        });
 
-        async function deleteItem(id) {
-            if (confirm('Delete this item?')) {
-                await fetch(`/api/items/${id}`, { method: 'DELETE' });
-                loadData();
+            if (res.ok) {
+                alertBox.innerHTML = `<div class="alert alert-success">🎉 Item saved successfully!</div>`;
+                resetAdminForm();
+                loadAdminItems();
+            } else {
+                alertBox.innerHTML = `<div class="alert alert-danger">❌ Error saving item.</div>`;
             }
+        } catch (err) {
+            alertBox.innerHTML = `<div class="alert alert-danger">❌ Server connection error.</div>`;
         }
+    });
 
-        async function deleteLead(id) {
-            if (confirm('Delete this lead?')) {
-                await fetch(`/api/leads/${id}`, { method: 'DELETE' });
-                loadData();
+    // Delete Item
+    async function deleteItem(id) {
+        if (!confirm("Are you sure you want to delete this item?")) return;
+
+        try {
+            const res = await fetch(`/api/items/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadAdminItems();
             }
+        } catch (err) {
+            alert("Failed to delete item.");
         }
+    }
 
-        loadData();
-    </script>
+    loadAdminItems();
+</script>
 </body>
 </html>
