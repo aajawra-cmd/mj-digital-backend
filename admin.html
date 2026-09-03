@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MJ Digital - Dynamic Category Admin Portal</title>
+    <title>MJ Digital - Advanced Variant Admin Portal</title>
     <!-- FontAwesome & Bootstrap 5 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,7 +12,8 @@
         .admin-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .category-tab-btn { border-radius: 20px; font-weight: 600; padding: 8px 18px; }
         .category-tab-btn.active { background-color: #4f46e5 !important; color: white !important; }
-        .spec-row { background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .variant-box { background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .spec-row { background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; }
     </style>
 </head>
 <body>
@@ -42,10 +43,10 @@
                             <label class="form-label fw-semibold">Category *</label>
                             <select id="itemCategory" class="form-select" onchange="handleCategoryChange()" required>
                                 <option value="" selected disabled>-- Select Category --</option>
-                                <option value="Electronics">Electronics</option>
                                 <option value="Mobile">Mobile & Accessories</option>
-                                <option value="Travel">Travel Package</option>
                                 <option value="Fashion">Fashion & Apparel</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Travel">Travel Package</option>
                                 <option value="Service">Digital Service</option>
                                 <option value="Home">Home Essentials</option>
                             </select>
@@ -54,60 +55,90 @@
                         <!-- Sub-Category / Type -->
                         <div class="col-md-3">
                             <label class="form-label fw-semibold">Type / Sub-Category</label>
-                            <input type="text" id="itemSubCategory" class="form-control" placeholder="e.g. Laptop, TV, Headphone, Monitor">
+                            <input type="text" id="itemSubCategory" class="form-control" placeholder="e.g. Smartphone, T-Shirt, Laptop">
                         </div>
 
                         <!-- Item Title -->
                         <div class="col-md-3">
-                            <label class="form-label fw-semibold">Title *</label>
-                            <input type="text" id="itemTitle" class="form-control" placeholder="e.g. Samsung 32-Inch HD TV / Sony WH-1000XM5" required>
+                            <label class="form-label fw-semibold">Product Title *</label>
+                            <input type="text" id="itemTitle" class="form-control" placeholder="e.g. iPhone 15 Pro / Slim Fit Shirt" required>
                         </div>
 
-                        <!-- Price -->
+                        <!-- Base Price -->
                         <div class="col-md-3">
-                            <label class="form-label fw-semibold">Price / Rate *</label>
-                            <input type="text" id="itemPrice" class="form-control" placeholder="e.g. ₹18,705 or ₹69,999" required>
+                            <label class="form-label fw-semibold">Base Price *</label>
+                            <input type="text" id="itemPrice" class="form-control" placeholder="e.g. ₹69,999 or ₹1,299" required>
                         </div>
 
-                        <!-- Image URL -->
+                        <!-- Main Image URL -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Image URL *</label>
+                            <label class="form-label fw-semibold">Main Display Image URL *</label>
                             <input type="url" id="itemImageUrl" class="form-control" placeholder="https://images.unsplash.com/..." required>
                         </div>
 
-                        <!-- Duration / Spec Header -->
+                        <!-- Short Tagline -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Short Spec Tag / Subtitle</label>
-                            <input type="text" id="itemDuration" class="form-control" placeholder="e.g. 15.6 Inch | 12GB RAM | 256GB SSD">
+                            <label class="form-label fw-semibold">Short Specs / Tagline</label>
+                            <input type="text" id="itemDuration" class="form-control" placeholder="e.g. A17 Pro Chip | 100% Cotton">
                         </div>
 
-                        <!-- Dynamic Specific Specifications Section -->
+                        <!-- SECTION 1: PRODUCT VARIANTS (Storage / Size / Models) -->
                         <div class="col-12 mt-4">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="form-label fw-bold text-primary mb-0"><i class="fa-solid fa-list-check me-1"></i> Technical Specifications (Model-Specific Fields)</label>
-                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addSpecRow()"><i class="fa-solid fa-plus me-1"></i> Add Spec Field</button>
-                            </div>
-                            <small class="text-muted d-block mb-3">Laptop ke liye RAM/CPU, TV ke liye Screen/Resolution, Headphones ke liye Impedance/Color jaisi details yahan add karein.</small>
-                            
-                            <div id="specContainer" class="d-flex flex-column gap-2">
-                                <!-- Dynamic Rows Will Be Injected Here -->
+                            <div class="variant-box">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label fw-bold text-primary mb-0"><i class="fa-solid fa-layer-group me-1"></i> Storage / Size / Model Variants</label>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addVariantRow()"><i class="fa-solid fa-plus me-1"></i> Add Variant Option</button>
+                                </div>
+                                <small class="text-muted d-block mb-3">iPhone ke liye (128GB, 256GB, 512GB) ya Shirts ke liye (S, M, L, XL) ki alag-alag pricing ke saath options dalein.</small>
+                                
+                                <div id="variantContainer" class="d-flex flex-column gap-2">
+                                    <!-- Dynamic Variant Rows -->
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Highlights / Bullet Points (About this item) -->
+                        <!-- SECTION 2: COLOR VARIANTS -->
+                        <div class="col-12 mt-3">
+                            <div class="variant-box">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label fw-bold text-success mb-0"><i class="fa-solid fa-palette me-1"></i> Available Color Options</label>
+                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="addColorRow()"><i class="fa-solid fa-plus me-1"></i> Add Color</button>
+                                </div>
+                                <small class="text-muted d-block mb-3">Color name aur us particular color ki image link specify karein.</small>
+                                
+                                <div id="colorContainer" class="d-flex flex-column gap-2">
+                                    <!-- Dynamic Color Rows -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 3: TECHNICAL SPECIFICATIONS -->
+                        <div class="col-12 mt-3">
+                            <div class="variant-box">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label fw-bold text-dark mb-0"><i class="fa-solid fa-list-check me-1"></i> Technical Specifications / Details</label>
+                                    <button type="button" class="btn btn-sm btn-outline-dark" onclick="addSpecRow()"><i class="fa-solid fa-plus me-1"></i> Add Spec Field</button>
+                                </div>
+                                <div id="specContainer" class="d-flex flex-column gap-2">
+                                    <!-- Dynamic Spec Rows -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 4: HIGHLIGHTS (Bullet Points) -->
                         <div class="col-12 mt-3">
                             <label class="form-label fw-semibold"><i class="fa-solid fa-circle-info text-info me-1"></i> About This Item (Bullet Points - 1 per line)</label>
-                            <textarea id="itemHighlights" class="form-control" rows="3" placeholder="Enter key points (1 per line):&#10;• HIGH RESOLUTION: Crisp 1080p Visuals&#10;• NOISE CANCELLATION: Dual processor 8-mic system&#10;• BATTERY: Up to 30 Hours Playback"></textarea>
+                            <textarea id="itemHighlights" class="form-control" rows="3" placeholder="Enter key points (1 per line):&#10;• Dynamic Island display&#10;• Titanium design with textured matte glass back"></textarea>
                         </div>
 
                         <!-- Full Description -->
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Full Description & Details</label>
-                            <textarea id="itemDescription" class="form-control" rows="3" placeholder="Enter complete product summary, warranty details, inclusions..."></textarea>
+                            <label class="form-label fw-semibold">Full Description</label>
+                            <textarea id="itemDescription" class="form-control" rows="3" placeholder="Complete product details..."></textarea>
                         </div>
 
                         <div class="col-12 d-flex gap-2 pt-2">
-                            <button type="submit" id="saveBtn" class="btn btn-primary fw-bold px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Save Product / Package</button>
+                            <button type="submit" id="saveBtn" class="btn btn-primary fw-bold px-4"><i class="fa-solid fa-floppy-disk me-1"></i> Save Product with Variants</button>
                             <button type="button" id="cancelBtn" class="btn btn-secondary d-none" onclick="resetAdminForm()">Cancel Edit</button>
                         </div>
                     </div>
@@ -118,10 +149,10 @@
             <div class="d-flex flex-wrap gap-2 mb-4 align-items-center bg-white p-3 rounded-4 shadow-sm">
                 <span class="fw-bold text-muted me-2"><i class="fa-solid fa-filter me-1"></i> Filter Category:</span>
                 <button class="btn btn-outline-primary category-tab-btn active" onclick="filterAdminItems('All', event)">All Items</button>
-                <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Electronics', event)"><i class="fa-solid fa-laptop me-1"></i> Electronics</button>
                 <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Mobile', event)"><i class="fa-solid fa-mobile me-1"></i> Mobile</button>
-                <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Travel', event)"><i class="fa-solid fa-plane me-1"></i> Travel</button>
                 <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Fashion', event)"><i class="fa-solid fa-shirt me-1"></i> Fashion</button>
+                <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Electronics', event)"><i class="fa-solid fa-laptop me-1"></i> Electronics</button>
+                <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Travel', event)"><i class="fa-solid fa-plane me-1"></i> Travel</button>
                 <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Service', event)"><i class="fa-solid fa-headset me-1"></i> Service</button>
                 <button class="btn btn-outline-primary category-tab-btn" onclick="filterAdminItems('Home', event)"><i class="fa-solid fa-house me-1"></i> Home</button>
             </div>
@@ -136,8 +167,8 @@
                                 <th>Image</th>
                                 <th>Category</th>
                                 <th>Title</th>
-                                <th>Price</th>
-                                <th>Short Specs</th>
+                                <th>Base Price</th>
+                                <th>Variants Info</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -161,57 +192,130 @@
     let allAdminItems = [];
     let currentFilter = 'All';
 
-    // Helper: Add Dynamic Spec Row
-    function addSpecRow(key = '', value = '') {
-        const container = document.getElementById('specContainer');
-        const rowId = 'spec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    // Helper: Add Size / Storage Variant Row
+    function addVariantRow(name = '', price = '') {
+        const container = document.getElementById('variantContainer');
+        const rowId = 'var_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
         
-        const rowHtml = `
+        const html = `
             <div class="row g-2 align-items-center spec-row" id="${rowId}">
-                <div class="col-md-5">
-                    <input type="text" class="form-control form-control-sm spec-key" placeholder="Key (e.g. Screen Size / RAM / Impedance)" value="${key}">
-                </div>
                 <div class="col-md-6">
-                    <input type="text" class="form-control form-control-sm spec-value" placeholder="Value (e.g. 32 inches / 12 GB / 48 ohm)" value="${value}">
+                    <input type="text" class="form-control form-control-sm variant-name" placeholder="Variant Label (e.g. 128GB / 256GB OR Small / Medium / XL)" value="${name}">
+                </div>
+                <div class="col-md-5">
+                    <input type="text" class="form-control form-control-sm variant-price" placeholder="Specific Price (e.g. ₹69,999)" value="${price}">
                 </div>
                 <div class="col-md-1 text-end">
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="document.getElementById('${rowId}').remove()"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
         `;
-        container.insertAdjacentHTML('beforeend', rowHtml);
+        container.insertAdjacentHTML('beforeend', html);
     }
 
-    // Auto Preset Specs on Category Select
+    // Helper: Add Color Option Row
+    function addColorRow(colorName = '', colorImg = '') {
+        const container = document.getElementById('colorContainer');
+        const rowId = 'col_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+        
+        const html = `
+            <div class="row g-2 align-items-center spec-row" id="${rowId}">
+                <div class="col-md-5">
+                    <input type="text" class="form-control form-control-sm color-name" placeholder="Color Name (e.g. Natural Titanium / Blue / Black)" value="${colorName}">
+                </div>
+                <div class="col-md-6">
+                    <input type="url" class="form-control form-control-sm color-img" placeholder="Color Variant Image URL (Optional)" value="${colorImg}">
+                </div>
+                <div class="col-md-1 text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="document.getElementById('${rowId}').remove()"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    // Helper: Add Dynamic Spec Row
+    function addSpecRow(key = '', value = '') {
+        const container = document.getElementById('specContainer');
+        const rowId = 'spec_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+        
+        const html = `
+            <div class="row g-2 align-items-center spec-row" id="${rowId}">
+                <div class="col-md-5">
+                    <input type="text" class="form-control form-control-sm spec-key" placeholder="Key (e.g. Display / Material / Battery)" value="${key}">
+                </div>
+                <div class="col-md-6">
+                    <input type="text" class="form-control form-control-sm spec-value" placeholder="Value (e.g. 6.1 inch Super Retina / 100% Cotton)" value="${value}">
+                </div>
+                <div class="col-md-1 text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="document.getElementById('${rowId}').remove()"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+    }
+
+    // Auto Presets on Category Selection
     function handleCategoryChange() {
         const cat = document.getElementById('itemCategory').value;
-        const container = document.getElementById('specContainer');
-        if(container.children.length > 0) return; // Don't override if user already added fields
+        const vContainer = document.getElementById('variantContainer');
+        const cContainer = document.getElementById('colorContainer');
 
-        if (cat === 'Electronics' || cat === 'Mobile') {
-            addSpecRow('Brand', '');
-            addSpecRow('Model Name', '');
-            addSpecRow('Screen Size / Spec', '');
-        } else if (cat === 'Travel') {
-            addSpecRow('Duration', '');
-            addSpecRow('Inclusions', '');
+        if(vContainer.children.length === 0) {
+            if (cat === 'Mobile' || cat === 'Electronics') {
+                addVariantRow('128GB', '');
+                addVariantRow('256GB', '');
+                addVariantRow('512GB', '');
+            } else if (cat === 'Fashion') {
+                addVariantRow('Small (S)', '');
+                addVariantRow('Medium (M)', '');
+                addVariantRow('Large (L)', '');
+                addVariantRow('Extra Large (XL)', '');
+            }
+        }
+
+        if(cContainer.children.length === 0) {
+            if (cat === 'Mobile' || cat === 'Fashion' || cat === 'Electronics') {
+                addColorRow('Black', '');
+                addColorRow('Blue', '');
+            }
         }
     }
 
-    // Collect Specs Object
+    // Get Variant Array
+    function getVariantsFromUI() {
+        const list = [];
+        document.querySelectorAll('#variantContainer .spec-row').forEach(row => {
+            const name = row.querySelector('.variant-name').value.trim();
+            const price = row.querySelector('.variant-price').value.trim();
+            if (name) list.push({ label: name, price: price });
+        });
+        return list;
+    }
+
+    // Get Colors Array
+    function getColorsFromUI() {
+        const list = [];
+        document.querySelectorAll('#colorContainer .spec-row').forEach(row => {
+            const name = row.querySelector('.color-name').value.trim();
+            const img = row.querySelector('.color-img').value.trim();
+            if (name) list.push({ color: name, imageUrl: img });
+        });
+        return list;
+    }
+
+    // Get Specs Object
     function getSpecsFromUI() {
         const specs = {};
-        document.querySelectorAll('.spec-row').forEach(row => {
+        document.querySelectorAll('#specContainer .spec-row').forEach(row => {
             const key = row.querySelector('.spec-key').value.trim();
             const val = row.querySelector('.spec-value').value.trim();
-            if (key && val) {
-                specs[key] = val;
-            }
+            if (key && val) specs[key] = val;
         });
         return specs;
     }
 
-    // Load Items
+    // Fetch All Items
     async function loadAdminItems() {
         try {
             const res = await fetch('/api/items');
@@ -222,7 +326,7 @@
         }
     }
 
-    // Render Table
+    // Render Inventory Table
     function renderAdminTable(items) {
         const tbody = document.getElementById('adminItemsTable');
         
@@ -236,7 +340,11 @@
             return;
         }
 
-        tbody.innerHTML = filtered.map(item => `
+        tbody.innerHTML = filtered.map(item => {
+            const variantCount = item.variants ? item.variants.length : 0;
+            const colorCount = item.colors ? item.colors.length : 0;
+
+            return `
             <tr>
                 <td><img src="${item.imageUrl}" width="60" height="40" class="rounded object-fit-cover" onerror="this.src='https://via.placeholder.com/60x40';"></td>
                 <td>
@@ -245,13 +353,17 @@
                 </td>
                 <td class="fw-bold text-dark">${item.title}</td>
                 <td class="fw-semibold text-success">${item.price}</td>
-                <td class="small text-muted">${item.duration || '-'}</td>
+                <td>
+                    <span class="badge bg-info text-dark">${variantCount} Sizes/Models</span>
+                    <span class="badge bg-secondary">${colorCount} Colors</span>
+                </td>
                 <td>
                     <button class="btn btn-sm btn-outline-warning me-1" onclick="editItem('${item._id}')"><i class="fa-solid fa-pen"></i> Edit</button>
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteItem('${item._id}')"><i class="fa-solid fa-trash"></i> Delete</button>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
 
     function filterAdminItems(cat, evt) {
@@ -276,9 +388,20 @@
         document.getElementById('itemHighlights').value = Array.isArray(item.highlights) ? item.highlights.join('\n') : (item.highlights || '');
         document.getElementById('itemDescription').value = item.description || '';
 
-        // Load specs
-        const container = document.getElementById('specContainer');
-        container.innerHTML = '';
+        // Load Variants
+        document.getElementById('variantContainer').innerHTML = '';
+        if (item.variants && Array.isArray(item.variants)) {
+            item.variants.forEach(v => addVariantRow(v.label, v.price));
+        }
+
+        // Load Colors
+        document.getElementById('colorContainer').innerHTML = '';
+        if (item.colors && Array.isArray(item.colors)) {
+            item.colors.forEach(c => addColorRow(c.color, c.imageUrl));
+        }
+
+        // Load Specs
+        document.getElementById('specContainer').innerHTML = '';
         if (item.specs && typeof item.specs === 'object') {
             Object.entries(item.specs).forEach(([k, v]) => addSpecRow(k, v));
         }
@@ -291,12 +414,14 @@
     function resetAdminForm() {
         document.getElementById('itemId').value = '';
         document.getElementById('itemForm').reset();
+        document.getElementById('variantContainer').innerHTML = '';
+        document.getElementById('colorContainer').innerHTML = '';
         document.getElementById('specContainer').innerHTML = '';
         document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-circle-plus text-success me-2"></i>Add New Product / Package`;
         document.getElementById('cancelBtn').classList.add('d-none');
     }
 
-    // Save Item
+    // Submit Form
     document.getElementById('itemForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const alertBox = document.getElementById('adminAlert');
@@ -312,6 +437,8 @@
             price: document.getElementById('itemPrice').value,
             imageUrl: document.getElementById('itemImageUrl').value,
             duration: document.getElementById('itemDuration').value,
+            variants: getVariantsFromUI(),
+            colors: getColorsFromUI(),
             specs: getSpecsFromUI(),
             highlights: highlightsArray,
             description: document.getElementById('itemDescription').value
@@ -328,7 +455,7 @@
             });
 
             if (res.ok) {
-                alertBox.innerHTML = `<div class="alert alert-success">🎉 Product saved successfully with dynamic specifications!</div>`;
+                alertBox.innerHTML = `<div class="alert alert-success">🎉 Product saved with variants successfully!</div>`;
                 resetAdminForm();
                 loadAdminItems();
             } else {
@@ -344,9 +471,7 @@
 
         try {
             const res = await fetch(`/api/items/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                loadAdminItems();
-            }
+            if (res.ok) loadAdminItems();
         } catch (err) {
             alert("Failed to delete item.");
         }
