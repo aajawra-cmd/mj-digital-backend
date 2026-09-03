@@ -3,97 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MJ Digital - E-Commerce & Services</title>
-    <!-- Bootstrap 5 CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome Icons -->
+    <title>M J DIGITAL - Modern E-Commerce & Services</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <style>
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
-        
-        /* Navbar */
-        .navbar { background: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-        .navbar-brand { font-weight: 700; color: #0d6efd; }
-        .nav-link { font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
-
-        /* Category Bar */
-        .category-bar { background: #1e293b; overflow-x: auto; white-space: nowrap; }
-        .category-btn { color: #cbd5e1; background: none; border: none; padding: 12px 20px; font-weight: 600; font-size: 0.9rem; }
-        .category-btn:hover, .category-btn.active { color: #ffffff; background-color: #0d6efd; }
-
-        /* Hero Section */
-        .hero-section { 
-            background: linear-gradient(135deg, #0d6efd, #0dcaf0); 
-            color: white; 
-            padding: 70px 0; 
-            text-align: center; 
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --accent: #06b6d4;
+            --dark-bg: #0f172a;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
         }
 
-        /* Catalog Cards */
-        .catalog-card { border: none; border-radius: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .catalog-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
-        .catalog-img { height: 220px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px; background-color: #e9ecef; }
-        .badge-category { position: absolute; top: 15px; right: 15px; font-size: 0.8rem; padding: 6px 12px; border-radius: 20px; z-index: 2; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
 
-        /* Contact Section */
-        .contact-card { max-width: 700px; margin: auto; border-radius: 15px; border: none; }
-        
+        /* Glassmorphism Navigation */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: #334155 !important;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--primary) !important;
+        }
+
+        /* Premium Dark Hero Section */
+        .hero-section {
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 100%);
+            color: #ffffff;
+            padding: 90px 0 110px;
+            position: relative;
+        }
+
+        .hero-badge {
+            background: rgba(79, 70, 229, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            color: #a5b4fc;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            display: inline-block;
+        }
+
+        /* Category Filter Chips */
+        .category-chip-container {
+            margin-top: -30px;
+            z-index: 10;
+            position: relative;
+        }
+
+        .category-chips {
+            background: #ffffff;
+            border-radius: 50px;
+            padding: 8px 12px;
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08);
+            display: inline-flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .chip-btn {
+            border: none;
+            background: transparent;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .chip-btn.active, .chip-btn:hover {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Modern Product & Package Cards */
+        .product-card {
+            border: 1px solid #f1f5f9;
+            border-radius: 20px;
+            background: #ffffff;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-img-wrapper {
+            position: relative;
+            height: 220px;
+            overflow: hidden;
+            background-color: #f1f5f9;
+        }
+
+        .card-img-top {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .product-card:hover .card-img-top {
+            transform: scale(1.05);
+        }
+
+        .category-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+
+        /* Modern Contact & Info Cards */
+        .info-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            border: 1px solid #f1f5f9;
+        }
+
+        .info-icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-right: 15px;
+        }
+
         /* Footer */
-        footer { background: #0f172a; color: #cbd5e1; padding: 40px 0 20px; }
+        footer {
+            background: var(--dark-bg);
+            color: #94a3b8;
+            padding-top: 60px;
+            padding-bottom: 30px;
+        }
+
+        footer h5 {
+            color: #ffffff;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        footer a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: #ffffff;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .btn-gradient:hover {
+            opacity: 0.95;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Header & Main Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+    <!-- Glassmorphism Navbar -->
+    <nav class="navbar navbar-expand-lg glass-nav sticky-top py-3">
         <div class="container">
-            <a class="navbar-brand fs-4" href="#"><i class="fa-solid fa-store me-2"></i>MJ DIGITAL</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand fs-3" href="#"><i class="fa-solid fa-bolt me-2"></i>M J DIGITAL</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto ms-3">
+                <ul class="navbar-nav ms-auto me-3 gap-1 fw-semibold text-uppercase">
                     <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="#catalog" onclick="filterCatalog('Travel')">Travel</a></li>
                     <li class="nav-item"><a class="nav-link" href="#catalog" onclick="filterCatalog('Mobile')">Mobile</a></li>
                     <li class="nav-item"><a class="nav-link" href="#catalog" onclick="filterCatalog('Fashion')">Fashion</a></li>
                     <li class="nav-item"><a class="nav-link" href="#catalog" onclick="filterCatalog('Electronics')">Electronics</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#services">Service</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#catalog" onclick="filterCatalog('Service')">Service</a></li>
                 </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <a href="#contact" class="btn btn-outline-primary btn-sm rounded-pill"><i class="fa-solid fa-user me-1"></i>My Account</a>
-                    <a href="/admin" target="_blank" class="btn btn-primary btn-sm rounded-pill"><i class="fa-solid fa-lock me-1"></i>Admin</a>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="#contact" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-2 fw-semibold"><i class="fa-solid fa-user me-1"></i> My Account</a>
+                    <a href="/admin" target="_blank" class="btn btn-gradient btn-sm rounded-pill px-3 py-2"><i class="fa-solid fa-lock me-1"></i> Admin</a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Sub Category Strip -->
-    <div class="category-bar text-center">
-        <div class="container d-flex justify-content-center">
-            <button class="category-btn active" onclick="filterCatalog('All')"><i class="fa-solid fa-border-all me-1"></i> ALL PRODUCTS</button>
-            <button class="category-btn" onclick="filterCatalog('Travel')"><i class="fa-solid fa-plane me-1"></i> TRAVEL</button>
-            <button class="category-btn" onclick="filterCatalog('Mobile')"><i class="fa-solid fa-mobile-screen me-1"></i> MOBILE</button>
-            <button class="category-btn" onclick="filterCatalog('Fashion')"><i class="fa-solid fa-shirt me-1"></i> FASHION</button>
-            <button class="category-btn" onclick="filterCatalog('Electronics')"><i class="fa-solid fa-laptop me-1"></i> ELECTRONICS</button>
-            <button class="category-btn" onclick="filterCatalog('Service')"><i class="fa-solid fa-headset me-1"></i> SERVICE</button>
-        </div>
-    </div>
-
-    <!-- Hero Header -->
-    <header class="hero-section">
+    <!-- Dark Premium Hero Section -->
+    <header class="hero-section text-center">
         <div class="container">
-            <h1 class="display-4 fw-bold mb-3">Your One-Stop Digital & Shopping Hub</h1>
-            <p class="lead mb-4">Discover Top Brands, Electronics, Fashion Trends, Travel Packages & Professional Services.</p>
-            <a href="#catalog" class="btn btn-light btn-lg fw-bold px-4 rounded-pill shadow-sm">Explore Products</a>
+            <div class="hero-badge mb-3"><i class="fa-solid fa-sparkles me-2"></i> Next-Gen Commerce & Services Platform</div>
+            <h1 class="display-3 fw-extrabold mb-3 text-white">Smart Solutions. Endless Possibilities.</h1>
+            <p class="lead text-slate-300 mx-auto max-w-2xl mb-4" style="max-width: 650px; color: #cbd5e1;">Discover premium electronics, lifestyle fashion, curated travel itineraries, and specialized digital services all under one roof.</p>
+            <a href="#catalog" class="btn btn-light btn-lg rounded-pill px-4 py-3 fw-bold shadow-lg">Explore Collections <i class="fa-solid fa-arrow-down ms-2 fs-6"></i></a>
         </div>
     </header>
 
-    <!-- Dynamic Products & Catalog Section -->
-    <section id="catalog" class="py-5 bg-white">
+    <!-- Interactive Category Filter Chips -->
+    <div class="container category-chip-container text-center">
+        <div class="category-chips shadow-lg">
+            <button class="chip-btn active" onclick="filterCatalog('All', event)"><i class="fa-solid fa-layer-group me-1"></i> ALL</button>
+            <button class="chip-btn" onclick="filterCatalog('Travel', event)"><i class="fa-solid fa-plane-departure me-1"></i> TRAVEL</button>
+            <button class="chip-btn" onclick="filterCatalog('Mobile', event)"><i class="fa-solid fa-mobile-screen-button me-1"></i> MOBILE</button>
+            <button class="chip-btn" onclick="filterCatalog('Fashion', event)"><i class="fa-solid fa-shirt me-1"></i> FASHION</button>
+            <button class="chip-btn" onclick="filterCatalog('Electronics', event)"><i class="fa-solid fa-laptop me-1"></i> ELECTRONICS</button>
+            <button class="chip-btn" onclick="filterCatalog('Service', event)"><i class="fa-solid fa-headset me-1"></i> SERVICE</button>
+        </div>
+    </div>
+
+    <!-- Products & Packages Grid -->
+    <section id="catalog" class="py-5 mt-4">
         <div class="container">
-            <h2 class="text-center fw-bold mb-2" id="catalogTitle">Explore All Products & Services</h2>
-            <p class="text-center text-muted mb-5">Select a category above to filter items</p>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1" id="catalogTitle">Featured Catalog</h2>
+                    <p class="text-muted small mb-0">Browse and select items managed live from admin panel</p>
+                </div>
+            </div>
             
             <div id="dynamicItems" class="row g-4">
                 <div class="text-center py-5">
@@ -104,96 +281,189 @@
         </div>
     </section>
 
-    <!-- Contact & Lead Form Section -->
-    <section id="contact" class="py-5">
+    <!-- Contact & Company Info Section -->
+    <section id="contact" class="py-5 bg-white border-top">
         <div class="container">
-            <div class="card contact-card shadow p-4 p-md-5">
-                <h3 class="fw-bold text-center mb-2">My Account / Contact Support</h3>
-                <p class="text-muted text-center mb-4">Have an inquiry or order query? Submit your details below.</p>
-                
-                <div id="alertBox"></div>
+            <div class="row g-4">
+                <!-- Company Details Card -->
+                <div class="col-lg-5">
+                    <div class="info-card h-100">
+                        <h3 class="fw-bold mb-4">Contact Information</h3>
+                        <p class="text-muted mb-4">Have questions regarding orders, travel itineraries, or service queries? Reach out to us directly.</p>
 
-                <form id="leadForm">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Full Name *</label>
-                            <input type="text" id="name" class="form-control form-control-lg" required placeholder="e.g. Rahul Sharma">
+                        <div class="d-flex align-items-start mb-4">
+                            <div class="info-icon-box"><i class="fa-solid fa-building"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Company Name</h6>
+                                <p class="text-muted mb-0">M J DIGITAL</p>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Email Address *</label>
-                            <input type="email" id="email" class="form-control form-control-lg" required placeholder="e.g. rahul@example.com">
+
+                        <div class="d-flex align-items-start mb-4">
+                            <div class="info-icon-box"><i class="fa-solid fa-location-dot"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Office Address</h6>
+                                <p class="text-muted mb-0">GF5, Imran Residency, Near Silver Duplex, Chhipa Society, Danilimda, Ahmedabad, Gujarat – 380028, India</p>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Phone Number *</label>
-                            <input type="tel" id="phone" class="form-control form-control-lg" required placeholder="e.g. +91 9876543210">
+
+                        <div class="d-flex align-items-start mb-4">
+                            <div class="info-icon-box"><i class="fa-solid fa-envelope"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Email Us</h6>
+                                <a href="mailto:mjdigitalworlds@gmail.com" class="text-primary text-decoration-none fw-semibold">mjdigitalworlds@gmail.com</a>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Category / Query *</label>
-                            <select id="service" class="form-select form-select-lg" required>
-                                <option value="" selected disabled>-- Choose Category --</option>
-                                <option value="Travel">Travel Booking</option>
-                                <option value="Mobile">Mobile Purchase</option>
-                                <option value="Fashion">Fashion Order</option>
-                                <option value="Electronics">Electronics Query</option>
-                                <option value="Service">Digital Service</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Your Message / Order Requirement</label>
-                            <textarea id="message" class="form-control" rows="3" placeholder="Tell us what product or service you are looking for..."></textarea>
-                        </div>
-                        <div class="col-12">
-                            <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100 fw-bold mt-2">Submit Request</button>
+
+                        <div class="d-flex align-items-start">
+                            <div class="info-icon-box"><i class="fa-solid fa-phone"></i></div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Mobile / Phone</h6>
+                                <a href="tel:+918306669999" class="text-primary text-decoration-none fw-semibold">+91 830 666 9999</a>
+                            </div>
                         </div>
                     </div>
-                </form>
+                </div>
+
+                <!-- Contact Form -->
+                <div class="col-lg-7">
+                    <div class="info-card h-100">
+                        <h3 class="fw-bold mb-2">Send Us a Message</h3>
+                        <p class="text-muted mb-4">Fill in your requirements and our team will get back to you promptly.</p>
+                        
+                        <div id="alertBox"></div>
+
+                        <form id="leadForm">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Full Name *</label>
+                                    <input type="text" id="name" class="form-control form-control-lg fs-6" required placeholder="e.g. Rahul Sharma">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Email Address *</label>
+                                    <input type="email" id="email" class="form-control form-control-lg fs-6" required placeholder="e.g. rahul@example.com">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Phone Number *</label>
+                                    <input type="tel" id="phone" class="form-control form-control-lg fs-6" required placeholder="e.g. +91 9876543210">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Inquiry Category *</label>
+                                    <select id="service" class="form-select form-select-lg fs-6" required>
+                                        <option value="" selected disabled>-- Select Category --</option>
+                                        <option value="Travel">Travel & Package Inquiry</option>
+                                        <option value="Mobile">Mobile Purchase</option>
+                                        <option value="Fashion">Fashion & Apparel</option>
+                                        <option value="Electronics">Electronics Item</option>
+                                        <option value="Service">Digital Service</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Message / Order Requirement</label>
+                                    <textarea id="message" class="form-control fs-6" rows="4" placeholder="Mention specific details, dates, or product requirements..."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" id="submitBtn" class="btn btn-gradient btn-lg w-100 fw-bold py-3 mt-2 rounded-3">Submit Inquiry <i class="fa-solid fa-paper-plane ms-2 fs-6"></i></button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
+    <!-- Modal for Legal Documents -->
+    <div class="modal fade" id="legalModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="legalModalTitle">Document Title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-muted" id="legalModalBody" style="line-height: 1.8;">
+                    <!-- Content injected dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="text-center">
+    <footer>
         <div class="container">
-            <p class="mb-1">&copy; 2026 MJ Digital. All rights reserved.</p>
-            <small class="text-muted">Home | Travel | Mobile | Fashion | Electronics | Service</small>
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <h5 class="navbar-brand fs-3 mb-3"><i class="fa-solid fa-bolt me-2"></i>M J DIGITAL</h5>
+                    <p class="small">Your trusted marketplace for consumer goods, mobile accessories, fashion, electronics, travel bookings, and digital services.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled small d-flex flex-column gap-2">
+                        <li><a href="#" onclick="openLegal('privacy')"><i class="fa-solid fa-angle-right me-2"></i>Privacy Policy</a></li>
+                        <li><a href="#" onclick="openLegal('terms')"><i class="fa-solid fa-angle-right me-2"></i>Terms & Conditions</a></li>
+                        <li><a href="#" onclick="openLegal('refund')"><i class="fa-solid fa-angle-right me-2"></i>Refund & Cancellation Policy</a></li>
+                        <li><a href="#" onclick="openLegal('additional')"><i class="fa-solid fa-angle-right me-2"></i>Additional Terms</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contact Info</h5>
+                    <p class="small mb-1"><i class="fa-solid fa-location-dot me-2 text-primary"></i> Danilimda, Ahmedabad, Gujarat – 380028</p>
+                    <p class="small mb-1"><i class="fa-solid fa-envelope me-2 text-primary"></i> mjdigitalworlds@gmail.com</p>
+                    <p class="small"><i class="fa-solid fa-phone me-2 text-primary"></i> +91 830 666 9999</p>
+                </div>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.1);">
+            <div class="text-center small pt-2">
+                <p class="mb-0">&copy; 2026 M J DIGITAL. All Rights Reserved.</p>
+            </div>
         </div>
     </footer>
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         let allItems = [];
 
+        // Fetch Dynamic Items
         async function fetchCatalog() {
             try {
                 const res = await fetch('/api/items');
                 allItems = await res.json();
                 renderCatalog(allItems);
             } catch (err) {
-                document.getElementById('dynamicItems').innerHTML = `<div class="col-12 text-center text-danger py-4"><p>Failed to load items.</p></div>`;
+                document.getElementById('dynamicItems').innerHTML = `<div class="col-12 text-center text-danger py-4"><p>Failed to load catalog.</p></div>`;
             }
         }
 
         function renderCatalog(items) {
             const container = document.getElementById('dynamicItems');
             if (!items || items.length === 0) {
-                container.innerHTML = `<div class="col-12 text-center text-muted py-5"><p>No items found in this category.</p></div>`;
+                container.innerHTML = `
+                    <div class="col-12 text-center text-muted py-5">
+                        <i class="fa-solid fa-box-open fs-1 text-slate-300 mb-3 d-block"></i>
+                        <p class="mb-0">No items available in this category yet.</p>
+                    </div>`;
                 return;
             }
 
             container.innerHTML = items.map(item => `
-                <div class="col-md-4">
-                    <div class="card catalog-card h-100 shadow-sm position-relative">
-                        <span class="badge bg-primary badge-category">${item.category}</span>
-                        <img src="${item.imageUrl}" class="catalog-img card-img-top" alt="${item.title}" onerror="this.src='https://via.placeholder.com/400x250?text=No+Image';">
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title fw-bold text-dark mb-2">${item.title}</h5>
-                            <p class="card-text text-muted small mb-3 flex-grow-1">${item.description || 'No detailed description available.'}</p>
-                            ${item.duration ? `<p class="small text-primary fw-semibold mb-2"><i class="fa-regular fa-clock me-1"></i>${item.duration}</p>` : ''}
-                            <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
-                                <span class="fs-5 fw-bold text-dark">${item.price}</span>
-                                <a href="#contact" onclick="preselectItem('${item.title}')" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold">Inquire Now</a>
+                <div class="col-md-6 col-lg-4">
+                    <div class="product-card h-100 d-flex flex-column">
+                        <div class="card-img-wrapper">
+                            <span class="category-badge">${item.category}</span>
+                            <img src="${item.imageUrl}" class="card-img-top" alt="${item.title}" onerror="this.src='https://via.placeholder.com/400x250?text=Image+Unavailable';">
+                        </div>
+                        <div class="p-4 d-flex flex-column flex-grow-1">
+                            <h5 class="fw-bold text-dark mb-2">${item.title}</h5>
+                            <p class="text-muted small mb-3 flex-grow-1" style="line-height: 1.6;">${item.description || 'No description provided.'}</p>
+                            ${item.duration ? `<p class="small text-primary fw-semibold mb-3"><i class="fa-regular fa-clock me-1"></i> ${item.duration}</p>` : ''}
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                <div>
+                                    <span class="text-muted extra-small d-block" style="font-size: 0.75rem;">Price</span>
+                                    <span class="fs-5 fw-bold text-dark">${item.price}</span>
+                                </div>
+                                <a href="#contact" onclick="preselectItem('${item.title}')" class="btn btn-gradient btn-sm rounded-pill px-3 py-2 fw-semibold">Inquire Now</a>
                             </div>
                         </div>
                     </div>
@@ -201,12 +471,14 @@
             `).join('');
         }
 
-        function filterCatalog(category) {
-            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+        function filterCatalog(category, evt) {
+            if (evt) {
+                document.querySelectorAll('.chip-btn').forEach(btn => btn.classList.remove('active'));
+                evt.currentTarget.classList.add('active');
+            }
 
             if (category === 'All') {
-                document.getElementById('catalogTitle').innerText = "Explore All Products & Services";
+                document.getElementById('catalogTitle').innerText = "Featured Catalog";
                 renderCatalog(allItems);
             } else {
                 document.getElementById('catalogTitle').innerText = category + " Collection";
@@ -219,14 +491,14 @@
             document.getElementById('message').value = `Interested in: ${title}`;
         }
 
-        // Form Submit Logic
+        // Form Submission
         document.getElementById('leadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
             const alertBox = document.getElementById('alertBox');
             
             submitBtn.disabled = true;
-            submitBtn.innerText = 'Submitting...';
+            submitBtn.innerHTML = 'Sending... <i class="fa-solid fa-spinner fa-spin ms-2"></i>';
 
             const payload = {
                 name: document.getElementById('name').value,
@@ -245,18 +517,41 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    alertBox.innerHTML = `<div class="alert alert-success alert-dismissible fade show" role="alert">🎉 Inquiry submitted successfully!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                    alertBox.innerHTML = `<div class="alert alert-success alert-dismissible fade show" role="alert">🎉 Your inquiry has been submitted successfully! We will contact you soon.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
                     document.getElementById('leadForm').reset();
                 } else {
                     alertBox.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.message}</div>`;
                 }
             } catch (err) {
-                alertBox.innerHTML = `<div class="alert alert-danger">❌ Server error.</div>`;
+                alertBox.innerHTML = `<div class="alert alert-danger">❌ Server error. Please try again.</div>`;
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerText = 'Submit Request';
+                submitBtn.innerHTML = 'Submit Inquiry <i class="fa-solid fa-paper-plane ms-2 fs-6"></i>';
             }
         });
+
+        // Legal Modals Content
+        function openLegal(type) {
+            const titleEl = document.getElementById('legalModalTitle');
+            const bodyEl = document.getElementById('legalModalBody');
+
+            if (type === 'privacy') {
+                titleEl.innerText = "Privacy Policy";
+                bodyEl.innerHTML = `<p>At <strong>M J DIGITAL</strong>, we prioritize the protection of your personal information. We collect data such as your name, email, phone number, and query details solely for processing orders, managing travel bookings, and responding to inquiries.</p><p>We do not share, sell, or rent your personal information to third parties unless required by law. All data processed through our website is secured using industry-standard protocols.</p>`;
+            } else if (type === 'terms') {
+                titleEl.innerText = "Terms & Conditions";
+                bodyEl.innerHTML = `<p>Welcome to <strong>M J DIGITAL</strong>. By accessing our platform and placing orders for products, packages, or services, you agree to comply with our terms of service.</p><p>All prices, features, and availability of items listed are subject to change without prior notice. M J DIGITAL reserves the right to cancel or revise orders in case of pricing errors or inventory constraints.</p>`;
+            } else if (type === 'refund') {
+                titleEl.innerText = "Refund & Cancellation Policy";
+                bodyEl.innerHTML = `<p>Cancellations for services or tour packages must be requested at least 7 business days prior to the scheduled date.</p><p>Refund eligibility for products purchased through M J DIGITAL depends on the condition of the returned item. Returned products must be unused and in original packaging within 7 days of delivery. Custom or digital services are non-refundable once initiated.</p>`;
+            } else if (type === 'additional') {
+                titleEl.innerText = "Additional Terms";
+                bodyEl.innerHTML = `<p>These additional terms govern special promotions, customized tour bookings, and enterprise service contracts under <strong>M J DIGITAL</strong>.</p><p>For any customized travel or bulk product orders, specific written terms provided at the time of quotation will supersede standard general terms.</p>`;
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('legalModal'));
+            modal.show();
+        }
 
         fetchCatalog();
     </script>
