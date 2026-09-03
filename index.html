@@ -16,7 +16,6 @@
             --primary-hover: #4338ca;
             --accent: #06b6d4;
             --dark-bg: #0f172a;
-            --card-bg: #ffffff;
             --text-main: #1e293b;
             --text-muted: #64748b;
         }
@@ -30,7 +29,7 @@
 
         /* Glassmorphism Navigation */
         .glass-nav {
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
@@ -49,18 +48,18 @@
             font-size: 0.88rem;
             color: #334155 !important;
             transition: color 0.2s;
+            cursor: pointer;
         }
 
-        .nav-link:hover {
+        .nav-link:hover, .nav-link.active {
             color: var(--primary) !important;
         }
 
-        /* Premium Dark Hero Section */
+        /* Dark Premium Hero Section */
         .hero-section {
             background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 100%);
             color: #ffffff;
-            padding: 90px 0 110px;
-            position: relative;
+            padding: 80px 0 100px;
         }
 
         .hero-badge {
@@ -109,13 +108,14 @@
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         }
 
-        /* Modern Product & Package Cards */
+        /* Product Cards */
         .product-card {
             border: 1px solid #f1f5f9;
             border-radius: 20px;
             background: #ffffff;
             overflow: hidden;
             transition: all 0.3s ease;
+            position: relative;
         }
 
         .product-card:hover {
@@ -128,6 +128,7 @@
             height: 220px;
             overflow: hidden;
             background-color: #f1f5f9;
+            cursor: pointer;
         }
 
         .card-img-top {
@@ -144,7 +145,7 @@
         .category-badge {
             position: absolute;
             top: 15px;
-            right: 15px;
+            left: 15px;
             background: rgba(15, 23, 42, 0.75);
             backdrop-filter: blur(8px);
             color: #fff;
@@ -152,28 +153,51 @@
             font-size: 0.75rem;
             padding: 5px 12px;
             border-radius: 20px;
+            z-index: 2;
         }
 
-        /* Modern Contact & Info Cards */
-        .info-card {
+        .wishlist-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
             background: #ffffff;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            border: 1px solid #f1f5f9;
-        }
-
-        .info-icon-box {
-            width: 50px;
-            height: 50px;
-            border-radius: 14px;
-            background: rgba(79, 70, 229, 0.1);
-            color: var(--primary);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
-            margin-right: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            color: #94a3b8;
+            transition: all 0.2s;
+            z-index: 2;
+        }
+
+        .wishlist-btn.active, .wishlist-btn:hover {
+            color: #ef4444;
+            transform: scale(1.1);
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            border: none;
+            font-weight: 600;
+        }
+
+        .btn-gradient:hover {
+            opacity: 0.95;
+            color: #fff;
+        }
+
+        /* Details Section View */
+        #detailsViewPage {
+            display: none;
+            background: #ffffff;
+            min-height: 100vh;
+            padding-top: 40px;
+            padding-bottom: 80px;
         }
 
         /* Footer */
@@ -193,177 +217,186 @@
         footer a {
             color: #94a3b8;
             text-decoration: none;
-            transition: color 0.2s;
         }
 
         footer a:hover {
             color: #ffffff;
         }
-
-        .btn-gradient {
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: #fff;
-            border: none;
-            font-weight: 600;
-            transition: opacity 0.2s;
-        }
-
-        .btn-gradient:hover {
-            opacity: 0.95;
-            color: #fff;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Glassmorphism Navbar -->
+    <!-- Header Navigation -->
     <nav class="navbar navbar-expand-lg glass-nav sticky-top py-3">
         <div class="container">
-            <a class="navbar-brand fs-3" href="#"><i class="fa-solid fa-bolt me-2"></i>M J DIGITAL</a>
+            <a class="navbar-brand fs-3" href="#" onclick="showMainHome()"><i class="fa-solid fa-bolt me-2"></i>M J DIGITAL</a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto me-3 gap-1 fw-semibold text-uppercase">
-                    <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#catalog" onclick="filterCatalog('Travel')">Travel</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#catalog" onclick="filterCatalog('Mobile')">Mobile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#catalog" onclick="filterCatalog('Fashion')">Fashion</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#catalog" onclick="filterCatalog('Electronics')">Electronics</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#catalog" onclick="filterCatalog('Service')">Service</a></li>
+                <ul class="navbar-nav ms-auto me-3 gap-1 text-uppercase">
+                    <li class="nav-item"><a class="nav-link" onclick="filterCatalog('All', 'home')">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="filterCatalog('Travel')">Travel</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="filterCatalog('Mobile')">Mobile</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="filterCatalog('Fashion')">Fashion</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="filterCatalog('Electronics')">Electronics</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="filterCatalog('Service')">Service</a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-2">
-                    <a href="#contact" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-2 fw-semibold"><i class="fa-solid fa-user me-1"></i> My Account</a>
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3 py-2" onclick="showWishlist()"><i class="fa-solid fa-heart me-1"></i> Wishlist (<span id="wishlistCount">0</span>)</button>
+                    <a href="#contact" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-2 fw-semibold" onclick="showMainHome()"><i class="fa-solid fa-user me-1"></i> My Account</a>
                     <a href="/admin" target="_blank" class="btn btn-gradient btn-sm rounded-pill px-3 py-2"><i class="fa-solid fa-lock me-1"></i> Admin</a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Dark Premium Hero Section -->
-    <header class="hero-section text-center">
-        <div class="container">
-            <div class="hero-badge mb-3"><i class="fa-solid fa-sparkles me-2"></i> Next-Gen Commerce & Services Platform</div>
-            <h1 class="display-3 fw-extrabold mb-3 text-white">Smart Solutions. Endless Possibilities.</h1>
-            <p class="lead text-slate-300 mx-auto max-w-2xl mb-4" style="max-width: 650px; color: #cbd5e1;">Discover premium electronics, lifestyle fashion, curated travel itineraries, and specialized digital services all under one roof.</p>
-            <a href="#catalog" class="btn btn-light btn-lg rounded-pill px-4 py-3 fw-bold shadow-lg">Explore Collections <i class="fa-solid fa-arrow-down ms-2 fs-6"></i></a>
-        </div>
-    </header>
-
-    <!-- Interactive Category Filter Chips -->
-    <div class="container category-chip-container text-center">
-        <div class="category-chips shadow-lg">
-            <button class="chip-btn active" onclick="filterCatalog('All', event)"><i class="fa-solid fa-layer-group me-1"></i> ALL</button>
-            <button class="chip-btn" onclick="filterCatalog('Travel', event)"><i class="fa-solid fa-plane-departure me-1"></i> TRAVEL</button>
-            <button class="chip-btn" onclick="filterCatalog('Mobile', event)"><i class="fa-solid fa-mobile-screen-button me-1"></i> MOBILE</button>
-            <button class="chip-btn" onclick="filterCatalog('Fashion', event)"><i class="fa-solid fa-shirt me-1"></i> FASHION</button>
-            <button class="chip-btn" onclick="filterCatalog('Electronics', event)"><i class="fa-solid fa-laptop me-1"></i> ELECTRONICS</button>
-            <button class="chip-btn" onclick="filterCatalog('Service', event)"><i class="fa-solid fa-headset me-1"></i> SERVICE</button>
-        </div>
-    </div>
-
-    <!-- Products & Packages Grid -->
-    <section id="catalog" class="py-5 mt-4">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 class="fw-bold mb-1" id="catalogTitle">Featured Catalog</h2>
-                    <p class="text-muted small mb-0">Browse and select items managed live from admin panel</p>
-                </div>
+    <!-- MAIN HOME VIEW CONTAINER -->
+    <div id="mainHomeView">
+        <!-- Dark Hero Section -->
+        <header class="hero-section text-center">
+            <div class="container">
+                <div class="hero-badge mb-3"><i class="fa-solid fa-sparkles me-2"></i> Next-Gen Commerce & Services Platform</div>
+                <h1 class="display-3 fw-bold mb-3 text-white">Smart Solutions. Endless Possibilities.</h1>
+                <p class="lead text-slate-300 mx-auto mb-4" style="max-width: 650px; color: #cbd5e1;">Discover premium electronics, lifestyle fashion, curated travel itineraries, and specialized digital services all under one roof.</p>
+                <a href="#catalog" class="btn btn-light btn-lg rounded-pill px-4 py-3 fw-bold shadow-lg">Explore Collections <i class="fa-solid fa-arrow-down ms-2 fs-6"></i></a>
             </div>
-            
-            <div id="dynamicItems" class="row g-4">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2 text-muted">Loading items...</p>
-                </div>
+        </header>
+
+        <!-- Category Filter Chips -->
+        <div class="container category-chip-container text-center">
+            <div class="category-chips shadow-lg">
+                <button class="chip-btn active" onclick="filterCatalog('All', event)"><i class="fa-solid fa-layer-group me-1"></i> ALL</button>
+                <button class="chip-btn" onclick="filterCatalog('Travel', event)"><i class="fa-solid fa-plane-departure me-1"></i> TRAVEL</button>
+                <button class="chip-btn" onclick="filterCatalog('Mobile', event)"><i class="fa-solid fa-mobile-screen-button me-1"></i> MOBILE</button>
+                <button class="chip-btn" onclick="filterCatalog('Fashion', event)"><i class="fa-solid fa-shirt me-1"></i> FASHION</button>
+                <button class="chip-btn" onclick="filterCatalog('Electronics', event)"><i class="fa-solid fa-laptop me-1"></i> ELECTRONICS</button>
+                <button class="chip-btn" onclick="filterCatalog('Service', event)"><i class="fa-solid fa-headset me-1"></i> SERVICE</button>
             </div>
         </div>
-    </section>
 
-    <!-- Contact & Company Info Section -->
-    <section id="contact" class="py-5 bg-white border-top">
-        <div class="container">
-            <div class="row g-4">
-                <!-- Company Details Card -->
-                <div class="col-lg-5">
-                    <div class="info-card h-100">
-                        <h3 class="fw-bold mb-4">Contact Information</h3>
-                        <p class="text-muted mb-4">Have questions regarding orders, travel itineraries, or service queries? Reach out to us directly.</p>
+        <!-- Products Catalog Grid -->
+        <section id="catalog" class="py-5 mt-4">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1" id="catalogTitle">Featured Catalog</h2>
+                        <p class="text-muted small mb-0">Click on any item to view complete details, itinerary, or specifications</p>
+                    </div>
+                </div>
+                
+                <div id="dynamicItems" class="row g-4">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">Loading catalog items...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                        <div class="d-flex align-items-start mb-4">
-                            <div class="info-icon-box"><i class="fa-solid fa-building"></i></div>
-                            <div>
-                                <h6 class="fw-bold mb-1">Company Name</h6>
-                                <p class="text-muted mb-0">M J DIGITAL</p>
-                            </div>
+        <!-- Contact Section -->
+        <section id="contact" class="py-5 bg-white border-top">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="p-4 border rounded-4 h-100 bg-light">
+                            <h3 class="fw-bold mb-4">Contact Information</h3>
+                            <p class="text-muted mb-4">Company: <strong>M J DIGITAL</strong></p>
+                            <p class="text-muted mb-2"><i class="fa-solid fa-location-dot me-2 text-primary"></i> GF5, Imran Residency, Danilimda, Ahmedabad, Gujarat – 380028</p>
+                            <p class="text-muted mb-2"><i class="fa-solid fa-envelope me-2 text-primary"></i> mjdigitalworlds@gmail.com</p>
+                            <p class="text-muted mb-0"><i class="fa-solid fa-phone me-2 text-primary"></i> +91 830 666 9999</p>
                         </div>
-
-                        <div class="d-flex align-items-start mb-4">
-                            <div class="info-icon-box"><i class="fa-solid fa-location-dot"></i></div>
-                            <div>
-                                <h6 class="fw-bold mb-1">Office Address</h6>
-                                <p class="text-muted mb-0">GF5, Imran Residency, Near Silver Duplex, Chhipa Society, Danilimda, Ahmedabad, Gujarat – 380028, India</p>
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-start mb-4">
-                            <div class="info-icon-box"><i class="fa-solid fa-envelope"></i></div>
-                            <div>
-                                <h6 class="fw-bold mb-1">Email Us</h6>
-                                <a href="mailto:mjdigitalworlds@gmail.com" class="text-primary text-decoration-none fw-semibold">mjdigitalworlds@gmail.com</a>
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-start">
-                            <div class="info-icon-box"><i class="fa-solid fa-phone"></i></div>
-                            <div>
-                                <h6 class="fw-bold mb-1">Mobile / Phone</h6>
-                                <a href="tel:+918306669999" class="text-primary text-decoration-none fw-semibold">+91 830 666 9999</a>
-                            </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="p-4 border rounded-4 h-100">
+                            <h3 class="fw-bold mb-3">General Inquiry / Account Query</h3>
+                            <div id="alertBox"></div>
+                            <form id="leadForm">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <input type="text" id="name" class="form-control" required placeholder="Full Name *">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="email" id="email" class="form-control" required placeholder="Email Address *">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="tel" id="phone" class="form-control" required placeholder="Phone Number *">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <select id="service" class="form-select" required>
+                                            <option value="" selected disabled>Select Category</option>
+                                            <option value="Travel">Travel Package</option>
+                                            <option value="Mobile">Mobile Order</option>
+                                            <option value="Fashion">Fashion Order</option>
+                                            <option value="Electronics">Electronics Item</option>
+                                            <option value="Service">Digital Service</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <textarea id="message" class="form-control" rows="3" placeholder="Message or requirement details..."></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" id="submitBtn" class="btn btn-gradient w-100 py-3 rounded-3 fw-bold">Submit Request</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
+    </div>
 
-                <!-- Contact Form -->
-                <div class="col-lg-7">
-                    <div class="info-card h-100">
-                        <h3 class="fw-bold mb-2">Send Us a Message</h3>
-                        <p class="text-muted mb-4">Fill in your requirements and our team will get back to you promptly.</p>
-                        
-                        <div id="alertBox"></div>
+    <!-- DEDICATED PRODUCT / PACKAGE DETAILS VIEW PAGE -->
+    <div id="detailsViewPage">
+        <div class="container">
+            <button class="btn btn-outline-secondary rounded-pill mb-4" onclick="showMainHome()"><i class="fa-solid fa-arrow-left me-2"></i> Back to Catalog</button>
+            
+            <div class="row g-5">
+                <!-- Image & Wishlist -->
+                <div class="col-lg-6">
+                    <div class="position-relative border rounded-4 overflow-hidden bg-light shadow-sm">
+                        <img id="detailImg" src="" class="w-100" style="max-height: 450px; object-fit: cover;" alt="Product Image">
+                        <span id="detailBadge" class="badge bg-dark position-absolute top-0 start-0 m-3 px-3 py-2 rounded-pill fs-6">Category</span>
+                    </div>
+                </div>
 
-                        <form id="leadForm">
+                <!-- Info & Booking Form -->
+                <div class="col-lg-6">
+                    <h1 id="detailTitle" class="fw-bold mb-2">Item Title</h1>
+                    <p id="detailDuration" class="text-primary fw-semibold mb-3 fs-6"></p>
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <span id="detailPrice" class="fs-2 fw-bold text-dark">₹0</span>
+                        <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">In Stock / Available</span>
+                    </div>
+
+                    <h5 class="fw-bold mb-2">Overview & Description</h5>
+                    <p id="detailDesc" class="text-muted mb-4" style="line-height: 1.8;">Full description goes here...</p>
+
+                    <div class="d-flex gap-3 mb-5">
+                        <button id="detailBookBtn" class="btn btn-gradient btn-lg flex-grow-1 rounded-pill fw-bold" onclick="scrollToBooking()"><i class="fa-solid fa-bolt me-2"></i> Book / Order Now</button>
+                        <button id="detailWishlistBtn" class="btn btn-outline-danger btn-lg rounded-pill px-4" onclick="toggleCurrentWishlist()"><i class="fa-regular fa-heart me-1"></i> Wishlist</button>
+                    </div>
+
+                    <!-- Instant Direct Booking Box -->
+                    <div id="bookingSection" class="p-4 border rounded-4 bg-light">
+                        <h4 class="fw-bold mb-3"><i class="fa-solid fa-calendar-check me-2 text-primary"></i> Complete Booking / Order Request</h4>
+                        <form id="directBookingForm">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Full Name *</label>
-                                    <input type="text" id="name" class="form-control form-control-lg fs-6" required placeholder="e.g. Rahul Sharma">
+                                    <input type="text" id="bookName" class="form-control" required placeholder="Your Full Name *">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Email Address *</label>
-                                    <input type="email" id="email" class="form-control form-control-lg fs-6" required placeholder="e.g. rahul@example.com">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Phone Number *</label>
-                                    <input type="tel" id="phone" class="form-control form-control-lg fs-6" required placeholder="e.g. +91 9876543210">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Inquiry Category *</label>
-                                    <select id="service" class="form-select form-select-lg fs-6" required>
-                                        <option value="" selected disabled>-- Select Category --</option>
-                                        <option value="Travel">Travel & Package Inquiry</option>
-                                        <option value="Mobile">Mobile Purchase</option>
-                                        <option value="Fashion">Fashion & Apparel</option>
-                                        <option value="Electronics">Electronics Item</option>
-                                        <option value="Service">Digital Service</option>
-                                    </select>
+                                    <input type="tel" id="bookPhone" class="form-control" required placeholder="Phone Number *">
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label fw-semibold">Message / Order Requirement</label>
-                                    <textarea id="message" class="form-control fs-6" rows="4" placeholder="Mention specific details, dates, or product requirements..."></textarea>
+                                    <input type="email" id="bookEmail" class="form-control" required placeholder="Email Address *">
                                 </div>
                                 <div class="col-12">
-                                    <button type="submit" id="submitBtn" class="btn btn-gradient btn-lg w-100 fw-bold py-3 mt-2 rounded-3">Submit Inquiry <i class="fa-solid fa-paper-plane ms-2 fs-6"></i></button>
+                                    <textarea id="bookNotes" class="form-control" rows="2" placeholder="Custom preferences, travel date, address, or quantity details..."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" id="confirmBookBtn" class="btn btn-primary w-100 py-3 rounded-pill fw-bold">Confirm Booking Request</button>
                                 </div>
                             </div>
                         </form>
@@ -371,51 +404,13 @@
                 </div>
             </div>
         </div>
-    </section>
-
-    <!-- Modal for Legal Documents -->
-    <div class="modal fade" id="legalModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-lg">
-            <div class="modal-content border-0 rounded-4 shadow">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="legalModalTitle">Document Title</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4 text-muted" id="legalModalBody" style="line-height: 1.8;">
-                    <!-- Content injected dynamically -->
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Footer -->
     <footer>
-        <div class="container">
-            <div class="row g-4 mb-4">
-                <div class="col-md-4">
-                    <h5 class="navbar-brand fs-3 mb-3"><i class="fa-solid fa-bolt me-2"></i>M J DIGITAL</h5>
-                    <p class="small">Your trusted marketplace for consumer goods, mobile accessories, fashion, electronics, travel bookings, and digital services.</p>
-                </div>
-                <div class="col-md-4">
-                    <h5>Quick Links</h5>
-                    <ul class="list-unstyled small d-flex flex-column gap-2">
-                        <li><a href="#" onclick="openLegal('privacy')"><i class="fa-solid fa-angle-right me-2"></i>Privacy Policy</a></li>
-                        <li><a href="#" onclick="openLegal('terms')"><i class="fa-solid fa-angle-right me-2"></i>Terms & Conditions</a></li>
-                        <li><a href="#" onclick="openLegal('refund')"><i class="fa-solid fa-angle-right me-2"></i>Refund & Cancellation Policy</a></li>
-                        <li><a href="#" onclick="openLegal('additional')"><i class="fa-solid fa-angle-right me-2"></i>Additional Terms</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>Contact Info</h5>
-                    <p class="small mb-1"><i class="fa-solid fa-location-dot me-2 text-primary"></i> Danilimda, Ahmedabad, Gujarat – 380028</p>
-                    <p class="small mb-1"><i class="fa-solid fa-envelope me-2 text-primary"></i> mjdigitalworlds@gmail.com</p>
-                    <p class="small"><i class="fa-solid fa-phone me-2 text-primary"></i> +91 830 666 9999</p>
-                </div>
-            </div>
-            <hr style="border-color: rgba(255,255,255,0.1);">
-            <div class="text-center small pt-2">
-                <p class="mb-0">&copy; 2026 M J DIGITAL. All Rights Reserved.</p>
-            </div>
+        <div class="container text-center">
+            <p class="mb-1">&copy; 2026 M J DIGITAL. All Rights Reserved.</p>
+            <p class="small text-muted mb-0">Home | Travel | Mobile | Fashion | Electronics | Service</p>
         </div>
     </footer>
 
@@ -424,60 +419,92 @@
 
     <script>
         let allItems = [];
+        let wishlist = JSON.parse(localStorage.getItem('mj_wishlist')) || [];
+        let currentActiveItem = null;
 
-        // Fetch Dynamic Items
+        // Initialize & Fetch Catalog
         async function fetchCatalog() {
             try {
                 const res = await fetch('/api/items');
                 allItems = await res.json();
                 renderCatalog(allItems);
+                updateWishlistBadge();
             } catch (err) {
                 document.getElementById('dynamicItems').innerHTML = `<div class="col-12 text-center text-danger py-4"><p>Failed to load catalog.</p></div>`;
             }
         }
 
+        // Render Cards Grid
         function renderCatalog(items) {
             const container = document.getElementById('dynamicItems');
             if (!items || items.length === 0) {
-                container.innerHTML = `
-                    <div class="col-12 text-center text-muted py-5">
-                        <i class="fa-solid fa-box-open fs-1 text-slate-300 mb-3 d-block"></i>
-                        <p class="mb-0">No items available in this category yet.</p>
-                    </div>`;
+                container.innerHTML = `<div class="col-12 text-center text-muted py-5"><p>No items found in this section.</p></div>`;
                 return;
             }
 
-            container.innerHTML = items.map(item => `
+            container.innerHTML = items.map(item => {
+                const isWishlisted = wishlist.some(w => w._id === item._id);
+                return `
                 <div class="col-md-6 col-lg-4">
                     <div class="product-card h-100 d-flex flex-column">
-                        <div class="card-img-wrapper">
+                        <button class="wishlist-btn ${isWishlisted ? 'active' : ''}" onclick="toggleWishlist('${item._id}', event)">
+                            <i class="fa-${isWishlisted ? 'solid' : 'regular'} fa-heart"></i>
+                        </button>
+                        <div class="card-img-wrapper" onclick="openDetailsPage('${item._id}')">
                             <span class="category-badge">${item.category}</span>
-                            <img src="${item.imageUrl}" class="card-img-top" alt="${item.title}" onerror="this.src='https://via.placeholder.com/400x250?text=Image+Unavailable';">
+                            <img src="${item.imageUrl}" class="card-img-top" alt="${item.title}" onerror="this.src='https://via.placeholder.com/400x250?text=No+Image';">
                         </div>
                         <div class="p-4 d-flex flex-column flex-grow-1">
-                            <h5 class="fw-bold text-dark mb-2">${item.title}</h5>
-                            <p class="text-muted small mb-3 flex-grow-1" style="line-height: 1.6;">${item.description || 'No description provided.'}</p>
+                            <h5 class="fw-bold text-dark mb-2" style="cursor:pointer;" onclick="openDetailsPage('${item._id}')">${item.title}</h5>
+                            <p class="text-muted small mb-3 flex-grow-1">${(item.description || '').substring(0, 90)}...</p>
                             ${item.duration ? `<p class="small text-primary fw-semibold mb-3"><i class="fa-regular fa-clock me-1"></i> ${item.duration}</p>` : ''}
                             <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                                <div>
-                                    <span class="text-muted extra-small d-block" style="font-size: 0.75rem;">Price</span>
-                                    <span class="fs-5 fw-bold text-dark">${item.price}</span>
-                                </div>
-                                <a href="#contact" onclick="preselectItem('${item.title}')" class="btn btn-gradient btn-sm rounded-pill px-3 py-2 fw-semibold">Inquire Now</a>
+                                <span class="fs-5 fw-bold text-dark">${item.price}</span>
+                                <button onclick="openDetailsPage('${item._id}')" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-2 fw-semibold">View Details</button>
                             </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
+        // Open Dedicated Item View Page
+        function openDetailsPage(itemId) {
+            const item = allItems.find(i => i._id === itemId);
+            if (!item) return;
+
+            currentActiveItem = item;
+            document.getElementById('detailImg').src = item.imageUrl;
+            document.getElementById('detailBadge').innerText = item.category;
+            document.getElementById('detailTitle').innerText = item.title;
+            document.getElementById('detailPrice').innerText = item.price;
+            document.getElementById('detailDesc').innerText = item.description || 'Complete details and features available upon inquiry.';
+            document.getElementById('detailDuration').innerText = item.duration ? `Duration / Spec: ${item.duration}` : '';
+
+            // Update Wishlist button in details
+            const isWishlisted = wishlist.some(w => w._id === item._id);
+            const wBtn = document.getElementById('detailWishlistBtn');
+            wBtn.innerHTML = isWishlisted ? `<i class="fa-solid fa-heart text-danger me-1"></i> Wishlisted` : `<i class="fa-regular fa-heart me-1"></i> Add to Wishlist`;
+
+            document.getElementById('mainHomeView').style.display = 'none';
+            document.getElementById('detailsViewPage').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        function showMainHome() {
+            document.getElementById('detailsViewPage').style.display = 'none';
+            document.getElementById('mainHomeView').style.display = 'block';
+        }
+
+        // Filter Function
         function filterCatalog(category, evt) {
-            if (evt) {
+            showMainHome();
+            if (evt && evt.target) {
                 document.querySelectorAll('.chip-btn').forEach(btn => btn.classList.remove('active'));
-                evt.currentTarget.classList.add('active');
+                if (evt.target.classList.contains('chip-btn')) evt.target.classList.add('active');
             }
 
-            if (category === 'All') {
+            if (category === 'All' || category === 'home') {
                 document.getElementById('catalogTitle').innerText = "Featured Catalog";
                 renderCatalog(allItems);
             } else {
@@ -485,21 +512,88 @@
                 const filtered = allItems.filter(item => item.category.toLowerCase() === category.toLowerCase());
                 renderCatalog(filtered);
             }
+            document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function preselectItem(title) {
-            document.getElementById('message').value = `Interested in: ${title}`;
+        // Wishlist System
+        function toggleWishlist(itemId, evt) {
+            if (evt) evt.stopPropagation();
+            const item = allItems.find(i => i._id === itemId);
+            if (!item) return;
+
+            const index = wishlist.findIndex(w => w._id === itemId);
+            if (index > -1) {
+                wishlist.splice(index, 1);
+            } else {
+                wishlist.push(item);
+            }
+
+            localStorage.setItem('mj_wishlist', JSON.stringify(wishlist));
+            updateWishlistBadge();
+            renderCatalog(allItems);
         }
 
-        // Form Submission
+        function toggleCurrentWishlist() {
+            if (currentActiveItem) {
+                toggleWishlist(currentActiveItem._id);
+                openDetailsPage(currentActiveItem._id);
+            }
+        }
+
+        function updateWishlistBadge() {
+            document.getElementById('wishlistCount').innerText = wishlist.length;
+        }
+
+        function showWishlist() {
+            showMainHome();
+            document.getElementById('catalogTitle').innerText = "My Wishlist Items";
+            renderCatalog(wishlist);
+            document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function scrollToBooking() {
+            document.getElementById('bookingSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Direct Booking Submission
+        document.getElementById('directBookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const confirmBtn = document.getElementById('confirmBookBtn');
+            confirmBtn.disabled = true;
+            confirmBtn.innerText = 'Submitting Booking...';
+
+            const payload = {
+                name: document.getElementById('bookName').value,
+                email: document.getElementById('bookEmail').value,
+                phone: document.getElementById('bookPhone').value,
+                service: currentActiveItem ? currentActiveItem.category : 'Direct Booking',
+                message: `[DIRECT ORDER/BOOKING]: Item Title: ${currentActiveItem ? currentActiveItem.title : ''} | Price: ${currentActiveItem ? currentActiveItem.price : ''} | Notes: ${document.getElementById('bookNotes').value}`
+            };
+
+            try {
+                const res = await fetch('/api/leads/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("🎉 Booking request submitted successfully! We will contact you shortly.");
+                    document.getElementById('directBookingForm').reset();
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+            } catch (err) {
+                alert("❌ Server error. Please try again.");
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerText = 'Confirm Booking Request';
+            }
+        });
+
+        // General Form Submission
         document.getElementById('leadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const submitBtn = document.getElementById('submitBtn');
-            const alertBox = document.getElementById('alertBox');
-            
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Sending... <i class="fa-solid fa-spinner fa-spin ms-2"></i>';
-
             const payload = {
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
@@ -515,43 +609,14 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-
                 if (data.success) {
-                    alertBox.innerHTML = `<div class="alert alert-success alert-dismissible fade show" role="alert">🎉 Your inquiry has been submitted successfully! We will contact you soon.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                    document.getElementById('alertBox').innerHTML = `<div class="alert alert-success">🎉 Request submitted successfully!</div>`;
                     document.getElementById('leadForm').reset();
-                } else {
-                    alertBox.innerHTML = `<div class="alert alert-danger">❌ Error: ${data.message}</div>`;
                 }
             } catch (err) {
-                alertBox.innerHTML = `<div class="alert alert-danger">❌ Server error. Please try again.</div>`;
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Submit Inquiry <i class="fa-solid fa-paper-plane ms-2 fs-6"></i>';
+                document.getElementById('alertBox').innerHTML = `<div class="alert alert-danger">❌ Submission failed.</div>`;
             }
         });
-
-        // Legal Modals Content
-        function openLegal(type) {
-            const titleEl = document.getElementById('legalModalTitle');
-            const bodyEl = document.getElementById('legalModalBody');
-
-            if (type === 'privacy') {
-                titleEl.innerText = "Privacy Policy";
-                bodyEl.innerHTML = `<p>At <strong>M J DIGITAL</strong>, we prioritize the protection of your personal information. We collect data such as your name, email, phone number, and query details solely for processing orders, managing travel bookings, and responding to inquiries.</p><p>We do not share, sell, or rent your personal information to third parties unless required by law. All data processed through our website is secured using industry-standard protocols.</p>`;
-            } else if (type === 'terms') {
-                titleEl.innerText = "Terms & Conditions";
-                bodyEl.innerHTML = `<p>Welcome to <strong>M J DIGITAL</strong>. By accessing our platform and placing orders for products, packages, or services, you agree to comply with our terms of service.</p><p>All prices, features, and availability of items listed are subject to change without prior notice. M J DIGITAL reserves the right to cancel or revise orders in case of pricing errors or inventory constraints.</p>`;
-            } else if (type === 'refund') {
-                titleEl.innerText = "Refund & Cancellation Policy";
-                bodyEl.innerHTML = `<p>Cancellations for services or tour packages must be requested at least 7 business days prior to the scheduled date.</p><p>Refund eligibility for products purchased through M J DIGITAL depends on the condition of the returned item. Returned products must be unused and in original packaging within 7 days of delivery. Custom or digital services are non-refundable once initiated.</p>`;
-            } else if (type === 'additional') {
-                titleEl.innerText = "Additional Terms";
-                bodyEl.innerHTML = `<p>These additional terms govern special promotions, customized tour bookings, and enterprise service contracts under <strong>M J DIGITAL</strong>.</p><p>For any customized travel or bulk product orders, specific written terms provided at the time of quotation will supersede standard general terms.</p>`;
-            }
-
-            const modal = new bootstrap.Modal(document.getElementById('legalModal'));
-            modal.show();
-        }
 
         fetchCatalog();
     </script>
