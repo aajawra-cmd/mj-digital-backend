@@ -11,94 +11,73 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(__dirname));
 
-// MongoDB Connection Link
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://aajawra_db_user:fN0NHScso0r2SM51@mj.qwqplci.mongodb.net/leadDB?retryWrites=true&w=majority&appName=MJ";
+// MongoDB Connection
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://aajawra_db_user:r27VmhH7bfMdfhof@mj.qwqplci.mongodb.net/leadDB?retryWrites=true&w=majority&appName=MJ";
 
-mongoose.connect(MONGO_URI, {
-    serverSelectionTimeoutMS: 5000
-})
+mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
 .then(() => console.log('✅ MongoDB Connected Successfully'))
-.catch(err => {
-    console.error('❌ DB Connection Failed:', err.message);
-    console.error('👉 Tip: Mobile Hotspot se connect karke check karein agar ISP block kar raha hai.');
-});
+.catch(err => console.error('❌ DB Connection Failed:', err.message));
 
-// Lead Schema
+// Schemas
 const LeadSchema = new mongoose.Schema({
-    name: String,
-    email: String,
-    phone: String,
-    service: String,
-    message: String,
+    name: String, email: String, phone: String, service: String, message: String,
     createdAt: { type: Date, default: Date.now }
 });
+
+const ItemSchema = new mongoose.Schema({
+    title: String,
+    category: String, // 'Product' ya 'Package'
+    price: String,
+    duration: String, // Packages ke liye
+    description: String,
+    imageUrl: String,
+    createdAt: { type: Date, default: Date.now }
+});
+
 const Lead = mongoose.model('Lead', LeadSchema);
+const Item = mongoose.model('Item', ItemSchema);
 
 // Email Transporter
 const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
 });
 
-// --- HTML PAGE ROUTES (Aapke code me ye missing the) ---
-
-// 1. Home Page Route (index.html serve karega)
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// 2. Admin Page Route (admin.html serve karega)
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin.html'));
-});
+// Page Routes
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
 // --- API ROUTES ---
 
-// Submit Route (Optimized for Fast Response)
+// Leads API
 app.post('/api/leads/submit', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
-            return res.status(503).json({ 
-                success: false, 
-                message: "Database connected nahi hai." 
-            });
+            return res.status(503).json({ success: false, message: "Database connected nahi hai." });
         }
-
         const { name, email, phone, service, message } = req.body;
         const newLead = new Lead({ name, email, phone, service, message });
-        
-        // 1. Database me turant save karein
         await newLead.save();
-
-        // 2. Client ko instant success response bhej dein (No Waiting)
+        
         res.json({ success: true, message: 'Lead saved successfully!' });
 
-        // 3. Emails background me silently send hongi
         Promise.all([
             transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: process.env.ADMIN_EMAIL,
+                from: process.env.EMAIL_USER, to: process.env.ADMIN_EMAIL,
                 subject: `🚨 New Lead: ${name}`,
                 html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Phone:</strong> ${phone}</p><p><strong>Service:</strong> ${service}</p><p><strong>Message:</strong> ${message}</p>`
             }),
             transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: email,
+                from: process.env.EMAIL_USER, to: email,
                 subject: `Thank you for contacting us, ${name}!`,
                 html: `<p>Hi ${name},</p><p>We received your request for <strong>${service}</strong>.</p>`
             })
-        ]).catch(mailErr => console.log('⚠️ Background Email Error:', mailErr.message));
-
+        ]).catch(err => console.log('Mail error:', err.message));
     } catch (error) {
-        console.error('❌ Server Error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
 
-// Get Leads Route
 app.get('/api/leads', async (req, res) => {
     try {
         const leads = await Lead.find().sort({ createdAt: -1 });
@@ -108,14 +87,52 @@ app.get('/api/leads', async (req, res) => {
     }
 });
 
-// Admin Login Route
+app.delete('/api/leads/:id', async (req, res) => {
+    try {
+        await Lead.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Lead deleted' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Items API (Products & Packages)
+app.post('/api/items', async (req, res) => {
+    try {
+        const { title, category, price, duration, description, imageUrl } = req.body;
+        const newItem = new Item({ title, category, price, duration, description, imageUrl });
+        await newItem.save();
+        res.json({ success: true, message: 'Item added successfully!' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+app.get('/api/items', async (req, res) => {
+    try {
+        const items = await Item.find().sort({ createdAt: -1 });
+        res.json(items);
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+app.delete('/api/items/:id', async (req, res) => {
+    try {
+        await Item.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: 'Item deleted successfully!' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+// Admin Login
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
-    
     if (username === 'admin' && password === 'admin123') {
         res.json({ success: true, token: 'admin-secret-token-123' });
     } else {
-        res.status(401).json({ success: false, message: 'Invalid Username or Password!' });
+        res.status(401).json({ success: false, message: 'Invalid Credentials!' });
     }
 });
 
