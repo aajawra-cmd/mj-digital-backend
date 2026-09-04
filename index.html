@@ -30,9 +30,9 @@
         .color-dot { width: 32px; height: 32px; border-radius: 50%; display: inline-block; cursor: pointer; border: 2px solid #e2e8f0; }
         .color-dot.active { border-color: var(--primary-pink); transform: scale(1.1); }
 
-        /* Full Page Views */
+        /* Page Views */
         .page-view { display: none; min-height: 80vh; }
-        .page-view.active { display: block; }
+        .page-view.active { display: block !important; }
 
         /* Sidebar Navigation & Dynamic Content Panel */
         .profile-sidebar { border-right: 1px solid #eaeaec; min-height: 450px; }
@@ -46,7 +46,7 @@
         
         /* Content Panels */
         .content-panel { display: none; }
-        .content-panel.active { display: block; }
+        .content-panel.active { display: block !important; }
     </style>
 </head>
 <body>
@@ -77,8 +77,8 @@
                     </button>
                     <ul class="dropdown-menu profile-dropdown dropdown-menu-end p-2 mt-2">
                         <li class="px-3 py-2 border-bottom">
-                            <h6 class="fw-bold mb-0" id="navUserName">Hello mohsin</h6>
-                            <small class="text-muted" id="navUserPhone">9377772797</small>
+                            <h6 class="fw-bold mb-0">Hello mohsin</h6>
+                            <small class="text-muted">9377772797</small>
                         </li>
                         <li><a class="dropdown-item mt-2" onclick="navigateTo('profile', 'orders')">Orders</a></li>
                         <li><a class="dropdown-item" onclick="navigateTo('cart')">Wishlist</a></li>
@@ -156,7 +156,7 @@
     </div>
 </div>
 
-<!-- PAGE 2: ADD CART / MYNTRA CHECKOUT VIEW -->
+<!-- PAGE 2: ADD CART VIEW -->
 <div id="cartView" class="page-view container py-4">
     <div class="row g-4">
         <div class="col-lg-7">
@@ -214,15 +214,14 @@
     </div>
 </div>
 
-<!-- PAGE 3: DYNAMIC & ALL-WORKING PROFILE PAGE -->
+<!-- PAGE 3: PROFILE PAGE -->
 <div id="profileView" class="page-view container py-4">
     <div class="bg-white p-4 rounded border shadow-sm">
         <div class="row">
-            <!-- Sidebar Links (Myntra Credit Completely Removed) -->
             <div class="col-md-3 profile-sidebar pe-md-4">
                 <div class="pb-3 border-bottom mb-3">
                     <h6 class="fw-bold mb-0">Account</h6>
-                    <small class="text-muted" id="sidebarUserName">mohsin j</small>
+                    <small class="text-muted">mohsin j</small>
                 </div>
                 
                 <div class="small fw-bold text-muted mt-2 mb-1">ORDERS</div>
@@ -238,155 +237,76 @@
                 <a class="profile-sidebar-item" id="link-addresses" onclick="switchProfileSection('addresses')">Addresses</a>
             </div>
 
-            <!-- Dynamic Content Display Panels -->
             <div class="col-md-9 ps-md-4 mt-4 mt-md-0">
-                
-                <!-- 1. Profile Details Panel -->
                 <div id="panel-details" class="content-panel active">
                     <h5 class="fw-bold mb-4 border-bottom pb-2">Profile Details</h5>
                     <div class="row g-3 small">
                         <div class="col-4 text-muted">Full Name</div>
                         <div class="col-8 fw-bold">mohsin j</div>
-
                         <div class="col-4 text-muted">Mobile Number</div>
                         <div class="col-8 fw-bold">9377772797</div>
-
                         <div class="col-4 text-muted">Email ID</div>
                         <div class="col-8 fw-bold">mohsin2797@gmail.com</div>
-
                         <div class="col-4 text-muted">Gender</div>
                         <div class="col-8 fw-bold">MALE</div>
-
-                        <div class="col-4 text-muted">Date of Birth</div>
-                        <div class="col-8 text-muted">- not added -</div>
-
                         <div class="col-4 text-muted">Location</div>
                         <div class="col-8 fw-bold">Ahmedabad - 380028</div>
                     </div>
-                    <button class="btn btn-danger px-5 fw-bold mt-4" style="background-color: var(--primary-pink); border: none;" onclick="alert('Edit mode updated!')">EDIT</button>
+                    <button class="btn btn-danger px-5 fw-bold mt-4" style="background-color: var(--primary-pink); border: none;" onclick="alert('Profile Updated!')">EDIT</button>
                 </div>
 
-                <!-- 2. Orders & Returns Panel -->
                 <div id="panel-orders" class="content-panel">
                     <h5 class="fw-bold mb-4 border-bottom pb-2">Orders & Returns</h5>
                     <div id="profileOrdersList"></div>
                 </div>
 
-                <!-- 3. Coupons Panel -->
                 <div id="panel-coupons" class="content-panel">
                     <h5 class="fw-bold mb-4 border-bottom pb-2">My Coupons</h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="p-3 border rounded bg-light position-relative">
-                                <span class="badge bg-danger position-absolute top-0 end-0 m-2">MJ100</span>
-                                <h6 class="fw-bold text-danger mb-1">Flat ₹100 Off</h6>
-                                <p class="small text-muted mb-0">Applicable on orders above ₹999</p>
-                                <small class="text-success fw-bold">Expires in 10 days</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="p-3 border rounded bg-light position-relative">
-                                <span class="badge bg-primary position-absolute top-0 end-0 m-2">FESTIVE15</span>
-                                <h6 class="fw-bold text-primary mb-1">15% Instant Discount</h6>
-                                <p class="small text-muted mb-0">Applicable on Electronics & Mobiles</p>
-                                <small class="text-success fw-bold">Expires in 25 days</small>
-                            </div>
-                        </div>
+                    <div class="p-3 border rounded bg-light">
+                        <span class="badge bg-danger mb-2">MJ100</span>
+                        <h6 class="fw-bold">Flat ₹100 Off on orders above ₹999</h6>
                     </div>
                 </div>
 
-                <!-- 4. Saved Cards Panel -->
                 <div id="panel-cards" class="content-panel">
-                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-                        <h5 class="fw-bold mb-0">Saved Cards</h5>
-                        <button class="btn btn-sm btn-outline-danger fw-bold" onclick="alert('Add Card Modal')">+ ADD NEW CARD</button>
-                    </div>
-                    <div class="p-3 border rounded mb-3 d-flex justify-content-between align-items-center bg-light">
-                        <div>
-                            <div class="fw-bold"><i class="fa-regular fa-credit-card me-2 text-primary"></i> HDFC Bank Credit Card</div>
-                            <small class="text-muted">**** **** **** 4829 | Exp: 08/29</small>
-                        </div>
-                        <button class="btn btn-sm btn-link text-danger text-decoration-none" onclick="this.parentElement.remove()">Remove</button>
-                    </div>
+                    <h5 class="fw-bold mb-4 border-bottom pb-2">Saved Cards</h5>
+                    <div class="p-3 border rounded bg-light">HDFC Bank Credit Card (**** 4829)</div>
                 </div>
 
-                <!-- 5. Saved UPI Panel -->
                 <div id="panel-upi" class="content-panel">
-                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-                        <h5 class="fw-bold mb-0">Saved UPI Handles</h5>
-                        <button class="btn btn-sm btn-outline-danger fw-bold" onclick="alert('Add UPI Modal')">+ ADD NEW UPI</button>
-                    </div>
-                    <div class="p-3 border rounded mb-3 d-flex justify-content-between align-items-center bg-light">
-                        <div>
-                            <div class="fw-bold"><i class="fa-solid fa-mobile-screen me-2 text-success"></i> Google Pay / BHIM UPI</div>
-                            <small class="text-muted">9377772797@okicici</small>
-                        </div>
-                        <button class="btn btn-sm btn-link text-danger text-decoration-none" onclick="this.parentElement.remove()">Remove</button>
-                    </div>
+                    <h5 class="fw-bold mb-4 border-bottom pb-2">Saved UPI</h5>
+                    <div class="p-3 border rounded bg-light">9377772797@okicici</div>
                 </div>
 
-                <!-- 6. Saved Addresses Panel -->
                 <div id="panel-addresses" class="content-panel">
-                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-                        <h5 class="fw-bold mb-0">Saved Addresses</h5>
-                        <button class="btn btn-sm btn-outline-danger fw-bold" onclick="alert('Add Address Modal')">+ ADD NEW ADDRESS</button>
-                    </div>
-
-                    <div class="border rounded p-3 mb-3 position-relative">
-                        <span class="badge bg-secondary position-absolute top-0 end-0 m-3">HOME</span>
-                        <h6 class="fw-bold mb-1">Mohsin Jawrawala</h6>
-                        <p class="small text-muted mb-1">24 Block C Haji Flat Behind Noor Haji Flat Opp Imran Residency Chhipa Soc Opp Zayda Duplex, Ahmedabad - 380028, Gujarat</p>
-                        <small class="d-block text-dark fw-bold mb-2">Mobile: 9377772797</small>
-                        <div class="border-top pt-2 d-flex gap-3 small">
-                            <a class="text-primary fw-bold cursor-pointer text-decoration-none" onclick="alert('Edit Address')">EDIT</a>
-                            <a class="text-danger fw-bold cursor-pointer text-decoration-none" onclick="this.closest('.border').remove()">REMOVE</a>
-                        </div>
+                    <h5 class="fw-bold mb-4 border-bottom pb-2">Saved Addresses</h5>
+                    <div class="border rounded p-3">
+                        <h6 class="fw-bold">Mohsin Jawrawala</h6>
+                        <p class="small text-muted mb-0">24 Block C Haji Flat, Opp Imran Residency, Ahmedabad - 380028</p>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 </div>
 
-<!-- PAGE 4: LOGIN / SIGNUP PAGE -->
+<!-- PAGE 4: LOGIN PAGE -->
 <div id="loginView" class="page-view container py-4">
     <div class="login-card shadow-sm">
         <div class="login-banner">
-            <span class="badge bg-danger mb-1">FLAT ₹300 OFF</span>
-            <h6 class="fw-bold mb-0">ON YOUR 1st ORDER + EXCITING OFFERS</h6>
+            <h6 class="fw-bold mb-0">LOGIN / SIGNUP</h6>
         </div>
         <div class="p-4">
-            <h5 class="fw-bold mb-3"><span class="text-dark">Login</span> <small class="text-muted fs-6">or</small> <span class="text-dark">Signup</span></h5>
-            
-            <div class="mb-3">
-                <div class="input-group">
-                    <span class="input-group-text bg-light fw-bold">+91</span>
-                    <input type="text" id="loginMobileInput" class="form-control" placeholder="Mobile Number *">
-                </div>
-            </div>
-
-            <div class="form-check mb-3 small text-muted">
-                <input class="form-check-input" type="checkbox" id="termsCheck" checked>
-                <label class="form-check-label" for="termsCheck">
-                    By continuing, I agree to the <a href="#" class="text-danger fw-bold">Terms of Use</a> & <a href="#" class="text-danger fw-bold">Privacy Policy</a>
-                </label>
-            </div>
-
-            <button class="btn w-100 py-2 fw-bold text-white mb-3" style="background-color: var(--primary-pink);" onclick="processLogin()">
-                CONTINUE
-            </button>
-
-            <div class="small text-muted text-center">Have trouble logging in? <a href="#" class="text-danger fw-bold">Get help</a></div>
+            <input type="text" id="loginMobileInput" class="form-control mb-3" placeholder="Mobile Number *">
+            <button class="btn w-100 py-2 fw-bold text-white" style="background-color: var(--primary-pink);" onclick="processLogin()">CONTINUE</button>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    let currentCart = [{ title: "iPhone 17 Pro", storage: "256GB", color: "Natural Titanium", price: 149999, origPrice: 159999 }];
+    let currentCart = [{ title: "iPhone 17 Pro", storage: "256GB", price: 149999, origPrice: 159999 }];
     let currentWishlist = [];
-    let placedOrders = JSON.parse(localStorage.getItem('adminBookings')) || [];
 
     function navigateTo(pageId, subSection = 'details') {
         document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
@@ -409,7 +329,7 @@
     }
 
     function addToCart() {
-        currentCart.push({ title: "iPhone 17 Pro", storage: "256GB", color: "Natural Titanium", price: 149999, origPrice: 159999 });
+        currentCart.push({ title: "iPhone 17 Pro", storage: "256GB", price: 149999, origPrice: 159999 });
         document.getElementById('cartCount').innerText = currentCart.length;
         alert("Item added to Bag!");
     }
@@ -442,7 +362,7 @@
                     <div>
                         <h6 class="fw-bold mb-1">${item.title}</h6>
                         <span class="badge bg-light text-dark border">${item.storage}</span>
-                        <div class="fw-bold mt-2">₹${item.price} <span class="text-muted text-decoration-line-through small">₹${item.origPrice}</span></div>
+                        <div class="fw-bold mt-2">₹${item.price}</div>
                     </div>
                 </div>
                 <button class="btn btn-sm btn-outline-danger" onclick="removeItem(${idx})"><i class="fa-solid fa-xmark"></i></button>
@@ -458,40 +378,31 @@
 
     function placeOrder() {
         if(currentCart.length === 0) return;
+        const placedOrders = JSON.parse(localStorage.getItem('adminBookings')) || [];
         const newOrder = {
             id: "ORD-" + Math.floor(10000 + Math.random() * 90000),
-            type: "Direct Purchase",
-            customerName: "mohsin j",
-            phone: "9377772797",
             details: currentCart.map(c => `${c.title} (${c.storage})`).join(', '),
             amount: currentCart.reduce((a, b) => a + b.price, 0),
-            date: new Date().toLocaleString(),
             status: "Order Placed"
         };
         placedOrders.unshift(newOrder);
         localStorage.setItem('adminBookings', JSON.stringify(placedOrders));
         currentCart = [];
         document.getElementById('cartCount').innerText = 0;
-        alert("🎉 Order Placed Successfully!");
+        alert("Order Placed Successfully!");
         navigateTo('profile', 'orders');
     }
 
     function switchProfileSection(sec) {
-        // Remove active class from all sidebar links
         document.querySelectorAll('.profile-sidebar-item').forEach(el => el.classList.remove('active'));
-        
-        // Hide all content panels
         document.querySelectorAll('.content-panel').forEach(el => el.classList.remove('active'));
 
-        // Highlight selected sidebar item
         const activeLink = document.getElementById(`link-${sec}`);
         if(activeLink) activeLink.classList.add('active');
 
-        // Show active content panel
         const activePanel = document.getElementById(`panel-${sec}`);
         if(activePanel) activePanel.classList.add('active');
 
-        // Render Orders if selected
         if(sec === 'orders') {
             const list = document.getElementById('profileOrdersList');
             const orders = JSON.parse(localStorage.getItem('adminBookings')) || [];
@@ -502,7 +413,7 @@
                         <span class="badge bg-success">${o.status}</span>
                     </div>
                     <div class="small text-muted mt-1">${o.details}</div>
-                    <div class="fw-bold text-dark mt-2">Total Amount: ₹${o.amount}</div>
+                    <div class="fw-bold text-dark mt-2">Total: ₹${o.amount}</div>
                 </div>
             `).join('') || "<p class='text-muted small'>No orders placed yet.</p>";
         }
