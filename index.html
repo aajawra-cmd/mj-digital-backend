@@ -3,105 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MJ DIGITAL - Premium Electronics Store</title>
+    <title>MJ DIGITAL - Premium 3D Store</title>
     <!-- Bootstrap 5 & FontAwesome -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary-pink: #ff3f6c;
-            --primary-dark: #282c3f;
-            --bg-gray: #f5f5f6;
-            --teal-active: #14cda8;
+            --primary-dark: #0f172a;
+            --accent-cyan: #38bdf8;
+            --card-bg: rgba(255, 255, 255, 0.9);
         }
-        body { background-color: var(--bg-gray); font-family: 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #282c3f; }
-        
-        /* Navbar Styling */
-        .navbar-brand { font-weight: 800; letter-spacing: -0.5px; cursor: pointer; }
-        .nav-link { font-weight: 700; color: #282c3f; text-transform: uppercase; font-size: 13px; letter-spacing: 0.3px; cursor: pointer; }
-        .profile-dropdown { width: 280px; border-radius: 4px; border: 1px solid #eaeaec; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .profile-dropdown .dropdown-item { font-size: 13px; font-weight: 600; color: #3e4152; padding: 6px 20px; cursor: pointer; }
-        .profile-dropdown .dropdown-item:hover { background-color: #f5f5f6; color: var(--primary-pink); }
-        
-        /* Product Page Cards */
-        .product-card { background: #fff; border-radius: 8px; border: 1px solid #eaeaec; }
-        .variant-btn { border: 1px solid #d4d5d9; background: #fff; border-radius: 20px; padding: 8px 18px; font-weight: 700; cursor: pointer; font-size: 13px; }
-        .variant-btn.active { border-color: var(--primary-pink); background: #fff0f4; color: var(--primary-pink); }
-        .color-dot { width: 32px; height: 32px; border-radius: 50%; display: inline-block; cursor: pointer; border: 2px solid #e2e8f0; }
-        .color-dot.active { border-color: var(--primary-pink); transform: scale(1.1); }
+        body {
+            background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #020617);
+            min-height: 100vh;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
+        }
 
-        /* Page Views */
+        /* 3D Glassmorphism Header */
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-link {
+            color: #cbd5e1 !important;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: var(--accent-cyan) !important;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        /* 3D Product & Interactive Cards */
+        .card-3d {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.1);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        .card-3d:hover {
+            transform: translateY(-8px) rotateX(2deg) rotateY(2deg);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 63, 108, 0.3);
+        }
+
+        /* Page Display Control */
         .page-view { display: none; min-height: 80vh; }
-        .page-view.active { display: block !important; }
+        .page-view.active { display: block; }
 
-        /* Sidebar Navigation & Dynamic Content Panel */
-        .profile-sidebar { border-right: 1px solid #eaeaec; min-height: 450px; }
-        .profile-sidebar-item { display: block; padding: 8px 0; color: #282c3f; font-size: 14px; text-decoration: none; font-weight: 500; cursor: pointer; }
-        .profile-sidebar-item.active { color: var(--teal-active) !important; font-weight: 700 !important; }
-        .profile-sidebar-item:hover { color: var(--teal-active); }
-        
-        /* Login Card */
-        .login-card { max-width: 400px; margin: 40px auto; background: #fff; border-radius: 4px; border: 1px solid #eaeaec; overflow: hidden; }
-        .login-banner { background: #fff3f5; padding: 20px; text-align: center; border-bottom: 1px dashed var(--primary-pink); }
-        
-        /* Content Panels */
-        .content-panel { display: none; }
-        .content-panel.active { display: block !important; }
+        /* 3D Floating Login Card */
+        .login-card-3d {
+            max-width: 420px;
+            margin: 60px auto;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 63, 108, 0.25);
+            overflow: hidden;
+            transform: perspective(1000px) rotateX(2deg);
+        }
+
+        /* Footer & Modals */
+        footer {
+            background: rgba(2, 6, 23, 0.9);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .modal-content {
+            background: #0f172a;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .variant-btn {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border-radius: 20px;
+            padding: 8px 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .variant-btn.active {
+            border-color: var(--primary-pink);
+            background: var(--primary-pink);
+            box-shadow: 0 0 15px rgba(255, 63, 108, 0.5);
+        }
     </style>
 </head>
 <body>
 
 <!-- Header Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm py-2">
+<nav class="navbar navbar-expand-lg glass-nav sticky-top py-3">
     <div class="container">
-        <a class="navbar-brand text-primary fs-3 me-4" onclick="navigateTo('home')"><i class="fa-solid fa-bolt text-warning"></i> MJ DIGITAL</a>
+        <a class="navbar-brand text-white fw-bold fs-3" onclick="navigateTo('home')">
+            <i class="fa-solid fa-bolt text-warning me-1"></i> MJ DIGITAL
+        </a>
         
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto gap-2">
+            <ul class="navbar-nav me-auto gap-3 ms-lg-4">
                 <li class="nav-item"><a class="nav-link" onclick="navigateTo('home')">HOME</a></li>
-                <li class="nav-item"><a class="nav-link" onclick="navigateTo('home')">TRAVEL</a></li>
-                <li class="nav-item"><a class="nav-link text-danger fw-bold" onclick="navigateTo('home')">MOBILE</a></li>
-                <li class="nav-item"><a class="nav-link" onclick="navigateTo('home')">FASHION</a></li>
-                <li class="nav-item"><a class="nav-link" onclick="navigateTo('home')">ELECTRONICS</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="navigateTo('category', 'Travels')">TRAVELS</a></li>
+                <li class="nav-item"><a class="nav-link text-info" onclick="navigateTo('home')">MOBILE</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="navigateTo('category', 'Fashion')">FASHION</a></li>
+                <li class="nav-item"><a class="nav-link" onclick="navigateTo('category', 'Electronics')">ELECTRONICS</a></li>
+                <li class="nav-item"><a class="nav-link text-warning" onclick="navigateTo('category', 'Services')">SERVICES</a></li>
             </ul>
 
             <div class="d-flex gap-3 align-items-center">
-                <!-- Profile Dropdown View -->
-                <div class="dropdown">
-                    <button class="btn btn-link text-dark text-decoration-none p-0 fw-bold small dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fa-regular fa-user fs-5 d-block text-center"></i> Profile
-                    </button>
-                    <ul class="dropdown-menu profile-dropdown dropdown-menu-end p-2 mt-2">
-                        <li class="px-3 py-2 border-bottom">
-                            <h6 class="fw-bold mb-0">Hello mohsin</h6>
-                            <small class="text-muted">9377772797</small>
-                        </li>
-                        <li><a class="dropdown-item mt-2" onclick="navigateTo('profile', 'orders')">Orders</a></li>
-                        <li><a class="dropdown-item" onclick="navigateTo('cart')">Wishlist</a></li>
-                        <li><a class="dropdown-item" onclick="navigateTo('profile', 'coupons')">Coupons</a></li>
-                        <li><a class="dropdown-item" onclick="navigateTo('profile', 'cards')">Saved Cards</a></li>
-                        <li><a class="dropdown-item" onclick="navigateTo('profile', 'upi')">Saved UPI</a></li>
-                        <li><a class="dropdown-item" onclick="navigateTo('profile', 'addresses')">Saved Addresses</a></li>
-                        <li class="border-top mt-2 pt-2"><a class="dropdown-item text-primary" onclick="navigateTo('profile', 'details')">Edit Profile</a></li>
-                        <li><a class="dropdown-item text-danger" onclick="navigateTo('login')">Logout</a></li>
-                    </ul>
-                </div>
-
-                <a class="text-dark text-decoration-none fw-bold small position-relative cursor-pointer" onclick="navigateTo('cart')">
-                    <i class="fa-regular fa-heart fs-5 d-block text-center"></i> Wishlist
-                    <span id="wishCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px;">0</span>
+                <a class="text-white text-decoration-none fw-bold small" onclick="navigateTo('profile', 'details')">
+                    <i class="fa-regular fa-user fs-5 d-block text-center text-info"></i> Profile
                 </a>
 
-                <a class="text-dark text-decoration-none fw-bold small position-relative cursor-pointer" onclick="navigateTo('cart')">
-                    <i class="fa-solid fa-bag-shopping fs-5 d-block text-center"></i> Bag
-                    <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px;">0</span>
+                <a class="text-white text-decoration-none fw-bold small position-relative" onclick="navigateTo('cart')">
+                    <i class="fa-solid fa-bag-shopping fs-5 d-block text-center text-warning"></i> Bag
+                    <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">1</span>
                 </a>
 
-                <a href="/admin.html" target="_blank" class="btn btn-dark rounded-pill px-3 btn-sm fw-bold ms-2">
+                <a href="/admin.html" target="_blank" class="btn btn-outline-info rounded-pill px-3 btn-sm fw-bold">
                     <i class="fa-solid fa-lock me-1"></i> Admin Panel
                 </a>
             </div>
@@ -109,46 +140,38 @@
     </div>
 </nav>
 
-<!-- PAGE 1: STORE FRONT PRODUCT VIEW -->
-<div id="homeView" class="page-view active container py-4">
-    <div class="product-card p-4 shadow-sm">
-        <div class="row g-4">
-            <div class="col-md-5 text-center d-flex align-items-center justify-content-center bg-light rounded p-3">
-                <img id="productImage" src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600" class="img-fluid rounded" style="max-height: 380px; object-fit: contain;" alt="iPhone 17 Pro">
+<!-- PAGE 1: HOME PAGE (PRODUCTS & 3D LAYOUT) -->
+<div id="homeView" class="page-view active container py-5">
+    <div class="card-3d p-4 p-md-5">
+        <div class="row g-4 align-items-center">
+            <div class="col-md-5 text-center">
+                <img id="productImage" src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600" class="img-fluid rounded-4 shadow-lg" style="max-height: 380px; object-fit: contain;" alt="iPhone 17 Pro">
             </div>
             <div class="col-md-7">
-                <span class="badge bg-primary px-3 py-2 mb-2">Mobiles & Tablets</span>
-                <h1 id="productTitle" class="fw-bold fs-2">iPhone 17 Pro</h1>
-                <p class="text-muted">Overview & Description: Flagship Performance | Dynamic Display | ERGO|OPWSRG</p>
+                <span class="badge bg-info text-dark px-3 py-2 mb-2 fw-bold">Flagship Category</span>
+                <h1 id="productTitle" class="fw-bold text-white display-5">iPhone 17 Pro</h1>
+                <p class="text-slate-300">Overview & Description: Flagship Performance | Dynamic 3D Display | ERGO|OPWSRG Titanium Finish</p>
 
-                <div class="d-flex align-items-baseline gap-2 my-3">
-                    <h2 class="fw-bold text-dark mb-0">₹ <span id="productPrice">149999</span></h2>
+                <div class="d-flex align-items-baseline gap-3 my-4">
+                    <h2 class="fw-bold text-warning mb-0 fs-1">₹ <span id="productPrice">149999</span></h2>
                     <span class="text-muted text-decoration-line-through fs-5">₹ <span id="originalPrice">159999</span></span>
-                    <span id="discountBadge" class="badge bg-success ms-2">Save ₹10,000</span>
+                    <span class="badge bg-success px-3 py-2">Save ₹10,000</span>
                 </div>
 
-                <div class="mb-3">
-                    <label class="fw-bold d-block mb-2 small">SELECT STORAGE VARIANT:</label>
+                <div class="mb-4">
+                    <label class="fw-bold d-block mb-2 small text-info">STORAGE VARIANT:</label>
                     <div class="d-flex gap-2">
                         <button class="variant-btn active" onclick="selectVariant('256GB', 149999, 159999, this)">256 GB</button>
                         <button class="variant-btn" onclick="selectVariant('512GB', 169999, 179999, this)">512 GB</button>
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <label class="fw-bold d-block mb-2 small">SELECT COLOR:</label>
-                    <div class="d-flex gap-3 align-items-center">
-                        <span class="color-dot active" style="background-color: #53514e;" title="Natural Titanium"></span>
-                        <span class="color-dot" style="background-color: #2f363d;" title="Blue Titanium"></span>
-                    </div>
-                </div>
-
                 <div class="d-flex gap-3">
-                    <button class="btn btn-danger btn-lg fw-bold flex-grow-1" style="background: var(--primary-pink);" onclick="addToCart()">
+                    <button class="btn btn-danger btn-lg fw-bold flex-grow-1 shadow" style="background: var(--primary-pink); border: none;" onclick="addToCart()">
                         <i class="fa-solid fa-bag-shopping me-2"></i> ADD TO BAG
                     </button>
-                    <button class="btn btn-outline-secondary btn-lg fw-bold" onclick="addToWishlist()">
-                        <i class="fa-regular fa-heart me-2"></i> WISHLIST
+                    <button class="btn btn-outline-light btn-lg fw-bold" onclick="navigateTo('login')">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i> LOGIN
                     </button>
                 </div>
             </div>
@@ -156,57 +179,42 @@
     </div>
 </div>
 
-<!-- PAGE 2: ADD CART VIEW -->
-<div id="cartView" class="page-view container py-4">
+<!-- PAGE 2: CATEGORY VIEW (TRAVEL, FASHION, ELECTRONICS, SERVICES) -->
+<div id="categoryView" class="page-view container py-5">
+    <h2 id="categoryTitle" class="fw-bold text-info mb-4 text-uppercase">Category View</h2>
+    <div class="row g-4" id="categoryProductsContainer"></div>
+</div>
+
+<!-- PAGE 3: BAG / CART VIEW -->
+<div id="cartView" class="page-view container py-5">
     <div class="row g-4">
         <div class="col-lg-7">
-            <div class="bg-white p-3 rounded mb-3 border d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="small text-muted d-block">Check delivery time & services</span>
-                    <strong class="text-dark">Enter PIN Code</strong>
-                </div>
-                <button class="btn btn-outline-danger btn-sm fw-bold">ENTER PIN CODE</button>
+            <div class="card-3d p-4 mb-3">
+                <h5 class="fw-bold text-info border-bottom border-secondary pb-2">Selected Bag Items</h5>
+                <div id="cartItemsContainer"></div>
             </div>
-
-            <div class="bg-white p-3 rounded mb-3 border">
-                <div class="fw-bold small mb-2"><i class="fa-solid fa-tags text-danger me-1"></i> Available Offers</div>
-                <div class="p-2 rounded bg-light border text-muted small">
-                    <strong>7.5% Assured Cashback*</strong> on a minimum spend of ₹100. T&C apply.
-                </div>
-            </div>
-
-            <div id="cartItemsContainer"></div>
         </div>
-
         <div class="col-lg-5">
-            <div class="bg-white p-4 rounded border">
-                <h6 class="fw-bold border-bottom pb-2 text-uppercase text-muted" style="font-size: 12px;">Price Details (<span id="cartTotalItems">1</span> Item)</h6>
-                
-                <div class="d-flex justify-content-between mb-2 small">
-                    <span>Total MRP</span>
-                    <span class="fw-bold">₹<span id="summaryTotalMRP">159999</span></span>
+            <div class="card-3d p-4">
+                <h6 class="fw-bold text-uppercase text-muted border-bottom border-secondary pb-2">Price Details</h6>
+                <div class="d-flex justify-content-between my-2">
+                    <span>Total Price</span>
+                    <span class="fw-bold">₹149,999</span>
                 </div>
-                <div class="d-flex justify-content-between mb-2 small text-success">
-                    <span>Discount on MRP</span>
-                    <span class="fw-bold">-₹<span id="summaryDiscount">10000</span></span>
+                <div class="d-flex justify-content-between my-2 text-success">
+                    <span>Discount</span>
+                    <span class="fw-bold">-₹10,000</span>
                 </div>
-                <div class="d-flex justify-content-between mb-2 small">
-                    <span>Coupon Discount</span>
-                    <span class="text-danger fw-bold cursor-pointer" onclick="alert('No coupon applied')">Apply Coupon</span>
+                <div class="d-flex justify-content-between my-2">
+                    <span>Delivery Charge</span>
+                    <span class="text-success fw-bold">FREE</span>
                 </div>
-                <div class="d-flex justify-content-between mb-2 small">
-                    <span>Platform Fee</span>
-                    <span class="fw-bold text-success">FREE</span>
-                </div>
-
-                <hr>
-
-                <div class="d-flex justify-content-between mb-3 fw-bold fs-5">
+                <hr class="border-secondary">
+                <div class="d-flex justify-content-between fs-4 fw-bold text-warning mb-3">
                     <span>Total Amount</span>
-                    <span class="text-dark">₹<span id="summaryFinalTotal">149999</span></span>
+                    <span>₹149,999</span>
                 </div>
-
-                <button class="btn w-100 fw-bold py-3 text-white" style="background-color: var(--primary-pink); letter-spacing: 1px;" onclick="placeOrder()">
+                <button class="btn btn-danger w-100 fw-bold py-3" style="background: var(--primary-pink); border: none;" onclick="placeOrder()">
                     PLACE ORDER
                 </button>
             </div>
@@ -214,91 +222,158 @@
     </div>
 </div>
 
-<!-- PAGE 3: PROFILE PAGE -->
-<div id="profileView" class="page-view container py-4">
-    <div class="bg-white p-4 rounded border shadow-sm">
-        <div class="row">
-            <div class="col-md-3 profile-sidebar pe-md-4">
-                <div class="pb-3 border-bottom mb-3">
-                    <h6 class="fw-bold mb-0">Account</h6>
-                    <small class="text-muted">mohsin j</small>
+<!-- PAGE 4: 3D LOOK LOGIN & SIGNUP -->
+<div id="loginView" class="page-view container py-4">
+    <div class="login-card-3d">
+        <div class="p-4 text-center border-bottom border-secondary" style="background: rgba(255, 63, 108, 0.15);">
+            <span class="badge bg-danger mb-2">3D SECURE ACCESS</span>
+            <h4 class="fw-bold text-white mb-0">Login or Signup</h4>
+        </div>
+        <div class="p-4">
+            <div class="mb-4">
+                <label class="form-label small text-info fw-bold">Mobile Number</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark text-white border-secondary">+91</span>
+                    <input type="text" id="loginMobileInput" class="form-control bg-dark text-white border-secondary" placeholder="Enter 10 digit number">
                 </div>
-                
-                <div class="small fw-bold text-muted mt-2 mb-1">ORDERS</div>
-                <a class="profile-sidebar-item" id="link-orders" onclick="switchProfileSection('orders')">Orders & Returns</a>
-
-                <div class="small fw-bold text-muted mt-3 mb-1">CREDITS</div>
-                <a class="profile-sidebar-item" id="link-coupons" onclick="switchProfileSection('coupons')">Coupons</a>
-
-                <div class="small fw-bold text-muted mt-3 mb-1">ACCOUNT</div>
-                <a class="profile-sidebar-item active" id="link-details" onclick="switchProfileSection('details')">Profile Details</a>
-                <a class="profile-sidebar-item" id="link-cards" onclick="switchProfileSection('cards')">Saved Cards</a>
-                <a class="profile-sidebar-item" id="link-upi" onclick="switchProfileSection('upi')">Saved UPI</a>
-                <a class="profile-sidebar-item" id="link-addresses" onclick="switchProfileSection('addresses')">Addresses</a>
             </div>
 
-            <div class="col-md-9 ps-md-4 mt-4 mt-md-0">
-                <div id="panel-details" class="content-panel active">
-                    <h5 class="fw-bold mb-4 border-bottom pb-2">Profile Details</h5>
-                    <div class="row g-3 small">
-                        <div class="col-4 text-muted">Full Name</div>
-                        <div class="col-8 fw-bold">mohsin j</div>
-                        <div class="col-4 text-muted">Mobile Number</div>
-                        <div class="col-8 fw-bold">9377772797</div>
-                        <div class="col-4 text-muted">Email ID</div>
-                        <div class="col-8 fw-bold">mohsin2797@gmail.com</div>
-                        <div class="col-4 text-muted">Gender</div>
-                        <div class="col-8 fw-bold">MALE</div>
-                        <div class="col-4 text-muted">Location</div>
-                        <div class="col-8 fw-bold">Ahmedabad - 380028</div>
-                    </div>
-                    <button class="btn btn-danger px-5 fw-bold mt-4" style="background-color: var(--primary-pink); border: none;" onclick="alert('Profile Updated!')">EDIT</button>
-                </div>
+            <div class="form-check mb-4 small text-muted">
+                <input class="form-check-input" type="checkbox" id="termsCheck" checked>
+                <label class="form-check-label text-slate-300" for="termsCheck">
+                    I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="text-info">Terms & Conditions</a> and <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal" class="text-info">Privacy Policy</a>
+                </label>
+            </div>
 
-                <div id="panel-orders" class="content-panel">
-                    <h5 class="fw-bold mb-4 border-bottom pb-2">Orders & Returns</h5>
-                    <div id="profileOrdersList"></div>
-                </div>
+            <button class="btn btn-danger w-100 py-3 fw-bold shadow-lg" style="background: var(--primary-pink); border: none;" onclick="processLogin()">
+                CONTINUE
+            </button>
+        </div>
+    </div>
+</div>
 
-                <div id="panel-coupons" class="content-panel">
-                    <h5 class="fw-bold mb-4 border-bottom pb-2">My Coupons</h5>
-                    <div class="p-3 border rounded bg-light">
-                        <span class="badge bg-danger mb-2">MJ100</span>
-                        <h6 class="fw-bold">Flat ₹100 Off on orders above ₹999</h6>
-                    </div>
-                </div>
+<!-- PAGE 5: PROFILE VIEW -->
+<div id="profileView" class="page-view container py-5">
+    <div class="card-3d p-4">
+        <h4 class="fw-bold text-info border-bottom border-secondary pb-2 mb-4">My Profile Details</h4>
+        <div class="row g-3">
+            <div class="col-md-4 text-muted">Full Name:</div>
+            <div class="col-md-8 fw-bold">Mohsin J</div>
+            <div class="col-md-4 text-muted">Mobile Number:</div>
+            <div class="col-md-8 fw-bold">9377772797</div>
+            <div class="col-md-4 text-muted">Email ID:</div>
+            <div class="col-md-8 fw-bold">mohsin2797@gmail.com</div>
+        </div>
+    </div>
+</div>
 
-                <div id="panel-cards" class="content-panel">
-                    <h5 class="fw-bold mb-4 border-bottom pb-2">Saved Cards</h5>
-                    <div class="p-3 border rounded bg-light">HDFC Bank Credit Card (**** 4829)</div>
-                </div>
+<!-- FOOTER WITH LEGAL POLICY LINKS -->
+<footer class="mt-auto py-4 text-center text-muted small">
+    <div class="container">
+        <div class="d-flex justify-content-center gap-3 gap-md-4 mb-3 flex-wrap">
+            <a href="#" class="text-slate-300 text-decoration-none" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>
+            <a href="#" class="text-slate-300 text-decoration-none" data-bs-toggle="modal" data-bs-target="#termsModal">Terms & Conditions</a>
+            <a href="#" class="text-slate-300 text-decoration-none" data-bs-toggle="modal" data-bs-target="#additionalTermsModal">Additional Terms</a>
+            <a href="#" class="text-warning text-decoration-none fw-bold" data-bs-toggle="modal" data-bs-target="#refundModal">Refund & Cancellation Policy</a>
+        </div>
+        <p class="mb-0">&copy; 2026 MJ DIGITAL. All Rights Reserved. Designed with 3D Dynamic Engine.</p>
+    </div>
+</footer>
 
-                <div id="panel-upi" class="content-panel">
-                    <h5 class="fw-bold mb-4 border-bottom pb-2">Saved UPI</h5>
-                    <div class="p-3 border rounded bg-light">9377772797@okicici</div>
-                </div>
+<!-- POLICY MODALS -->
 
-                <div id="panel-addresses" class="content-panel">
-                    <h5 class="fw-bold mb-4 border-bottom pb-2">Saved Addresses</h5>
-                    <div class="border rounded p-3">
-                        <h6 class="fw-bold">Mohsin Jawrawala</h6>
-                        <p class="small text-muted mb-0">24 Block C Haji Flat, Opp Imran Residency, Ahmedabad - 380028</p>
-                    </div>
-                </div>
+<!-- 1. Privacy Policy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-info fw-bold">Privacy Policy</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body small">
+                <h6>1. Information Collection</h6>
+                <p>We collect essential personal data including name, mobile number, delivery address, and payment information to fulfill orders smoothly.</p>
+                <h6>2. Data Usage & Security</h6>
+                <p>Your details are protected using industry-standard encryption protocols and are never shared with unauthorized third parties.</p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- PAGE 4: LOGIN PAGE -->
-<div id="loginView" class="page-view container py-4">
-    <div class="login-card shadow-sm">
-        <div class="login-banner">
-            <h6 class="fw-bold mb-0">LOGIN / SIGNUP</h6>
+<!-- 2. Terms & Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-info fw-bold">Terms & Conditions</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body small">
+                <p>By using MJ DIGITAL platform, you agree to abide by all purchasing guidelines, fair usage practices, and account management rules outlined herein.</p>
+            </div>
         </div>
-        <div class="p-4">
-            <input type="text" id="loginMobileInput" class="form-control mb-3" placeholder="Mobile Number *">
-            <button class="btn w-100 py-2 fw-bold text-white" style="background-color: var(--primary-pink);" onclick="processLogin()">CONTINUE</button>
+    </div>
+</div>
+
+<!-- 3. Additional Terms Modal -->
+<div class="modal fade" id="additionalTermsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-info fw-bold">Additional Terms</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body small">
+                <p>Promotions, coupon codes, and special category sales may carry additional terms regarding stock availability, maximum order limits, and non-stackable offers.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. DETAILED CATEGORY-WISE REFUND & CANCELLATION MODAL -->
+<div class="modal fade" id="refundModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-warning fw-bold"><i class="fa-solid fa-rotate-left me-2"></i> Category-Wise Refund & Cancellation Policy</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body small">
+                
+                <div class="mb-4">
+                    <h6 class="text-info fw-bold"><i class="fa-solid fa-plane me-2"></i> 1. Travels (Flight, Hotel & Tour Bookings)</h6>
+                    <ul>
+                        <li><strong>Cancellation Windows:</strong> Cancellations made 48+ hours prior to departure/check-in receive up to 80% refund subject to airline/hotel penalties.</li>
+                        <li><strong>Convenience Fees:</strong> Platform convenience fees and insurance charges are strictly non-refundable.</li>
+                        <li><strong>Processing Time:</strong> Refunds for cancelled travel tickets are credited within 5 to 7 working days to the original payment method.</li>
+                    </ul>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-info fw-bold"><i class="fa-solid fa-screwdriver-wrench me-2"></i> 2. Services (Repair, Extended Warranty & Digital Services)</h6>
+                    <ul>
+                        <li><strong>Pre-Initiation:</strong> 100% full refund available if service booking is cancelled at least 4 hours before service technician dispatch.</li>
+                        <li><strong>Post-Service:</strong> Once service inspection or repair work has commenced, service fees become non-refundable.</li>
+                    </ul>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-info fw-bold"><i class="fa-solid fa-mobile-screen-button me-2"></i> 3. Mobile & Electronics</h6>
+                    <ul>
+                        <li><strong>7-Day Replacement/Refund:</strong> Eligible for refund or replacement within 7 days of delivery only in cases of manufacturing defects, physical transit damage, or wrong item received.</li>
+                        <li><strong>Verification Requirements:</strong> Mandatory unboxing video and IMEI/Serial number match verification required before issuing refund approval.</li>
+                    </ul>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-info fw-bold"><i class="fa-solid fa-shirt me-2"></i> 4. Fashion</h6>
+                    <ul>
+                        <li><strong>10-Day Easy Return:</strong> Unworn, unwashed fashion items with all original tags attached can be returned within 10 days for a full refund or store credit.</li>
+                        <li><strong>Non-Returnable:</strong> Innerwear, socks, and personal care products are strictly non-returnable due to hygiene regulations.</li>
+                    </ul>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>
@@ -306,19 +381,36 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let currentCart = [{ title: "iPhone 17 Pro", storage: "256GB", price: 149999, origPrice: 159999 }];
-    let currentWishlist = [];
 
-    function navigateTo(pageId, subSection = 'details') {
+    function navigateTo(pageId, categoryName = null) {
         document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
         window.scrollTo(0, 0);
 
         if (pageId === 'home') document.getElementById('homeView').classList.add('active');
         else if (pageId === 'cart') { renderCart(); document.getElementById('cartView').classList.add('active'); }
-        else if (pageId === 'profile') {
-            document.getElementById('profileView').classList.add('active');
-            switchProfileSection(subSection);
-        }
         else if (pageId === 'login') document.getElementById('loginView').classList.add('active');
+        else if (pageId === 'profile') document.getElementById('profileView').classList.add('active');
+        else if (pageId === 'category') {
+            renderCategoryView(categoryName);
+            document.getElementById('categoryView').classList.add('active');
+        }
+    }
+
+    function renderCategoryView(cat) {
+        document.getElementById('categoryTitle').innerText = cat + " Section";
+        const container = document.getElementById('categoryProductsContainer');
+        container.innerHTML = `
+            <div class="col-md-6">
+                <div class="card-3d p-4">
+                    <h5 class="fw-bold text-white">${cat} Premium Package / Item</h5>
+                    <p class="text-muted">High performance, certified original product with full warranty & support.</p>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="fs-4 fw-bold text-warning">₹ 29,999</span>
+                        <button class="btn btn-outline-info fw-bold" onclick="addToCart()">Add to Bag</button>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     function selectVariant(storage, price, origPrice, btn) {
@@ -334,96 +426,33 @@
         alert("Item added to Bag!");
     }
 
-    function addToWishlist() {
-        currentWishlist.push({ title: "iPhone 17 Pro" });
-        document.getElementById('wishCount').innerText = currentWishlist.length;
-        alert("Saved to Wishlist!");
-    }
-
     function renderCart() {
         const container = document.getElementById('cartItemsContainer');
-        if (currentCart.length === 0) {
-            container.innerHTML = "<div class='bg-white p-4 rounded text-center'>Your Bag is Empty</div>";
-            return;
-        }
-
-        let totalMRP = currentCart.reduce((a, b) => a + b.origPrice, 0);
-        let finalTotal = currentCart.reduce((a, b) => a + b.price, 0);
-
-        document.getElementById('cartTotalItems').innerText = currentCart.length;
-        document.getElementById('summaryTotalMRP').innerText = totalMRP;
-        document.getElementById('summaryDiscount').innerText = totalMRP - finalTotal;
-        document.getElementById('summaryFinalTotal').innerText = finalTotal;
-
         container.innerHTML = currentCart.map((item, idx) => `
-            <div class="bg-white p-3 rounded mb-3 border d-flex justify-content-between align-items-center">
-                <div class="d-flex gap-3">
-                    <img src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=150" style="width: 80px; height: 80px; object-fit: contain;">
-                    <div>
-                        <h6 class="fw-bold mb-1">${item.title}</h6>
-                        <span class="badge bg-light text-dark border">${item.storage}</span>
-                        <div class="fw-bold mt-2">₹${item.price}</div>
-                    </div>
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom border-secondary">
+                <div>
+                    <h6 class="fw-bold text-white mb-0">${item.title}</h6>
+                    <small class="text-muted">${item.storage}</small>
                 </div>
-                <button class="btn btn-sm btn-outline-danger" onclick="removeItem(${idx})"><i class="fa-solid fa-xmark"></i></button>
+                <div class="fw-bold text-warning">₹${item.price}</div>
             </div>
         `).join('');
     }
 
-    function removeItem(idx) {
-        currentCart.splice(idx, 1);
-        document.getElementById('cartCount').innerText = currentCart.length;
-        renderCart();
-    }
-
     function placeOrder() {
-        if(currentCart.length === 0) return;
-        const placedOrders = JSON.parse(localStorage.getItem('adminBookings')) || [];
-        const newOrder = {
-            id: "ORD-" + Math.floor(10000 + Math.random() * 90000),
-            details: currentCart.map(c => `${c.title} (${c.storage})`).join(', '),
-            amount: currentCart.reduce((a, b) => a + b.price, 0),
-            status: "Order Placed"
-        };
-        placedOrders.unshift(newOrder);
-        localStorage.setItem('adminBookings', JSON.stringify(placedOrders));
+        alert("🎉 Order Placed Successfully!");
         currentCart = [];
         document.getElementById('cartCount').innerText = 0;
-        alert("Order Placed Successfully!");
-        navigateTo('profile', 'orders');
-    }
-
-    function switchProfileSection(sec) {
-        document.querySelectorAll('.profile-sidebar-item').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.content-panel').forEach(el => el.classList.remove('active'));
-
-        const activeLink = document.getElementById(`link-${sec}`);
-        if(activeLink) activeLink.classList.add('active');
-
-        const activePanel = document.getElementById(`panel-${sec}`);
-        if(activePanel) activePanel.classList.add('active');
-
-        if(sec === 'orders') {
-            const list = document.getElementById('profileOrdersList');
-            const orders = JSON.parse(localStorage.getItem('adminBookings')) || [];
-            list.innerHTML = orders.map(o => `
-                <div class="border rounded p-3 mb-2 bg-light">
-                    <div class="d-flex justify-content-between fw-bold">
-                        <span>${o.id}</span>
-                        <span class="badge bg-success">${o.status}</span>
-                    </div>
-                    <div class="small text-muted mt-1">${o.details}</div>
-                    <div class="fw-bold text-dark mt-2">Total: ₹${o.amount}</div>
-                </div>
-            `).join('') || "<p class='text-muted small'>No orders placed yet.</p>";
-        }
+        navigateTo('home');
     }
 
     function processLogin() {
         const val = document.getElementById('loginMobileInput').value;
         if(val) {
-            alert("Logged in as: +91 " + val);
+            alert("Logged in successfully as: +91 " + val);
             navigateTo('home');
+        } else {
+            alert("Please enter a valid mobile number.");
         }
     }
 </script>
