@@ -12,14 +12,15 @@
             --primary-pink: #ff3f6c;
             --primary-dark: #282c3f;
             --bg-gray: #f5f5f6;
+            --teal-active: #14cda8;
         }
         body { background-color: var(--bg-gray); font-family: 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #282c3f; }
         
-        /* Navbar Dropdown */
-        .navbar-brand { font-weight: 800; letter-spacing: -0.5px; }
+        /* Navbar Styling */
+        .navbar-brand { font-weight: 800; letter-spacing: -0.5px; cursor: pointer; }
         .nav-link { font-weight: 700; color: #282c3f; text-transform: uppercase; font-size: 13px; letter-spacing: 0.3px; cursor: pointer; }
         .profile-dropdown { width: 280px; border-radius: 4px; border: 1px solid #eaeaec; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .profile-dropdown .dropdown-item { font-size: 13px; font-weight: 600; color: #3e4152; padding: 6px 20px; }
+        .profile-dropdown .dropdown-item { font-size: 13px; font-weight: 600; color: #3e4152; padding: 6px 20px; cursor: pointer; }
         .profile-dropdown .dropdown-item:hover { background-color: #f5f5f6; color: var(--primary-pink); }
         
         /* Product Page Cards */
@@ -29,18 +30,23 @@
         .color-dot { width: 32px; height: 32px; border-radius: 50%; display: inline-block; cursor: pointer; border: 2px solid #e2e8f0; }
         .color-dot.active { border-color: var(--primary-pink); transform: scale(1.1); }
 
-        /* Full Page View Display Control */
+        /* Full Page Views */
         .page-view { display: none; min-height: 80vh; }
         .page-view.active { display: block; }
 
-        /* Sidebar Profile Layout */
-        .profile-sidebar { border-right: 1px solid #eaeaec; }
-        .profile-sidebar-item { display: block; padding: 10px 0; color: #282c3f; font-size: 14px; text-decoration: none; font-weight: 500; cursor: pointer; }
-        .profile-sidebar-item.active, .profile-sidebar-item:hover { color: #14cda8; font-weight: 700; }
+        /* Sidebar Navigation & Dynamic Content Panel */
+        .profile-sidebar { border-right: 1px solid #eaeaec; min-height: 450px; }
+        .profile-sidebar-item { display: block; padding: 8px 0; color: #282c3f; font-size: 14px; text-decoration: none; font-weight: 500; cursor: pointer; }
+        .profile-sidebar-item.active { color: var(--teal-active) !important; font-weight: 700 !important; }
+        .profile-sidebar-item:hover { color: var(--teal-active); }
         
-        /* Myntra Login Card */
+        /* Login Card */
         .login-card { max-width: 400px; margin: 40px auto; background: #fff; border-radius: 4px; border: 1px solid #eaeaec; overflow: hidden; }
         .login-banner { background: #fff3f5; padding: 20px; text-align: center; border-bottom: 1px dashed var(--primary-pink); }
+        
+        /* Content Panels */
+        .content-panel { display: none; }
+        .content-panel.active { display: block; }
     </style>
 </head>
 <body>
@@ -75,25 +81,22 @@
                             <small class="text-muted" id="navUserPhone">9377772797</small>
                         </li>
                         <li><a class="dropdown-item mt-2" onclick="navigateTo('profile', 'orders')">Orders</a></li>
-                        <li><a class="dropdown-item" onclick="navigateTo('wishlist')">Wishlist</a></li>
-                        <li><a class="dropdown-item" onclick="navigateTo('profile', 'giftcards')">Gift Cards</a></li>
-                        <li><a class="dropdown-item" onclick="navigateTo('profile', 'contact')">Contact Us</a></li>
+                        <li><a class="dropdown-item" onclick="navigateTo('cart')">Wishlist</a></li>
                         <li><a class="dropdown-item" onclick="navigateTo('profile', 'coupons')">Coupons</a></li>
                         <li><a class="dropdown-item" onclick="navigateTo('profile', 'cards')">Saved Cards</a></li>
                         <li><a class="dropdown-item" onclick="navigateTo('profile', 'upi')">Saved UPI</a></li>
-                        <li><a class="dropdown-item" onclick="navigateTo('profile', 'wallets')">Wallets/BNPL</a></li>
                         <li><a class="dropdown-item" onclick="navigateTo('profile', 'addresses')">Saved Addresses</a></li>
-                        <li class="border-top mt-2 pt-2"><a class="dropdown-item text-primary" onclick="navigateTo('profile', 'edit')">Edit Profile</a></li>
+                        <li class="border-top mt-2 pt-2"><a class="dropdown-item text-primary" onclick="navigateTo('profile', 'details')">Edit Profile</a></li>
                         <li><a class="dropdown-item text-danger" onclick="navigateTo('login')">Logout</a></li>
                     </ul>
                 </div>
 
-                <a class="text-dark text-decoration-none fw-bold small position-relative" onclick="navigateTo('wishlist')">
+                <a class="text-dark text-decoration-none fw-bold small position-relative cursor-pointer" onclick="navigateTo('cart')">
                     <i class="fa-regular fa-heart fs-5 d-block text-center"></i> Wishlist
                     <span id="wishCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px;">0</span>
                 </a>
 
-                <a class="text-dark text-decoration-none fw-bold small position-relative" onclick="navigateTo('cart')">
+                <a class="text-dark text-decoration-none fw-bold small position-relative cursor-pointer" onclick="navigateTo('cart')">
                     <i class="fa-solid fa-bag-shopping fs-5 d-block text-center"></i> Bag
                     <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px;">0</span>
                 </a>
@@ -153,12 +156,10 @@
     </div>
 </div>
 
-<!-- PAGE 2: ADD CART / MYNTRA STYLE CHECKOUT VIEW -->
+<!-- PAGE 2: ADD CART / MYNTRA CHECKOUT VIEW -->
 <div id="cartView" class="page-view container py-4">
     <div class="row g-4">
-        <!-- Left Side: Delivery Check & Items -->
         <div class="col-lg-7">
-            <!-- Pin Code Checker -->
             <div class="bg-white p-3 rounded mb-3 border d-flex justify-content-between align-items-center">
                 <div>
                     <span class="small text-muted d-block">Check delivery time & services</span>
@@ -167,7 +168,6 @@
                 <button class="btn btn-outline-danger btn-sm fw-bold">ENTER PIN CODE</button>
             </div>
 
-            <!-- Offers Banner -->
             <div class="bg-white p-3 rounded mb-3 border">
                 <div class="fw-bold small mb-2"><i class="fa-solid fa-tags text-danger me-1"></i> Available Offers</div>
                 <div class="p-2 rounded bg-light border text-muted small">
@@ -175,11 +175,9 @@
                 </div>
             </div>
 
-            <!-- Items List -->
             <div id="cartItemsContainer"></div>
         </div>
 
-        <!-- Right Side: Exact Price Details Summary Panel -->
         <div class="col-lg-5">
             <div class="bg-white p-4 rounded border">
                 <h6 class="fw-bold border-bottom pb-2 text-uppercase text-muted" style="font-size: 12px;">Price Details (<span id="cartTotalItems">1</span> Item)</h6>
@@ -216,33 +214,35 @@
     </div>
 </div>
 
-<!-- PAGE 3: FULL MYNTRA-STYLE PROFILE PAGE -->
+<!-- PAGE 3: DYNAMIC & ALL-WORKING PROFILE PAGE -->
 <div id="profileView" class="page-view container py-4">
-    <div class="bg-white p-4 rounded border">
+    <div class="bg-white p-4 rounded border shadow-sm">
         <div class="row">
-            <!-- Profile Left Sidebar Navigation -->
+            <!-- Sidebar Links (Myntra Credit Completely Removed) -->
             <div class="col-md-3 profile-sidebar pe-md-4">
                 <div class="pb-3 border-bottom mb-3">
                     <h6 class="fw-bold mb-0">Account</h6>
                     <small class="text-muted" id="sidebarUserName">mohsin j</small>
                 </div>
-                <div class="small fw-bold text-muted mt-3 mb-1">ORDERS</div>
-                <a class="profile-sidebar-item" onclick="switchProfileSection('orders')">Orders & Returns</a>
+                
+                <div class="small fw-bold text-muted mt-2 mb-1">ORDERS</div>
+                <a class="profile-sidebar-item" id="link-orders" onclick="switchProfileSection('orders')">Orders & Returns</a>
 
                 <div class="small fw-bold text-muted mt-3 mb-1">CREDITS</div>
-                <a class="profile-sidebar-item" onclick="switchProfileSection('coupons')">Coupons</a>
-                <a class="profile-sidebar-item">Myntra Credit</a>
+                <a class="profile-sidebar-item" id="link-coupons" onclick="switchProfileSection('coupons')">Coupons</a>
 
                 <div class="small fw-bold text-muted mt-3 mb-1">ACCOUNT</div>
-                <a class="profile-sidebar-item active" id="profLinkDetails" onclick="switchProfileSection('details')">Profile Details</a>
-                <a class="profile-sidebar-item" onclick="switchProfileSection('cards')">Saved Cards</a>
-                <a class="profile-sidebar-item" onclick="switchProfileSection('upi')">Saved UPI</a>
-                <a class="profile-sidebar-item" onclick="switchProfileSection('addresses')">Addresses</a>
+                <a class="profile-sidebar-item active" id="link-details" onclick="switchProfileSection('details')">Profile Details</a>
+                <a class="profile-sidebar-item" id="link-cards" onclick="switchProfileSection('cards')">Saved Cards</a>
+                <a class="profile-sidebar-item" id="link-upi" onclick="switchProfileSection('upi')">Saved UPI</a>
+                <a class="profile-sidebar-item" id="link-addresses" onclick="switchProfileSection('addresses')">Addresses</a>
             </div>
 
-            <!-- Profile Right Details Panel -->
+            <!-- Dynamic Content Display Panels -->
             <div class="col-md-9 ps-md-4 mt-4 mt-md-0">
-                <div id="profileSectionDetails">
+                
+                <!-- 1. Profile Details Panel -->
+                <div id="panel-details" class="content-panel active">
                     <h5 class="fw-bold mb-4 border-bottom pb-2">Profile Details</h5>
                     <div class="row g-3 small">
                         <div class="col-4 text-muted">Full Name</div>
@@ -257,22 +257,99 @@
                         <div class="col-4 text-muted">Gender</div>
                         <div class="col-8 fw-bold">MALE</div>
 
+                        <div class="col-4 text-muted">Date of Birth</div>
+                        <div class="col-8 text-muted">- not added -</div>
+
                         <div class="col-4 text-muted">Location</div>
                         <div class="col-8 fw-bold">Ahmedabad - 380028</div>
                     </div>
-                    <button class="btn btn-danger px-5 fw-bold mt-4" style="background-color: var(--primary-pink); border: none;" onclick="alert('Edit mode enabled')">EDIT</button>
+                    <button class="btn btn-danger px-5 fw-bold mt-4" style="background-color: var(--primary-pink); border: none;" onclick="alert('Edit mode updated!')">EDIT</button>
                 </div>
 
-                <div id="profileSectionOrders" style="display: none;">
+                <!-- 2. Orders & Returns Panel -->
+                <div id="panel-orders" class="content-panel">
                     <h5 class="fw-bold mb-4 border-bottom pb-2">Orders & Returns</h5>
                     <div id="profileOrdersList"></div>
                 </div>
+
+                <!-- 3. Coupons Panel -->
+                <div id="panel-coupons" class="content-panel">
+                    <h5 class="fw-bold mb-4 border-bottom pb-2">My Coupons</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-light position-relative">
+                                <span class="badge bg-danger position-absolute top-0 end-0 m-2">MJ100</span>
+                                <h6 class="fw-bold text-danger mb-1">Flat ₹100 Off</h6>
+                                <p class="small text-muted mb-0">Applicable on orders above ₹999</p>
+                                <small class="text-success fw-bold">Expires in 10 days</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-light position-relative">
+                                <span class="badge bg-primary position-absolute top-0 end-0 m-2">FESTIVE15</span>
+                                <h6 class="fw-bold text-primary mb-1">15% Instant Discount</h6>
+                                <p class="small text-muted mb-0">Applicable on Electronics & Mobiles</p>
+                                <small class="text-success fw-bold">Expires in 25 days</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Saved Cards Panel -->
+                <div id="panel-cards" class="content-panel">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+                        <h5 class="fw-bold mb-0">Saved Cards</h5>
+                        <button class="btn btn-sm btn-outline-danger fw-bold" onclick="alert('Add Card Modal')">+ ADD NEW CARD</button>
+                    </div>
+                    <div class="p-3 border rounded mb-3 d-flex justify-content-between align-items-center bg-light">
+                        <div>
+                            <div class="fw-bold"><i class="fa-regular fa-credit-card me-2 text-primary"></i> HDFC Bank Credit Card</div>
+                            <small class="text-muted">**** **** **** 4829 | Exp: 08/29</small>
+                        </div>
+                        <button class="btn btn-sm btn-link text-danger text-decoration-none" onclick="this.parentElement.remove()">Remove</button>
+                    </div>
+                </div>
+
+                <!-- 5. Saved UPI Panel -->
+                <div id="panel-upi" class="content-panel">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+                        <h5 class="fw-bold mb-0">Saved UPI Handles</h5>
+                        <button class="btn btn-sm btn-outline-danger fw-bold" onclick="alert('Add UPI Modal')">+ ADD NEW UPI</button>
+                    </div>
+                    <div class="p-3 border rounded mb-3 d-flex justify-content-between align-items-center bg-light">
+                        <div>
+                            <div class="fw-bold"><i class="fa-solid fa-mobile-screen me-2 text-success"></i> Google Pay / BHIM UPI</div>
+                            <small class="text-muted">9377772797@okicici</small>
+                        </div>
+                        <button class="btn btn-sm btn-link text-danger text-decoration-none" onclick="this.parentElement.remove()">Remove</button>
+                    </div>
+                </div>
+
+                <!-- 6. Saved Addresses Panel -->
+                <div id="panel-addresses" class="content-panel">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+                        <h5 class="fw-bold mb-0">Saved Addresses</h5>
+                        <button class="btn btn-sm btn-outline-danger fw-bold" onclick="alert('Add Address Modal')">+ ADD NEW ADDRESS</button>
+                    </div>
+
+                    <div class="border rounded p-3 mb-3 position-relative">
+                        <span class="badge bg-secondary position-absolute top-0 end-0 m-3">HOME</span>
+                        <h6 class="fw-bold mb-1">Mohsin Jawrawala</h6>
+                        <p class="small text-muted mb-1">24 Block C Haji Flat Behind Noor Haji Flat Opp Imran Residency Chhipa Soc Opp Zayda Duplex, Ahmedabad - 380028, Gujarat</p>
+                        <small class="d-block text-dark fw-bold mb-2">Mobile: 9377772797</small>
+                        <div class="border-top pt-2 d-flex gap-3 small">
+                            <a class="text-primary fw-bold cursor-pointer text-decoration-none" onclick="alert('Edit Address')">EDIT</a>
+                            <a class="text-danger fw-bold cursor-pointer text-decoration-none" onclick="this.closest('.border').remove()">REMOVE</a>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 </div>
 
-<!-- PAGE 4: LOGIN / SIGNUP PAGE (EXACT MYNTRA UI) -->
+<!-- PAGE 4: LOGIN / SIGNUP PAGE -->
 <div id="loginView" class="page-view container py-4">
     <div class="login-card shadow-sm">
         <div class="login-banner">
@@ -311,7 +388,7 @@
     let currentWishlist = [];
     let placedOrders = JSON.parse(localStorage.getItem('adminBookings')) || [];
 
-    function navigateTo(pageId, subSection = null) {
+    function navigateTo(pageId, subSection = 'details') {
         document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
         window.scrollTo(0, 0);
 
@@ -319,10 +396,9 @@
         else if (pageId === 'cart') { renderCart(); document.getElementById('cartView').classList.add('active'); }
         else if (pageId === 'profile') {
             document.getElementById('profileView').classList.add('active');
-            if (subSection) switchProfileSection(subSection);
+            switchProfileSection(subSection);
         }
         else if (pageId === 'login') document.getElementById('loginView').classList.add('active');
-        else if (pageId === 'wishlist') { renderCart(); document.getElementById('cartView').classList.add('active'); }
     }
 
     function selectVariant(storage, price, origPrice, btn) {
@@ -401,19 +477,32 @@
     }
 
     function switchProfileSection(sec) {
-        document.getElementById('profileSectionDetails').style.display = sec === 'details' ? 'block' : 'none';
-        document.getElementById('profileSectionOrders').style.display = sec === 'orders' ? 'block' : 'none';
+        // Remove active class from all sidebar links
+        document.querySelectorAll('.profile-sidebar-item').forEach(el => el.classList.remove('active'));
+        
+        // Hide all content panels
+        document.querySelectorAll('.content-panel').forEach(el => el.classList.remove('active'));
 
+        // Highlight selected sidebar item
+        const activeLink = document.getElementById(`link-${sec}`);
+        if(activeLink) activeLink.classList.add('active');
+
+        // Show active content panel
+        const activePanel = document.getElementById(`panel-${sec}`);
+        if(activePanel) activePanel.classList.add('active');
+
+        // Render Orders if selected
         if(sec === 'orders') {
             const list = document.getElementById('profileOrdersList');
-            list.innerHTML = placedOrders.map(o => `
-                <div class="border rounded p-3 mb-2">
+            const orders = JSON.parse(localStorage.getItem('adminBookings')) || [];
+            list.innerHTML = orders.map(o => `
+                <div class="border rounded p-3 mb-2 bg-light">
                     <div class="d-flex justify-content-between fw-bold">
                         <span>${o.id}</span>
                         <span class="badge bg-success">${o.status}</span>
                     </div>
-                    <div class="small text-muted">${o.details}</div>
-                    <div class="fw-bold text-dark mt-1">Total: ₹${o.amount}</div>
+                    <div class="small text-muted mt-1">${o.details}</div>
+                    <div class="fw-bold text-dark mt-2">Total Amount: ₹${o.amount}</div>
                 </div>
             `).join('') || "<p class='text-muted small'>No orders placed yet.</p>";
         }
