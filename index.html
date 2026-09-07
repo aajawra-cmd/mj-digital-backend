@@ -3,458 +3,1101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MJ DIGITAL - Premium 3D Store</title>
-    <!-- Bootstrap 5 & FontAwesome -->
+    <title>M J DIGITAL - Premium Multi-Store & Travel Portal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary-pink: #ff3f6c;
-            --primary-dark: #0f172a;
-            --accent-cyan: #38bdf8;
-            --card-bg: rgba(255, 255, 255, 0.9);
+        :root { 
+            --primary: #2563eb;
+            --accent: #06b6d4;
+            --dark-bg: #0f172a; 
         }
-        body {
-            background: radial-gradient(circle at top left, #1e1b4b, #0f172a, #020617);
+        
+        body { 
+            background: #f8fafc; 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #0f172a;
+            display: flex;
+            flex-direction: column;
             min-height: 100vh;
-            color: #f8fafc;
-            font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
         }
 
-        /* 3D Glassmorphism Header */
-        .glass-nav {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .nav-link {
-            color: #cbd5e1 !important;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 13px;
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: var(--accent-cyan) !important;
-            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
-        }
+        .main-wrapper { flex: 1; }
 
-        /* 3D Product & Interactive Cards */
-        .card-3d {
-            background: rgba(30, 41, 59, 0.7);
+        .navbar-custom { 
+            background: rgba(15, 23, 42, 0.95); 
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(56, 189, 248, 0.1);
-            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
-        .card-3d:hover {
-            transform: translateY(-8px) rotateX(2deg) rotateY(2deg);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 63, 108, 0.3);
+        .nav-link { 
+            color: #cbd5e1 !important; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover, .nav-link.active { 
+            color: #38bdf8 !important; 
+            transform: translateY(-1px);
         }
 
-        /* Page Display Control */
-        .page-view { display: none; min-height: 80vh; }
+        .page-view { display: none; animation: fadeIn 0.4s ease-out; }
         .page-view.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        /* 3D Floating Login Card */
-        .login-card-3d {
-            max-width: 420px;
-            margin: 60px auto;
-            background: rgba(30, 41, 59, 0.85);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+        .hero-section {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(37, 99, 235, 0.8)), url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
             border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 63, 108, 0.25);
+            color: white;
+            padding: 80px 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .card-custom { 
+            background: #ffffff; 
+            border-radius: 20px; 
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
-            transform: perspective(1000px) rotateX(2deg);
         }
 
-        /* Footer & Modals */
-        footer {
-            background: rgba(2, 6, 23, 0.9);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .modal-content {
-            background: #0f172a;
-            color: #f8fafc;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .variant-btn {
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            border-radius: 20px;
-            padding: 8px 18px;
-            font-weight: 700;
+        .category-chip {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .variant-btn.active {
-            border-color: var(--primary-pink);
-            background: var(--primary-pink);
-            box-shadow: 0 0 15px rgba(255, 63, 108, 0.5);
+        .category-chip:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.15);
         }
+
+        .travel-tab-btn { 
+            border-radius: 30px; 
+            padding: 10px 28px; 
+            font-weight: 700; 
+            border: none;
+            background: #e2e8f0; 
+            color: #475569;
+        }
+        .travel-tab-btn.active { 
+            background: linear-gradient(135deg, #0ea5e9, #2563eb); 
+            color: #fff;
+        }
+
+        .card-img-top-custom { height: 210px; object-fit: cover; width: 100%; }
+        .prod-img { height: 190px; object-fit: contain; padding: 20px; width: 100%; }
+
+        .btn-brand {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .profile-nav-btn {
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            color: #475569;
+        }
+        .profile-nav-btn.active, .profile-nav-btn:hover {
+            background: #e0f2fe;
+            color: var(--primary);
+        }
+
+        .auth-card { max-width: 450px; margin: 0 auto; }
+        .otp-input { width: 50px; height: 50px; text-align: center; font-size: 20px; font-weight: bold; border-radius: 8px; border: 1px solid #cbd5e1; }
+        
+        .inline-address-card {
+            background: #f1f5f9;
+            border: 1px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .label-btn-check { display: none; }
+        .label-btn-check + .btn-label {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .label-btn-check:checked + .btn-label {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tracking-timeline {
+            position: relative;
+            padding-left: 20px;
+            margin-top: 20px;
+        }
+        .tracking-step {
+            position: relative;
+            padding-bottom: 24px;
+            padding-left: 24px;
+            border-left: 2px solid #e2e8f0;
+        }
+        .tracking-step:last-child {
+            border-left: 2px solid transparent;
+            padding-bottom: 0;
+        }
+        .tracking-step.completed { border-left-color: #2563eb; }
+        .tracking-icon {
+            position: absolute;
+            left: -13px;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .tracking-step.completed .tracking-icon { background: #2563eb; }
+        .tracking-step.active .tracking-icon {
+            background: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2);
+        }
+
+        .policy-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            line-height: 1.7;
+        }
+        .policy-card h2 {
+            color: #0f172a;
+            font-weight: 700;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .policy-card h4 {
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+
+        .contact-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            height: 100%;
+        }
+
+        footer {
+    background: #0f172a;
+    color: #e2e8f0 !important; /* Text color bright light blue-gray */
+    padding: 50px 0 20px;
+    margin-top: auto;
+}
+
+/* Footer text class overrides */
+footer p, footer span, footer .small {
+    color: #cbd5e1 !important; /* Address & Paragraphs fully visible */
+}
+
+footer a {
+    color: #93c5fd !important;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+footer a:hover {
+    color: #38bdf8 !important;
+}
+
+footer .text-muted {
+    color: #cbd5e1 !important; /* Hide/dim issue fix */
+}
+        footer a:hover { color: #38bdf8; }
     </style>
 </head>
 <body>
 
-<!-- Header Navbar -->
-<nav class="navbar navbar-expand-lg glass-nav sticky-top py-3">
-    <div class="container">
-        <a class="navbar-brand text-white fw-bold fs-3" onclick="navigateTo('home')">
-            <i class="fa-solid fa-bolt text-warning me-1"></i> MJ DIGITAL
-        </a>
-        
-        <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto gap-3 ms-lg-4">
-                <li class="nav-item"><a class="nav-link" onclick="navigateTo('home')">HOME</a></li>
-                <li class="nav-item"><a class="nav-link" onclick="navigateTo('category', 'Travels')">TRAVELS</a></li>
-                <li class="nav-item"><a class="nav-link text-info" onclick="navigateTo('home')">MOBILE</a></li>
-                <li class="nav-item"><a class="nav-link" onclick="navigateTo('category', 'Fashion')">FASHION</a></li>
-                <li class="nav-item"><a class="nav-link" onclick="navigateTo('category', 'Electronics')">ELECTRONICS</a></li>
-                <li class="nav-item"><a class="nav-link text-warning" onclick="navigateTo('category', 'Services')">SERVICES</a></li>
-            </ul>
-
-            <div class="d-flex gap-3 align-items-center">
-                <a class="text-white text-decoration-none fw-bold small" onclick="navigateTo('profile', 'details')">
-                    <i class="fa-regular fa-user fs-5 d-block text-center text-info"></i> Profile
-                </a>
-
-                <a class="text-white text-decoration-none fw-bold small position-relative" onclick="navigateTo('cart')">
-                    <i class="fa-solid fa-bag-shopping fs-5 d-block text-center text-warning"></i> Bag
-                    <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">1</span>
-                </a>
-
-                <a href="/admin.html" target="_blank" class="btn btn-outline-info rounded-pill px-3 btn-sm fw-bold">
-                    <i class="fa-solid fa-lock me-1"></i> Admin Panel
-                </a>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-info fs-4" onclick="navigateTo('page-home')">
+                <i class="fa-solid fa-cube text-primary me-2"></i>M J DIGITAL
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto ms-4">
+                    <li class="nav-item"><a class="nav-link nav-btn active" onclick="navigateTo('page-home', this)">HOME</a></li>
+                    <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-travels', this)">TRAVELS</a></li>
+                    <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-mobile', this)">MOBILE</a></li>
+                    <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-fashion', this)">FASHION</a></li>
+                    <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-electronics', this)">ELECTRONICS</a></li>
+                    <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-services', this)">SERVICES</a></li>
+                    <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-contact', this)">CONTACT US</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <a class="text-light position-relative cursor-pointer" onclick="navigateTo('page-wishlist')">
+                        <i class="fa-regular fa-heart fs-5"></i>
+                        <span id="wishCount" class="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">0</span>
+                    </a>
+                    <a class="text-light position-relative cursor-pointer" onclick="navigateTo('page-cart')">
+                        <i class="fa-solid fa-bag-shopping fs-5"></i>
+                        <span id="cartCount" class="badge bg-primary rounded-circle position-absolute top-0 start-100 translate-middle">0</span>
+                    </a>
+                    <button class="btn btn-outline-info btn-sm rounded-pill px-3" id="profileNavBtn" onclick="checkAuthAndNavigate()"><i class="fa-solid fa-user me-1"></i> Account</button>
+                </div>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<!-- PAGE 1: HOME PAGE (PRODUCTS & 3D LAYOUT) -->
-<div id="homeView" class="page-view active container py-5">
-    <div class="card-3d p-4 p-md-5">
-        <div class="row g-4 align-items-center">
-            <div class="col-md-5 text-center">
-                <img id="productImage" src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=600" class="img-fluid rounded-4 shadow-lg" style="max-height: 380px; object-fit: contain;" alt="iPhone 17 Pro">
-            </div>
-            <div class="col-md-7">
-                <span class="badge bg-info text-dark px-3 py-2 mb-2 fw-bold">Flagship Category</span>
-                <h1 id="productTitle" class="fw-bold text-white display-5">iPhone 17 Pro</h1>
-                <p class="text-slate-300">Overview & Description: Flagship Performance | Dynamic 3D Display | ERGO|OPWSRG Titanium Finish</p>
+    <div class="main-wrapper container my-5">
 
-                <div class="d-flex align-items-baseline gap-3 my-4">
-                    <h2 class="fw-bold text-warning mb-0 fs-1">₹ <span id="productPrice">149999</span></h2>
-                    <span class="text-muted text-decoration-line-through fs-5">₹ <span id="originalPrice">159999</span></span>
-                    <span class="badge bg-success px-3 py-2">Save ₹10,000</span>
+        <!-- 1. HOME VIEW -->
+        <div id="page-home" class="page-view active">
+            <div class="hero-section mb-5">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <span class="badge bg-info text-dark px-3 py-2 rounded-pill fw-bold mb-3"><i class="fa-solid fa-bolt me-1"></i> MEGA SALE IS LIVE</span>
+                        <h1 class="display-4 fw-extrabold mb-3">Next-Gen Tech & Premium Travel Journeys</h1>
+                        <p class="fs-5 opacity-90 mb-4">Discover flagship smartphones, high-performance electronics & curated world travel experiences all in one place.</p>
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-brand btn-lg px-4" onclick="navigateTo('page-mobile')">Shop Mobiles</button>
+                            <button class="btn btn-outline-light btn-lg px-4 rounded-pill" onclick="navigateTo('page-travels')">Explore Travels</button>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <div class="mb-4">
-                    <label class="fw-bold d-block mb-2 small text-info">STORAGE VARIANT:</label>
-                    <div class="d-flex gap-2">
-                        <button class="variant-btn active" onclick="selectVariant('256GB', 149999, 159999, this)">256 GB</button>
-                        <button class="variant-btn" onclick="selectVariant('512GB', 169999, 179999, this)">512 GB</button>
+            <h4 class="fw-bold mb-4"><i class="fa-solid fa-grid-2 text-primary me-2"></i>Popular Categories</h4>
+            <div class="row g-3 mb-5">
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-mobile')"><div class="category-chip"><i class="fa-solid fa-mobile-screen text-success fs-1 mb-2"></i><div class="fw-bold">Mobiles</div></div></div>
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-travels')"><div class="category-chip"><i class="fa-solid fa-plane-departure text-primary fs-1 mb-2"></i><div class="fw-bold">Travels</div></div></div>
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-electronics')"><div class="category-chip"><i class="fa-solid fa-laptop text-info fs-1 mb-2"></i><div class="fw-bold">Electronics</div></div></div>
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-fashion')"><div class="category-chip"><i class="fa-solid fa-shirt text-warning fs-1 mb-2"></i><div class="fw-bold">Fashion</div></div></div>
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-services')"><div class="category-chip"><i class="fa-solid fa-screwdriver-wrench text-danger fs-1 mb-2"></i><div class="fw-bold">Services</div></div></div>
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-cart')"><div class="category-chip"><i class="fa-solid fa-bag-shopping text-secondary fs-1 mb-2"></i><div class="fw-bold">My Bag</div></div></div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold mb-0"><i class="fa-solid fa-fire text-danger me-2"></i>Trending Deals</h4>
+                <a class="text-primary fw-bold text-decoration-none cursor-pointer" onclick="navigateTo('page-mobile')">View All &rrarr;</a>
+            </div>
+            <div class="row g-4 mb-5" id="homeTrendingGrid"></div>
+        </div>
+
+        <!-- 2. CONTACT US VIEW -->
+        <div id="page-contact" class="page-view">
+            <div class="policy-card">
+                <h2>Contact Us</h2>
+                <p class="text-muted mb-4">Have questions about your order, travel packages, or services? Get in touch with us below.</p>
+                
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="contact-box">
+                            <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-building me-2"></i>COMPANY</h5>
+                            <h4 class="fw-bold text-dark">M J DIGITAL</h4>
+                            <hr class="my-3">
+                            <h6 class="fw-bold text-muted mb-2"><i class="fa-solid fa-location-dot me-2 text-danger"></i>ADDRESS</h6>
+                            <p class="mb-0 fw-semibold">
+                                GF5, Imran Residency, Near Silver Duplex,<br>
+                                Chhipa Society, Danilimda, Ahmedabad,<br>
+                                Gujarat – 380028, India
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="contact-box">
+                            <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-headset me-2"></i>GET IN TOUCH</h5>
+                            
+                            <div class="mb-3">
+                                <h6 class="fw-bold text-muted mb-1"><i class="fa-solid fa-envelope me-2 text-primary"></i>EMAIL</h6>
+                                <p class="mb-0 fs-6"><a href="mailto:mjdigitalworlds@gmail.com" class="text-decoration-none fw-bold text-dark">mjdigitalworlds@gmail.com</a></p>
+                            </div>
+
+                            <hr class="my-3">
+
+                            <div>
+                                <h6 class="fw-bold text-muted mb-1"><i class="fa-solid fa-phone me-2 text-success"></i>MOBILE NUMBER</h6>
+                                <p class="mb-0 fs-5 fw-bold text-success">+91 830 666 9999</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="d-flex gap-3">
-                    <button class="btn btn-danger btn-lg fw-bold flex-grow-1 shadow" style="background: var(--primary-pink); border: none;" onclick="addToCart()">
-                        <i class="fa-solid fa-bag-shopping me-2"></i> ADD TO BAG
-                    </button>
-                    <button class="btn btn-outline-light btn-lg fw-bold" onclick="navigateTo('login')">
-                        <i class="fa-solid fa-right-to-bracket me-2"></i> LOGIN
-                    </button>
+                <h4 class="fw-bold mb-3">Send Us a Direct Message</h4>
+                <form onsubmit="alert('Thank you! Your message has been received. We will contact you shortly.'); event.preventDefault();">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="small fw-bold mb-1">Your Name</label><input type="text" class="form-control" placeholder="Enter full name" required></div>
+                        <div class="col-md-6"><label class="small fw-bold mb-1">Email / Phone</label><input type="text" class="form-control" placeholder="Enter contact details" required></div>
+                        <div class="col-12"><label class="small fw-bold mb-1">Message</label><textarea class="form-control" rows="4" placeholder="How can we help you?" required></textarea></div>
+                    </div>
+                    <button type="submit" class="btn btn-brand px-4 py-2 mt-3">Send Message</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 3. TRAVELS VIEW -->
+        <div id="page-travels" class="page-view">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold"><i class="fa-solid fa-earth-americas text-primary me-2"></i>Explore Travel Destinations</h2>
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <button class="travel-tab-btn active" id="btn-intl" onclick="filterTravels('International')">International</button>
+                    <button class="travel-tab-btn" id="btn-india" onclick="filterTravels('India')">India Destinations</button>
+                </div>
+            </div>
+            <div class="row g-4" id="travelGrid"></div>
+        </div>
+
+        <!-- 4. MOBILE VIEW -->
+        <div id="page-mobile" class="page-view">
+            <h3 class="fw-bold mb-4"><i class="fa-solid fa-mobile-screen text-success me-2"></i>Mobile Store</h3>
+            <div class="row g-4" id="mobileGrid"></div>
+        </div>
+
+        <!-- 5. AUTHENTICATION VIEW -->
+        <div id="page-auth" class="page-view">
+            <div class="auth-card card-custom p-4">
+                <ul class="nav nav-pills nav-justified mb-4">
+                    <li class="nav-item"><button class="nav-link active fw-bold" id="tab-login" onclick="toggleAuthMode('login')">Sign In</button></li>
+                    <li class="nav-item"><button class="nav-link fw-bold" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</button></li>
+                </ul>
+
+                <form id="loginForm" onsubmit="requestOtp(event, 'login')">
+                    <div class="mb-3"><label class="small fw-bold">Mobile / Email</label><input type="text" id="loginEmail" class="form-control" value="83066699" required></div>
+                    <div class="mb-3"><label class="small fw-bold">Password</label><input type="password" id="loginPassword" class="form-control" value="123456" required></div>
+                    <button type="submit" class="btn btn-brand w-100 py-2 mt-2">Get OTP & Login</button>
+                </form>
+
+                <form id="signupForm" style="display: none;" onsubmit="requestOtp(event, 'signup')">
+                    <div class="mb-3"><label class="small fw-bold">Full Name</label><input type="text" id="signupName" class="form-control" placeholder="Mohsin J" required></div>
+                    <div class="mb-3"><label class="small fw-bold">Email Address</label><input type="email" id="signupEmail" class="form-control" placeholder="mjdigitalworlds@gmail.com" required></div>
+                    <div class="mb-3"><label class="small fw-bold">Mobile Number</label><input type="tel" id="signupPhone" class="form-control" placeholder="+91 830 666 9999" required></div>
+                    <button type="submit" class="btn btn-brand w-100 py-2 mt-2">Send OTP Verification</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 6. ACCOUNT DASHBOARD -->
+        <div id="page-profile" class="page-view">
+            <h3 class="fw-bold mb-4"><i class="fa-solid fa-user-gear text-primary me-2"></i>My Account Dashboard</h3>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="card-custom p-3">
+                        <button class="profile-nav-btn active mb-2" onclick="switchProfileTab('p-orders', this)"><i class="fa-solid fa-box-open me-2"></i> Orders & Bookings</button>
+                        <button class="profile-nav-btn mb-2" onclick="switchProfileTab('p-personal', this)"><i class="fa-solid fa-id-card me-2"></i> Profile Details</button>
+                        <button class="profile-nav-btn mb-2" onclick="switchProfileTab('p-address', this)"><i class="fa-solid fa-location-dot me-2"></i> Saved Addresses</button>
+                        <button class="profile-nav-btn mb-2" onclick="switchProfileTab('p-cards', this)"><i class="fa-solid fa-credit-card me-2"></i> Saved Cards</button>
+                        <hr class="my-2">
+                        <button class="profile-nav-btn text-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</button>
+                    </div>
+                </div>
+
+                <div class="col-md-9">
+                    <div class="card-custom p-4">
+                        <div id="p-orders" class="profile-tab-content">
+                            <h4 class="fw-bold mb-3">Order & Booking History</h4>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Item Name</th>
+                                            <th>Date</th>
+                                            <th>Price</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ordersTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="p-personal" class="profile-tab-content" style="display:none;">
+                            <h4 class="fw-bold mb-3">Editable Profile Details</h4>
+                            <form onsubmit="requestOtp(event, 'update-profile')">
+                                <div class="row g-3">
+                                    <div class="col-md-6"><label class="small fw-bold mb-1">Full Name</label><input type="text" id="profileNameInput" class="form-control" value="M J DIGITAL Customer"></div>
+                                    <div class="col-md-6"><label class="small fw-bold mb-1">Email Address</label><input type="email" id="profileEmailInput" class="form-control" value="mjdigitalworlds@gmail.com"></div>
+                                    <div class="col-md-6"><label class="small fw-bold mb-1">Mobile Phone</label><input type="text" id="profilePhoneInput" class="form-control" value="+91 830 666 9999"></div>
+                                </div>
+                                <button type="submit" class="btn btn-brand btn-sm mt-3 px-4 py-2">Verify OTP & Save Changes</button>
+                            </form>
+                        </div>
+
+                        <div id="p-address" class="profile-tab-content" style="display:none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="fw-bold mb-0">Saved Addresses</h4>
+                                <button class="btn btn-outline-primary btn-sm" id="toggleAddressFormBtn" onclick="toggleInlineAddressForm()">+ Add New Address</button>
+                            </div>
+
+                            <div id="inlineAddressContainer" class="inline-address-card" style="display: none;">
+                                <h5 class="fw-bold mb-3"><i class="fa-solid fa-plus-circle text-primary me-2"></i>Add New Address</h5>
+                                <form id="newAddressForm" onsubmit="saveNewAddress(event)">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="small fw-bold d-block mb-2">Address Type / Label</label>
+                                            <div class="d-flex gap-2">
+                                                <input type="radio" name="addrLabelRadio" id="lblHome" value="Home" class="label-btn-check" checked>
+                                                <label for="lblHome" class="btn-label"><i class="fa-solid fa-house me-1"></i> Home</label>
+
+                                                <input type="radio" name="addrLabelRadio" id="lblOffice" value="Office" class="label-btn-check">
+                                                <label for="lblOffice" class="btn-label"><i class="fa-solid fa-briefcase me-1"></i> Office</label>
+
+                                                <input type="radio" name="addrLabelRadio" id="lblOther" value="Other" class="label-btn-check">
+                                                <label for="lblOther" class="btn-label"><i class="fa-solid fa-location-dot me-1"></i> Other</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6"><label class="small fw-bold mb-1">Full Name</label><input type="text" id="newAddrName" class="form-control" placeholder="M J DIGITAL" required></div>
+                                        <div class="col-md-6"><label class="small fw-bold mb-1">Phone Number</label><input type="text" id="newAddrPhone" class="form-control" placeholder="+91 830 666 9999" required></div>
+                                        <div class="col-12"><label class="small fw-bold mb-1">Street Address / House No.</label><input type="text" id="newAddrText" class="form-control" placeholder="GF5, Imran Residency, Near Silver Duplex, Chhipa Society, Danilimda" required></div>
+                                        <div class="col-md-4"><label class="small fw-bold mb-1">City & Pincode</label><input type="text" id="newAddrCity" class="form-control" value="Ahmedabad - 380028" required></div>
+                                        <div class="col-md-4"><label class="small fw-bold mb-1">State Name</label><input type="text" id="newAddrState" class="form-control" value="Gujarat" required></div>
+                                        <div class="col-md-4"><label class="small fw-bold mb-1">Nation / Country</label><input type="text" id="newAddrNation" class="form-control" value="India" required></div>
+                                    </div>
+                                    <div class="d-flex gap-2 mt-4">
+                                        <button type="submit" class="btn btn-brand px-4 py-2">Save Address</button>
+                                        <button type="button" class="btn btn-light px-4 py-2" onclick="toggleInlineAddressForm()">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="row g-3" id="addressListContainer">
+                                <div class="col-md-6">
+                                    <div class="border rounded-3 p-3 position-relative bg-white">
+                                        <span class="badge bg-primary position-absolute top-0 end-0 m-2">Default (Office)</span>
+                                        <h6 class="fw-bold mb-1" id="lblAddrName">M J DIGITAL</h6>
+                                        <p class="small text-muted mb-1" id="lblAddrText">GF5, Imran Residency, Near Silver Duplex, Chhipa Society, Danilimda, Ahmedabad, Gujarat – 380028, India</p>
+                                        <p class="small text-muted mb-0" id="lblAddrPhone">Phone: +91 830 666 9999</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="p-cards" class="profile-tab-content" style="display:none;">
+                            <h4 class="fw-bold mb-3">Saved Payment Cards</h4>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="p-3 rounded-3 text-white" style="background: linear-gradient(135deg, #1e293b, #475569);">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <i class="fa-brands fa-cc-visa fs-2"></i>
+                                            <span class="small">HDFC Bank</span>
+                                        </div>
+                                        <h5 class="mb-3">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; 4829</h5>
+                                        <div class="d-flex justify-content-between small opacity-75">
+                                            <span>M J DIGITAL</span>
+                                            <span>EXPIRES 08/28</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- 7. BUSINESS PILLARS (DETAILED POLICIES) -->
+        
+        <!-- TERMS & CONDITIONS -->
+        <div id="page-terms" class="page-view">
+            <div class="policy-card">
+                <h2>Terms & Conditions</h2>
+                <p class="text-muted small">Last Updated: September 2026</p>
+                <p>Welcome to <strong>M J DIGITAL</strong>. By accessing or using our platform, website, or mobile applications, you agree to comply with and be bound by the following terms and conditions.</p>
+
+                <h4>1. User Account Eligibility</h4>
+                <p>To access certain features, buy products, or book travel packages, you must create an account. You agree to provide accurate information and keep your credentials secure. Users must be at least 18 years of age or supervised by a legal guardian.</p>
+
+                <h4>2. Ordering & Pricing</h4>
+                <p>All prices listed on M J DIGITAL are in Indian Rupees (INR) and inclusive of applicable taxes unless stated otherwise. We reserve the right to modify prices or correct typographical pricing errors at any time before order confirmation.</p>
+
+                <h4>3. Travel & Booking Policy</h4>
+                <p>Travel packages, flight vouchers, and hotel reservations offered through M J DIGITAL are subject to third-party airline and hotel partner policies. Ticket names must strictly match official government ID cards.</p>
+
+                <h4>4. Intellectual Property</h4>
+                <p>All trademarks, logos, texts, software code, and graphics displayed on this platform are the exclusive intellectual property of M J DIGITAL and its official partners.</p>
+
+                <h4>5. Limitation of Liability</h4>
+                <p>M J DIGITAL shall not be liable for indirect, incidental, or consequential damages resulting from operational delays, courier misplacements, or travel disruptions caused by force majeure events.</p>
+            </div>
+        </div>
+
+        <!-- REFUND & CANCELLATION -->
+        <div id="page-cancellation" class="page-view">
+            <div class="policy-card">
+                <h2>Refund & Cancellation Policy</h2>
+                <p class="text-muted small">Last Updated: September 2026</p>
+                <p>At <strong>M J DIGITAL</strong>, we strive to deliver transparent cancellation and prompt refund processes for physical electronics, fashion items, and travel bookings.</p>
+
+                <h4>1. Electronics & Product Order Cancellation</h4>
+                <p>Orders for physical items can be cancelled directly from your account dashboard before the shipment is dispatched. Once dispatched, cancellation fees may apply as per courier terms.</p>
+
+                <h4>2. Travel Package Cancellation</h4>
+                <p>Travel cancellations depend on airline, hotel, and local vendor cancellation windows:</p>
+                <ul>
+                    <li><strong>30+ Days before departure:</strong> 90% refund of booking amount.</li>
+                    <li><strong>15 - 29 Days before departure:</strong> 50% refund of booking amount.</li>
+                    <li><strong>Less than 15 Days before departure:</strong> Non-refundable.</li>
+                </ul>
+
+                <h4>3. Refund Timeline</h4>
+                <p>Approved refunds are processed automatically back to the original payment method (UPI, Card, NetBanking) within 5 to 7 business days from the cancellation approval date.</p>
+            </div>
+        </div>
+
+        <!-- PRIVACY POLICY -->
+        <div id="page-privacy" class="page-view">
+            <div class="policy-card">
+                <h2>Privacy Policy</h2>
+                <p class="text-muted small">Last Updated: September 2026</p>
+                <p>M J DIGITAL is committed to protecting your personal information and privacy.</p>
+
+                <h4>1. Information We Collect</h4>
+                <p>We collect personal details such as your Name, Mobile Number, Email Address, Delivery Address, and Payment Preferences when you register, log in via OTP, or place an order on our platform.</p>
+
+                <h4>2. How We Use Your Data</h4>
+                <p>Your data is used exclusively to process orders, dispatch physical products, issue travel vouchers, provide live order tracking updates, and deliver customer support.</p>
+
+                <h4>3. Data Sharing & Security</h4>
+                <p>We do NOT sell or rent your personal data to third parties. Data is shared strictly with trusted fulfillment partners (courier companies, payment gateways, airline/hotel providers) to complete your service. We implement 256-bit SSL encryption to keep all communications secure.</p>
+
+                <h4>4. Cookies & Analytics</h4>
+                <p>We use essential cookies to maintain user session security, remember cart contents, and analyze overall site performance to improve customer experience.</p>
+            </div>
+        </div>
+
+        <!-- ADDITIONAL TERMS & DETAILS -->
+        <div id="page-additional-terms" class="page-view">
+            <div class="policy-card">
+                <h2>Additional Terms & Details</h2>
+                <p class="text-muted small">Last Updated: September 2026</p>
+                <p>Supplementary operational terms governing warranty, dispute resolution, and local jurisdiction for M J DIGITAL.</p>
+
+                <h4>1. Product Warranty & Service</h4>
+                <p>All smartphones, laptops, and electronic devices sold by M J DIGITAL carry manufacturer standard warranties. Warranty claims should be directed to the respective official brand service centers.</p>
+
+                <h4>2. Legal Jurisdiction</h4>
+                <p>These terms and all transactions through M J DIGITAL are governed by the laws of India. Any legal disputes or claims shall be subject to the exclusive jurisdiction of the competent courts in Ahmedabad, Gujarat, India.</p>
+
+                <h4>3. Policy Updates</h4>
+                <p>M J DIGITAL reserves the right to amend these terms, privacy guidelines, and refund rules at any time without prior individual notice. Updates take immediate effect upon publishing.</p>
+            </div>
+        </div>
+
+        <div id="page-fashion" class="page-view"><h3 class="fw-bold mb-4">Fashion</h3></div>
+        <div id="page-electronics" class="page-view"><h3 class="fw-bold mb-4">Electronics</h3></div>
+        <div id="page-services" class="page-view"><h3 class="fw-bold mb-4">Services</h3></div>
+        <div id="page-wishlist" class="page-view"><h3 class="fw-bold mb-4">Wishlist</h3></div>
+        <div id="page-cart" class="page-view"><h3 class="fw-bold mb-4">Shopping Bag</h3></div>
+
     </div>
-</div>
 
-<!-- PAGE 2: CATEGORY VIEW (TRAVEL, FASHION, ELECTRONICS, SERVICES) -->
-<div id="categoryView" class="page-view container py-5">
-    <h2 id="categoryTitle" class="fw-bold text-info mb-4 text-uppercase">Category View</h2>
-    <div class="row g-4" id="categoryProductsContainer"></div>
-</div>
-
-<!-- PAGE 3: BAG / CART VIEW -->
-<div id="cartView" class="page-view container py-5">
-    <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="card-3d p-4 mb-3">
-                <h5 class="fw-bold text-info border-bottom border-secondary pb-2">Selected Bag Items</h5>
-                <div id="cartItemsContainer"></div>
-            </div>
-        </div>
-        <div class="col-lg-5">
-            <div class="card-3d p-4">
-                <h6 class="fw-bold text-uppercase text-muted border-bottom border-secondary pb-2">Price Details</h6>
-                <div class="d-flex justify-content-between my-2">
-                    <span>Total Price</span>
-                    <span class="fw-bold">₹149,999</span>
-                </div>
-                <div class="d-flex justify-content-between my-2 text-success">
-                    <span>Discount</span>
-                    <span class="fw-bold">-₹10,000</span>
-                </div>
-                <div class="d-flex justify-content-between my-2">
-                    <span>Delivery Charge</span>
-                    <span class="text-success fw-bold">FREE</span>
-                </div>
-                <hr class="border-secondary">
-                <div class="d-flex justify-content-between fs-4 fw-bold text-warning mb-3">
-                    <span>Total Amount</span>
-                    <span>₹149,999</span>
-                </div>
-                <button class="btn btn-danger w-100 fw-bold py-3" style="background: var(--primary-pink); border: none;" onclick="placeOrder()">
-                    PLACE ORDER
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- PAGE 4: 3D LOOK LOGIN & SIGNUP -->
-<div id="loginView" class="page-view container py-4">
-    <div class="login-card-3d">
-        <div class="p-4 text-center border-bottom border-secondary" style="background: rgba(255, 63, 108, 0.15);">
-            <span class="badge bg-danger mb-2">3D SECURE ACCESS</span>
-            <h4 class="fw-bold text-white mb-0">Login or Signup</h4>
-        </div>
-        <div class="p-4">
-            <div class="mb-4">
-                <label class="form-label small text-info fw-bold">Mobile Number</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-dark text-white border-secondary">+91</span>
-                    <input type="text" id="loginMobileInput" class="form-control bg-dark text-white border-secondary" placeholder="Enter 10 digit number">
-                </div>
-            </div>
-
-            <div class="form-check mb-4 small text-muted">
-                <input class="form-check-input" type="checkbox" id="termsCheck" checked>
-                <label class="form-check-label text-slate-300" for="termsCheck">
-                    I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="text-info">Terms & Conditions</a> and <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal" class="text-info">Privacy Policy</a>
-                </label>
-            </div>
-
-            <button class="btn btn-danger w-100 py-3 fw-bold shadow-lg" style="background: var(--primary-pink); border: none;" onclick="processLogin()">
-                CONTINUE
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- PAGE 5: PROFILE VIEW -->
-<div id="profileView" class="page-view container py-5">
-    <div class="card-3d p-4">
-        <h4 class="fw-bold text-info border-bottom border-secondary pb-2 mb-4">My Profile Details</h4>
-        <div class="row g-3">
-            <div class="col-md-4 text-muted">Full Name:</div>
-            <div class="col-md-8 fw-bold">Mohsin J</div>
-            <div class="col-md-4 text-muted">Mobile Number:</div>
-            <div class="col-md-8 fw-bold">9377772797</div>
-            <div class="col-md-4 text-muted">Email ID:</div>
-            <div class="col-md-8 fw-bold">mohsin2797@gmail.com</div>
-        </div>
-    </div>
-</div>
-
-<!-- FOOTER WITH LEGAL POLICY LINKS -->
-<footer class="mt-auto py-4 text-center text-muted small">
+    <!-- FOOTER WITH UPDATED COMPANY DETAILS -->
+    <!-- FOOTER -->
+<footer>
     <div class="container">
-        <div class="d-flex justify-content-center gap-3 gap-md-4 mb-3 flex-wrap">
-            <a href="#" class="text-slate-300 text-decoration-none" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>
-            <a href="#" class="text-slate-300 text-decoration-none" data-bs-toggle="modal" data-bs-target="#termsModal">Terms & Conditions</a>
-            <a href="#" class="text-slate-300 text-decoration-none" data-bs-toggle="modal" data-bs-target="#additionalTermsModal">Additional Terms</a>
-            <a href="#" class="text-warning text-decoration-none fw-bold" data-bs-toggle="modal" data-bs-target="#refundModal">Refund & Cancellation Policy</a>
+        <div class="row g-4 mb-4">
+            <!-- Column 1: Company & Address -->
+            <div class="col-md-4">
+                <h5 class="fw-bold text-white mb-3">
+                    <i class="fa-solid fa-cube text-primary me-2"></i>M J DIGITAL
+                </h5>
+                <p class="small text-light mb-3">
+                    Your all-in-one destination for premium smartphones, modern electronics, and world-class travel package bookings.
+                </p>
+                <!-- Full Visible Address -->
+                <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <p class="small text-white mb-1 fw-bold">
+                        <i class="fa-solid fa-location-dot text-danger me-2"></i>STORE ADDRESS:
+                    </p>
+                    <p class="small text-light mb-0" style="line-height: 1.5;">
+                        GF5, Imran Residency, Near Silver Duplex,<br>
+                        Chhipa Society, Danilimda, Ahmedabad,<br>
+                        Gujarat – 380028, India
+                    </p>
+                </div>
+            </div>
+
+            <!-- Column 2: Quick Links -->
+            <div class="col-md-2">
+                <h6 class="fw-bold text-white mb-3">Quick Links</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-2"><a href="javascript:void(0)" onclick="navigateTo('page-home')">Home</a></li>
+                    <li class="mb-2"><a href="javascript:void(0)" onclick="navigateTo('page-mobile')">Mobiles</a></li>
+                    <li class="mb-2"><a href="javascript:void(0)" onclick="navigateTo('page-travels')">Travel Packages</a></li>
+                    <li class="mb-2"><a href="javascript:void(0)" onclick="navigateTo('page-contact')">Contact Us</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 3: Business Policies -->
+            <div class="col-md-3">
+                <h6 class="fw-bold text-white mb-3">Business Policies</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-2"><a href="javascript:void(0)" onclick="navigateTo('page-terms')">Terms & Conditions</a></li>
+                    <li class="mb-2"><a href="javascript:void(0)" onclick="navigateTo('page-cancellation')">Refund & Cancellation</a></li>
+                    <li class="mb-2"><a href="javascript:void(0)" onclick="navigateTo('page-privacy')">Privacy Policy</a></li>
+                    <li class="mb-2"><a href="javascript:void(0)" onclick="navigateTo('page-additional-terms')">Additional Terms & Details</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 4: Direct Contact -->
+            <div class="col-md-3">
+                <h6 class="fw-bold text-white mb-3">Contact Information</h6>
+                <p class="small text-white mb-2"><i class="fa-solid fa-building me-2 text-primary"></i> <strong>M J DIGITAL</strong></p>
+                <p class="small text-white mb-2"><i class="fa-solid fa-phone me-2 text-success"></i> +91 830 666 9999</p>
+                <p class="small text-white mb-0"><i class="fa-solid fa-envelope me-2 text-info"></i> mjdigitalworlds@gmail.com</p>
+            </div>
         </div>
-        <p class="mb-0">&copy; 2026 MJ DIGITAL. All Rights Reserved. Designed with 3D Dynamic Engine.</p>
+
+        <hr class="border-secondary my-4">
+        <div class="d-flex justify-content-between align-items-center small text-light">
+            <span>&copy; 2026 M J DIGITAL. All rights reserved.</span>
+            <div class="d-flex gap-3">
+                <a href="javascript:void(0)" onclick="navigateTo('page-terms')">Terms</a>
+                <a href="javascript:void(0)" onclick="navigateTo('page-privacy')">Privacy</a>
+                <a href="javascript:void(0)" onclick="navigateTo('page-contact')">Contact</a>
+            </div>
+        </div>
     </div>
 </footer>
 
-<!-- POLICY MODALS -->
-
-<!-- 1. Privacy Policy Modal -->
-<div class="modal fade" id="privacyModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title text-info fw-bold">Privacy Policy</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body small">
-                <h6>1. Information Collection</h6>
-                <p>We collect essential personal data including name, mobile number, delivery address, and payment information to fulfill orders smoothly.</p>
-                <h6>2. Data Usage & Security</h6>
-                <p>Your details are protected using industry-standard encryption protocols and are never shared with unauthorized third parties.</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- 2. Terms & Conditions Modal -->
-<div class="modal fade" id="termsModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title text-info fw-bold">Terms & Conditions</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body small">
-                <p>By using MJ DIGITAL platform, you agree to abide by all purchasing guidelines, fair usage practices, and account management rules outlined herein.</p>
+    <!-- OTP MODAL -->
+    <div class="modal fade" id="otpVerificationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 text-center p-4">
+                <i class="fa-solid fa-shield-halved text-primary display-4 mb-3"></i>
+                <h4 class="fw-bold mb-1">Verify Mobile / Email</h4>
+                <p class="text-muted small">Enter the 4-digit OTP sent to your registered mobile/email</p>
+                <div class="d-flex justify-content-center gap-2 my-3">
+                    <input type="text" class="otp-input" maxlength="1" value="5">
+                    <input type="text" class="otp-input" maxlength="1" value="2">
+                    <input type="text" class="otp-input" maxlength="1" value="8">
+                    <input type="text" class="otp-input" maxlength="1" value="9">
+                </div>
+                <button class="btn btn-brand w-100 py-2 mt-2" onclick="verifyOtpAndProceed()">Verify & Confirm</button>
             </div>
         </div>
     </div>
-</div>
 
-<!-- 3. Additional Terms Modal -->
-<div class="modal fade" id="additionalTermsModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title text-info fw-bold">Additional Terms</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body small">
-                <p>Promotions, coupon codes, and special category sales may carry additional terms regarding stock availability, maximum order limits, and non-stackable offers.</p>
+    <!-- CANCEL ORDER MODAL -->
+    <div class="modal fade" id="cancelOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 p-4">
+                <h4 class="fw-bold text-danger mb-2"><i class="fa-solid fa-triangle-exclamation me-2"></i>Cancel Order</h4>
+                <p class="text-muted small mb-3">Are you sure you want to cancel <strong id="cancelItemName"></strong>?</p>
+                <div class="mb-3">
+                    <label class="small fw-bold mb-1">Select Cancellation Reason</label>
+                    <select id="cancelReasonSelect" class="form-select">
+                        <option value="Ordered by mistake">Ordered by mistake</option>
+                        <option value="Delivery time is too long">Delivery time is too long</option>
+                        <option value="Found a better price elsewhere">Found a better price elsewhere</option>
+                    </select>
+                </div>
+                <div class="d-flex gap-2 justify-content-end mt-3">
+                    <button class="btn btn-light" data-bs-dismiss="modal">Keep Order</button>
+                    <button class="btn btn-danger" onclick="confirmCancelOrder()">Confirm Cancellation</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- 4. DETAILED CATEGORY-WISE REFUND & CANCELLATION MODAL -->
-<div class="modal fade" id="refundModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title text-warning fw-bold"><i class="fa-solid fa-rotate-left me-2"></i> Category-Wise Refund & Cancellation Policy</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body small">
+    <!-- LIVE TRACKING MODAL -->
+    <div class="modal fade" id="liveTrackingModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-location-crosshairs me-2"></i>Live Order Tracking</h4>
+                        <p class="text-muted small mb-0">Tracking ID: <span id="trackIdText" class="fw-bold text-dark">#TRK-984210</span></p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <hr class="my-2">
                 
-                <div class="mb-4">
-                    <h6 class="text-info fw-bold"><i class="fa-solid fa-plane me-2"></i> 1. Travels (Flight, Hotel & Tour Bookings)</h6>
-                    <ul>
-                        <li><strong>Cancellation Windows:</strong> Cancellations made 48+ hours prior to departure/check-in receive up to 80% refund subject to airline/hotel penalties.</li>
-                        <li><strong>Convenience Fees:</strong> Platform convenience fees and insurance charges are strictly non-refundable.</li>
-                        <li><strong>Processing Time:</strong> Refunds for cancelled travel tickets are credited within 5 to 7 working days to the original payment method.</li>
-                    </ul>
-                </div>
+                <div class="row g-4 my-2">
+                    <div class="col-md-5">
+                        <div class="bg-light p-3 rounded-3 border">
+                            <h6 class="fw-bold mb-2">Item Details</h6>
+                            <p class="mb-1 text-primary fw-bold fs-6" id="trackItemTitle">iPhone 17 Pro (256GB)</p>
+                            <p class="small text-muted mb-2" id="trackItemDate">Order Date: 10 Aug 2026</p>
+                            <hr>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Estimated Delivery:</span>
+                                <strong class="text-success" id="trackEstDate">14 Aug 2026</strong>
+                            </div>
+                            <div class="d-flex justify-content-between small mt-1">
+                                <span class="text-muted">Courier Partner:</span>
+                                <strong>BlueDart Express</strong>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="mb-4">
-                    <h6 class="text-info fw-bold"><i class="fa-solid fa-screwdriver-wrench me-2"></i> 2. Services (Repair, Extended Warranty & Digital Services)</h6>
-                    <ul>
-                        <li><strong>Pre-Initiation:</strong> 100% full refund available if service booking is cancelled at least 4 hours before service technician dispatch.</li>
-                        <li><strong>Post-Service:</strong> Once service inspection or repair work has commenced, service fees become non-refundable.</li>
-                    </ul>
-                </div>
-
-                <div class="mb-4">
-                    <h6 class="text-info fw-bold"><i class="fa-solid fa-mobile-screen-button me-2"></i> 3. Mobile & Electronics</h6>
-                    <ul>
-                        <li><strong>7-Day Replacement/Refund:</strong> Eligible for refund or replacement within 7 days of delivery only in cases of manufacturing defects, physical transit damage, or wrong item received.</li>
-                        <li><strong>Verification Requirements:</strong> Mandatory unboxing video and IMEI/Serial number match verification required before issuing refund approval.</li>
-                    </ul>
-                </div>
-
-                <div class="mb-4">
-                    <h6 class="text-info fw-bold"><i class="fa-solid fa-shirt me-2"></i> 4. Fashion</h6>
-                    <ul>
-                        <li><strong>10-Day Easy Return:</strong> Unworn, unwashed fashion items with all original tags attached can be returned within 10 days for a full refund or store credit.</li>
-                        <li><strong>Non-Returnable:</strong> Innerwear, socks, and personal care products are strictly non-returnable due to hygiene regulations.</li>
-                    </ul>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    let currentCart = [{ title: "iPhone 17 Pro", storage: "256GB", price: 149999, origPrice: 159999 }];
-
-    function navigateTo(pageId, categoryName = null) {
-        document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
-        window.scrollTo(0, 0);
-
-        if (pageId === 'home') document.getElementById('homeView').classList.add('active');
-        else if (pageId === 'cart') { renderCart(); document.getElementById('cartView').classList.add('active'); }
-        else if (pageId === 'login') document.getElementById('loginView').classList.add('active');
-        else if (pageId === 'profile') document.getElementById('profileView').classList.add('active');
-        else if (pageId === 'category') {
-            renderCategoryView(categoryName);
-            document.getElementById('categoryView').classList.add('active');
-        }
-    }
-
-    function renderCategoryView(cat) {
-        document.getElementById('categoryTitle').innerText = cat + " Section";
-        const container = document.getElementById('categoryProductsContainer');
-        container.innerHTML = `
-            <div class="col-md-6">
-                <div class="card-3d p-4">
-                    <h5 class="fw-bold text-white">${cat} Premium Package / Item</h5>
-                    <p class="text-muted">High performance, certified original product with full warranty & support.</p>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <span class="fs-4 fw-bold text-warning">₹ 29,999</span>
-                        <button class="btn btn-outline-info fw-bold" onclick="addToCart()">Add to Bag</button>
+                    <div class="col-md-7">
+                        <h6 class="fw-bold mb-3">Shipment Progress</h6>
+                        <div class="tracking-timeline" id="trackingTimelineContainer"></div>
                     </div>
                 </div>
-            </div>
-        `;
-    }
 
-    function selectVariant(storage, price, origPrice, btn) {
-        document.getElementById('productPrice').innerText = price;
-        document.getElementById('originalPrice').innerText = origPrice;
-        document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-
-    function addToCart() {
-        currentCart.push({ title: "iPhone 17 Pro", storage: "256GB", price: 149999, origPrice: 159999 });
-        document.getElementById('cartCount').innerText = currentCart.length;
-        alert("Item added to Bag!");
-    }
-
-    function renderCart() {
-        const container = document.getElementById('cartItemsContainer');
-        container.innerHTML = currentCart.map((item, idx) => `
-            <div class="d-flex justify-content-between align-items-center p-3 border-bottom border-secondary">
-                <div>
-                    <h6 class="fw-bold text-white mb-0">${item.title}</h6>
-                    <small class="text-muted">${item.storage}</small>
+                <div class="text-end mt-3">
+                    <button class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
                 </div>
-                <div class="fw-bold text-warning">₹${item.price}</div>
             </div>
-        `).join('');
-    }
+        </div>
+    </div>
 
-    function placeOrder() {
-        alert("🎉 Order Placed Successfully!");
-        currentCart = [];
-        document.getElementById('cartCount').innerText = 0;
-        navigateTo('home');
-    }
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let isLoggedIn = true;
+        let pendingAction = '';
+        let otpModal, cancelModal, trackingModal;
+        let selectedCancelOrderId = null;
 
-    function processLogin() {
-        const val = document.getElementById('loginMobileInput').value;
-        if(val) {
-            alert("Logged in successfully as: +91 " + val);
-            navigateTo('home');
-        } else {
-            alert("Please enter a valid mobile number.");
+        let userOrders = [
+            { 
+                id: 101, 
+                type: 'Mobile', 
+                title: 'iPhone 17 Pro (256GB)', 
+                date: '10 Aug 2026', 
+                price: '₹149,999', 
+                status: 'In Transit', 
+                badge: 'bg-primary', 
+                cancellable: true,
+                trackable: true,
+                trackingSteps: [
+                    { title: 'Order Confirmed', time: '10 Aug, 10:30 AM', completed: true },
+                    { title: 'Packed & Ready for Dispatch', time: '10 Aug, 04:15 PM', completed: true },
+                    { title: 'In Transit (Arrived at Hub)', time: '11 Aug, 08:00 AM', active: true },
+                    { title: 'Out for Delivery', time: 'Expected 14 Aug', completed: false },
+                    { title: 'Delivered', time: 'Expected 14 Aug', completed: false }
+                ]
+            },
+            { 
+                id: 102, 
+                type: 'Travel', 
+                title: 'Singapore Explorer Tour', 
+                date: '02 Jul 2026', 
+                price: '₹90,000', 
+                status: 'Booked', 
+                badge: 'bg-info text-dark', 
+                cancellable: true,
+                trackable: true,
+                trackingSteps: [
+                    { title: 'Booking Confirmed', time: '02 Jul, 11:00 AM', completed: true },
+                    { title: 'Flight & Hotel Vouchers Issued', time: '03 Jul, 02:30 PM', active: true },
+                    { title: 'Tour Departure Date', time: 'Expected 15 Oct', completed: false }
+                ]
+            }
+        ];
+
+        const mobileData = [
+            { id: 'm1', title: 'iPhone 17 Pro', brand: 'Apple', price: 149999, img: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500' },
+            { id: 'm2', title: 'Samsung S24 Ultra', brand: 'Samsung', price: 129999, img: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=500' }
+        ];
+
+        const travelPackages = {
+            International: [{ id: 't1', title: 'Singapore Tour Package', price: 45000, img: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=500', desc: '5 Days / 4 Nights' }],
+            India: [{ id: 't3', title: 'Goa Beach Holiday', price: 15000, img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=500', desc: 'Water sports & beaches' }]
+        };
+
+        // Live API Backend URL (Jab aapka backend server http://localhost:5000 par chal raha ho)
+const API_BASE_URL = 'http://localhost:5000/api';
+
+async function loadMainWebsiteData() {
+    try {
+        // 1. Fetch Company Settings (Address, Phone, Email Footer ke liye)
+        const settingsRes = await fetch(`${API_BASE_URL}/settings`);
+        if (settingsRes.ok) {
+            const settings = await settingsRes.json();
+            // Phone, Email, Address update karein
+            if (document.getElementById('lblAddrPhone')) {
+                document.getElementById('lblAddrPhone').innerText = settings.phone || '+91 830 666 9999';
+            }
         }
+
+        // 2. Fetch Live CMS Policies (Privacy Policy, Terms, etc.)
+        const cmsRes = await fetch(`${API_BASE_URL}/cms/privacy-policy`);
+        if (cmsRes.ok) {
+            const cmsData = await cmsRes.json();
+            const privacyContainer = document.querySelector('#page-privacy .policy-card');
+            if (privacyContainer && cmsData.content) {
+                privacyContainer.innerHTML = cmsData.content;
+            }
+        }
+
+        // 3. Fetch Live Mobile / Products
+        const prodRes = await fetch(`${API_BASE_URL}/products`);
+        if (prodRes.ok) {
+            const products = await prodRes.json();
+            // Backend se aaye products ko load karein
+            if (typeof loadHomeTrending === 'function') {
+                // Live products render karein
+            }
+        }
+
+        // 4. Fetch Live Travel Packages
+        const travelRes = await fetch(`${API_BASE_URL}/travels`);
+        if (travelRes.ok) {
+            const travels = await travelRes.json();
+            // Live travels render karein
+        }
+
+    } catch (error) {
+        console.log("Backend offline ya connect nahi hai, local dummy data show ho raha hai:", error);
     }
-</script>
+}
+
+// Dom ready hone par load karein
+document.addEventListener("DOMContentLoaded", function() {
+    otpModal = new bootstrap.Modal(document.getElementById('otpVerificationModal'));
+    cancelModal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+    trackingModal = new bootstrap.Modal(document.getElementById('liveTrackingModal'));
+    
+    // Default local lists load karein
+    loadOrdersTable();
+    loadHomeTrending();
+
+    // Direct Live API backend se data fetch karein
+    loadMainWebsiteData();
+});
+
+        function loadOrdersTable() {
+            const tbody = document.getElementById('ordersTableBody');
+            tbody.innerHTML = userOrders.map(o => `
+                <tr>
+                    <td><span class="badge ${o.type === 'Mobile' ? 'bg-primary' : 'bg-info text-dark'}">${o.type}</span></td>
+                    <td class="fw-bold">${o.title}</td>
+                    <td>${o.date}</td>
+                    <td>${o.price}</td>
+                    <td><span class="badge ${o.badge}">${o.status}</span></td>
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end gap-2">
+                            ${o.trackable ? 
+                                `<button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="openLiveTracking(${o.id})"><i class="fa-solid fa-location-arrow me-1"></i> Track Live</button>` : ''
+                            }
+                            ${o.cancellable ? 
+                                `<button class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="openCancelModal(${o.id})"><i class="fa-solid fa-xmark me-1"></i> Cancel</button>` 
+                                : `<button class="btn btn-light btn-sm rounded-pill px-3 text-muted" disabled>N/A</button>`
+                            }
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openLiveTracking(orderId) {
+            const order = userOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            document.getElementById('trackItemTitle').innerText = order.title;
+            document.getElementById('trackItemDate').innerText = 'Order Date: ' + order.date;
+
+            const timelineContainer = document.getElementById('trackingTimelineContainer');
+            timelineContainer.innerHTML = (order.trackingSteps || []).map(step => `
+                <div class="tracking-step ${step.completed ? 'completed' : ''} ${step.active ? 'active' : ''}">
+                    <div class="tracking-icon"><i class="fa-solid ${step.completed ? 'fa-check' : 'fa-circle-dot'}"></i></div>
+                    <h6 class="fw-bold mb-1 fs-6">${step.title}</h6>
+                    <span class="small text-muted">${step.time}</span>
+                </div>
+            `).join('');
+
+            trackingModal.show();
+        }
+
+        function openCancelModal(orderId) {
+            const order = userOrders.find(o => o.id === orderId);
+            if (!order) return;
+            selectedCancelOrderId = orderId;
+            document.getElementById('cancelItemName').innerText = order.title;
+            cancelModal.show();
+        }
+
+        function confirmCancelOrder() {
+            if (!selectedCancelOrderId) return;
+            const order = userOrders.find(o => o.id === selectedCancelOrderId);
+            if (order) {
+                order.status = 'Cancelled';
+                order.badge = 'bg-danger';
+                order.cancellable = false;
+                order.trackable = false;
+            }
+            cancelModal.hide();
+            loadOrdersTable();
+            alert('Your order/booking has been cancelled successfully.');
+        }
+
+        function navigateTo(pageId, navEl = null) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            const targetPage = document.getElementById(pageId);
+            if(targetPage) {
+                targetPage.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            
+            if(navEl) {
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                navEl.classList.add('active');
+            }
+
+            if(pageId === 'page-home') loadHomeTrending();
+            if(pageId === 'page-travels') filterTravels('International');
+            if(pageId === 'page-mobile') loadMobiles();
+        }
+
+        function checkAuthAndNavigate() {
+            if (isLoggedIn) navigateTo('page-profile');
+            else navigateTo('page-auth');
+        }
+
+        function toggleAuthMode(mode) {
+            document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+            document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
+            document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+            document.getElementById('signupForm').style.display = mode === 'signup' ? 'block' : 'none';
+        }
+
+        function requestOtp(e, actionType) {
+            e.preventDefault();
+            pendingAction = actionType;
+            otpModal.show();
+        }
+
+        function verifyOtpAndProceed() {
+            otpModal.hide();
+            isLoggedIn = true;
+
+            if (pendingAction === 'update-profile') {
+                const nameVal = document.getElementById('profileNameInput').value;
+                document.getElementById('lblAddrName').innerText = nameVal;
+                alert('OTP Verified! Profile Details Updated Successfully.');
+            } else {
+                alert('OTP Verified! Login Successful.');
+                navigateTo('page-profile');
+            }
+        }
+
+        function toggleInlineAddressForm() {
+            const container = document.getElementById('inlineAddressContainer');
+            const btn = document.getElementById('toggleAddressFormBtn');
+            
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                btn.style.display = 'none';
+            } else {
+                container.style.display = 'none';
+                btn.style.display = 'inline-block';
+            }
+        }
+
+        function saveNewAddress(e) {
+            e.preventDefault();
+            const label = document.querySelector('input[name="addrLabelRadio"]:checked').value;
+            const name = document.getElementById('newAddrName').value;
+            const phone = document.getElementById('newAddrPhone').value;
+            const text = document.getElementById('newAddrText').value;
+            const city = document.getElementById('newAddrCity').value;
+            const state = document.getElementById('newAddrState').value;
+            const nation = document.getElementById('newAddrNation').value;
+
+            const container = document.getElementById('addressListContainer');
+            const newCardHTML = `
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 position-relative bg-white">
+                        <span class="badge bg-secondary position-absolute top-0 end-0 m-2">${label}</span>
+                        <h6 class="fw-bold mb-1">${name}</h6>
+                        <p class="small text-muted mb-1">${text}, ${city}</p>
+                        <p class="small text-muted mb-1">${state}, ${nation}</p>
+                        <p class="small text-muted mb-0">Phone: ${phone}</p>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', newCardHTML);
+            toggleInlineAddressForm();
+            document.getElementById('newAddressForm').reset();
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            alert('Logged Out!');
+            navigateTo('page-home');
+        }
+
+        function switchProfileTab(tabId, btnEl) {
+            document.querySelectorAll('.profile-tab-content').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.profile-nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).style.display = 'block';
+            btnEl.classList.add('active');
+        }
+
+        function loadHomeTrending() {
+            document.getElementById('homeTrendingGrid').innerHTML = mobileData.map(m => `
+                <div class="col-md-6 col-lg-3">
+                    <div class="card-custom p-3 text-center">
+                        <img src="${m.img}" class="prod-img">
+                        <h6 class="fw-bold mb-1">${m.title}</h6>
+                        <h5 class="text-primary fw-bold my-2">₹${m.price}</h5>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterTravels(type) {
+            document.getElementById('btn-intl').classList.toggle('active', type === 'International');
+            document.getElementById('btn-india').classList.toggle('active', type === 'India');
+            document.getElementById('travelGrid').innerHTML = (travelPackages[type] || []).map(t => `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-custom">
+                        <img src="${t.img}" class="card-img-top-custom">
+                        <div class="p-4">
+                            <h5 class="fw-bold">${t.title}</h5>
+                            <p class="text-muted small">${t.desc}</p>
+                            <span class="fw-bold fs-5 text-primary">₹${t.price}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadMobiles() {
+            document.getElementById('mobileGrid').innerHTML = mobileData.map(m => `
+                <div class="col-md-4">
+                    <div class="card-custom p-4 text-center">
+                        <img src="${m.img}" class="prod-img mb-2">
+                        <h6 class="fw-bold fs-5">${m.title}</h6>
+                        <h4 class="text-primary fw-bold my-2">₹${m.price}</h4>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
 </body>
 </html>

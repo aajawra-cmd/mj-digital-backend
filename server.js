@@ -1,140 +1,125 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const nodemailer = require('nodemailer');
 const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
 
 const app = express();
-
 app.use(express.json());
 app.use(cors());
-app.use(express.static(__dirname));
 
-// MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://aajawra_db_user:r27VmhH7bfMdfhof@mj.qwqplci.mongodb.net/leadDB?retryWrites=true&w=majority&appName=MJ";
+mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/mjdigitalDB')
+    .then(() => console.log('✅ Database Connected'))
+    .catch(err => console.log('❌ DB Error: ', err));
 
-mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
-.then(() => console.log('✅ MongoDB Connected Successfully'))
-.catch(err => console.error('❌ DB Connection Failed:', err.message));
-
-// Schemas
-const LeadSchema = new mongoose.Schema({
-    name: String, email: String, phone: String, service: String, message: String,
-    createdAt: { type: Date, default: Date.now }
-});
-
+// 1. Universal Product & Travel Package Schema
 const ItemSchema = new mongoose.Schema({
+    type: { type: String, enum: ['Product', 'Travel'], required: true },
+    category: { type: String, enum: ['Mobile', 'Travels', 'Fashion', 'Electronics', 'Services'], required: true },
+    
+    // Common Fields
     title: String,
-    category: String, // 'Product' ya 'Package'
-    price: String,
-    duration: String, // Packages ke liye
+    price: Number,
+    originalPrice: Number,
+    discountPercent: Number,
+    images: [String],
     description: String,
-    imageUrl: String,
+    isLive: { type: Boolean, default: true },
+
+    // Travels Specific
+    destinationType: { type: String, enum: ['International', 'India'] },
+    destinationName: String, // e.g. Singapore, Dubai, Goa
+    activities: [String],
+    timeSlots: [String],
+    
+    // Mobile / Electronics Specific Specs
+    brand: String,
+    modelName: String,
+    screenSize: String,
+    color: String,
+    storageSize: String,
+    cpuModel: String,
+    ramSize: String,
+    os: String,
+    specialFeatures: String,
+    graphicsCard: String,
+
     createdAt: { type: Date, default: Date.now }
 });
 
-const Lead = mongoose.model('Lead', LeadSchema);
-const Item = mongoose.model('Item', ItemSchema);
-
-// Email Transporter
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+// 2. Order & Booking Flow Schema
+const OrderSchema = new mongoose.Schema({
+    orderType: String, // 'Travel Booking' or 'Product Order'
+    customer: {
+        name: String,
+        email: String,
+        mobile: String,
+        address: {
+            street: String,
+            city: String,
+            state: String,
+            pincode: String
+        }
+    },
+    items: Array, // Product details or Travel Details (Travelers count, Slot date/time)
+    totalAmount: Number,
+    paymentStatus: { type: String, default: 'Pending' }, // 'Paid', 'COD', 'Pending'
+    orderStatus: { type: String, default: 'Confirmed' },
+    createdAt: { type: Date, default: Date.now }
 });
 
-// Page Routes
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+// 3. Admin Legal Pages & Policy Settings
+const PolicySchema = new mongoose.Schema({
+    privacyPolicy: String,
+    termsAndConditions: String,
+    refundPolicy: String
+});
+
+const Item = mongoose.model('Item', ItemSchema);
+const Order = mongoose.model('Order', OrderSchema);
+const Policy = mongoose.model('Policy', PolicySchema);
 
 // --- API ROUTES ---
 
-// Leads API
-app.post('/api/leads/submit', async (req, res) => {
+// Save / Update Item (Product or Travel)
+app.post('/api/admin/items', async (req, res) => {
     try {
-        if (mongoose.connection.readyState !== 1) {
-            return res.status(503).json({ success: false, message: "Database connected nahi hai." });
-        }
-        const { name, email, phone, service, message } = req.body;
-        const newLead = new Lead({ name, email, phone, service, message });
-        await newLead.save();
-        
-        res.json({ success: true, message: 'Lead saved successfully!' });
-
-        Promise.all([
-            transporter.sendMail({
-                from: process.env.EMAIL_USER, to: process.env.ADMIN_EMAIL,
-                subject: `🚨 New Lead: ${name}`,
-                html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Phone:</strong> ${phone}</p><p><strong>Service:</strong> ${service}</p><p><strong>Message:</strong> ${message}</p>`
-            }),
-            transporter.sendMail({
-                from: process.env.EMAIL_USER, to: email,
-                subject: `Thank you for contacting us, ${name}!`,
-                html: `<p>Hi ${name},</p><p>We received your request for <strong>${service}</strong>.</p>`
-            })
-        ]).catch(err => console.log('Mail error:', err.message));
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-app.get('/api/leads', async (req, res) => {
-    try {
-        const leads = await Lead.find().sort({ createdAt: -1 });
-        res.json(leads);
+        const item = new Item(req.body);
+        await item.save();
+        res.json({ success: true, item });
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        res.status(500).json({ error: err.message });
     }
 });
 
-app.delete('/api/leads/:id', async (req, res) => {
-    try {
-        await Lead.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Lead deleted' });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-});
-
-// Items API (Products & Packages)
-app.post('/api/items', async (req, res) => {
-    try {
-        const { title, category, price, duration, description, imageUrl } = req.body;
-        const newItem = new Item({ title, category, price, duration, description, imageUrl });
-        await newItem.save();
-        res.json({ success: true, message: 'Item added successfully!' });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-});
-
+// Get Items by Category / Destination Filter
 app.get('/api/items', async (req, res) => {
     try {
-        const items = await Item.find().sort({ createdAt: -1 });
+        const filter = {};
+        if (req.query.category) filter.category = req.query.category;
+        if (req.query.destinationType) filter.destinationType = req.query.destinationType;
+        if (req.query.brand) filter.brand = req.query.brand;
+
+        const items = await Item.find(filter);
         res.json(items);
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        res.status(500).json({ error: err.message });
     }
 });
 
-app.delete('/api/items/:id', async (req, res) => {
+// Save Policies
+app.post('/api/admin/policies', async (req, res) => {
     try {
-        await Item.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: 'Item deleted successfully!' });
+        let policy = await Policy.findOne();
+        if (!policy) policy = new Policy();
+        
+        policy.privacyPolicy = req.body.privacyPolicy;
+        policy.termsAndConditions = req.body.termsAndConditions;
+        policy.refundPolicy = req.body.refundPolicy;
+        
+        await policy.save();
+        res.json({ success: true, message: "Policies updated" });
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        res.status(500).json({ error: err.message });
     }
 });
 
-// Admin Login
-app.post('/api/admin/login', (req, res) => {
-    const { username, password } = req.body;
-    if (username === 'admin' && password === 'admin123') {
-        res.json({ success: true, token: 'admin-secret-token-123' });
-    } else {
-        res.status(401).json({ success: false, message: 'Invalid Credentials!' });
-    }
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(5000, () => console.log('🚀 Backend running on port 5000'));
