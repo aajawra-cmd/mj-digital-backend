@@ -1081,7 +1081,7 @@
                 return cachedAllProducts;
             }
             try {
-                const res = await fetch('http://localhost:5000/api/products');
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products');
                 const data = await res.json();
                 const items = Array.isArray(data) ? data : (data.data || []);
                 items.forEach(it => { catalogItemsCache[it._id] = it; });
@@ -1137,7 +1137,7 @@
 
             let travels = [];
             try {
-                const res = await fetch('http://localhost:5000/api/travel-packages');
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
                 if (res.ok) {
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
@@ -1171,7 +1171,7 @@
 
             let travels = [];
             try {
-                const res = await fetch('http://localhost:5000/api/travel-packages');
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
                 if (res.ok) {
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
@@ -1392,7 +1392,7 @@
             }
 
             try {
-                const res = await fetch('http://localhost:5000/api/travel-packages');
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
                 if (res.ok) {
                     const result = await res.json();
                     const remoteData = Array.isArray(result) ? result : (result.data || []);
@@ -2218,7 +2218,7 @@
                         }]
                     };
 
-                    return fetch('http://localhost:5000/api/orders', {
+                    return fetch('https://mj-digital-backend-3.onrender.com/api/orders', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -2235,7 +2235,7 @@
                     finishCheckout();
                 } else {
                     // Razorpay Order Creation
-                    const orderRes = await fetch('http://localhost:5000/api/payment/create-order', {
+                    const orderRes = await fetch('https://mj-digital-backend-3.onrender.com/api/payment/create-order', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ amount: totalPayable })
@@ -2264,7 +2264,7 @@
                         theme: { color: "#2563eb" },
                         handler: async function (response) {
                             try {
-                                const verifyRes = await fetch('http://localhost:5000/api/payment/verify', {
+                                const verifyRes = await fetch('https://mj-digital-backend-3.onrender.com/api/payment/verify', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify(response)
@@ -2326,7 +2326,7 @@
             if (!container) return;
 
             try {
-                const res = await fetch('http://localhost:5000/api/orders');
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/orders');
                 const rawOrders = await res.json();
                 const orders = Array.isArray(rawOrders) ? rawOrders : (rawOrders.data || rawOrders.orders || []);
 
@@ -2549,7 +2549,7 @@
             if (isTravel) {
                 let travels = [];
                 try {
-                    const res = await fetch('http://localhost:5000/api/travel-packages');
+                    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
                 } catch(e) {
@@ -2641,7 +2641,7 @@
             const finalReason = selectVal === 'Other' ? document.getElementById('cancelReasonCustom').value : selectVal;
 
             try {
-                const res = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+                const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${orderId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: 'Cancelled', cancelReason: finalReason })
@@ -2667,7 +2667,7 @@
 
         async function loadMainSitePolicies() {
             try {
-                const res = await fetch('http://localhost:5000/api/cms/policies');
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/cms/policies');
                 const result = await res.json();
                 const policies = Array.isArray(result) ? result : (result.data || []);
                 if (Array.isArray(policies) && policies.length > 0) {
@@ -2685,7 +2685,7 @@
 
         async function syncLiveStoreSettings() {
             try {
-                const res = await fetch('http://localhost:5000/api/settings');
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/settings');
                 const result = await res.json();
                 if (!res.ok || !result.success || !result.data) return;
                 const s = result.data;

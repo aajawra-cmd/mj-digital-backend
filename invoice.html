@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   try {
-    const res = await fetch('http://localhost:5000/api/orders');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/orders');
     const result = await res.json();
     const orders = Array.isArray(result) ? result : (result.data || result.orders || []);
 

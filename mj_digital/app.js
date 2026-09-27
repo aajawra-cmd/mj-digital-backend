@@ -258,7 +258,7 @@ function switchCmsTab(tabKey, element) {
 
 async function loadCmsPoliciesFromBackend() {
   try {
-    const res = await fetch('http://localhost:5000/api/cms/policies');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/cms/policies');
     const result = await res.json();
     const list = Array.isArray(result) ? result : (result.data || []);
 
@@ -297,7 +297,7 @@ async function saveCmsContent() {
   }
 
   try {
-    const res = await fetch(`http://localhost:5000/api/cms/policies/${activeCmsTab}`, {
+    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/cms/policies/${activeCmsTab}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: contentToSave })
@@ -329,7 +329,7 @@ async function renderRevenueChart() {
   if (!ctx || typeof Chart === 'undefined') return;
 
   try {
-    const res = await fetch('http://localhost:5000/api/analytics/monthly-revenue');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/analytics/monthly-revenue');
     const json = await res.json();
     const data = (json && json.success) ? json.data : chartDatasets.monthly;
 
@@ -551,7 +551,7 @@ async function loadAdminProducts() {
   const tbody = document.getElementById('productsTableBody');
 
   try {
-    const res = await fetch('http://localhost:5000/api/products');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products');
     const result = await res.json();
     const products = Array.isArray(result) ? result : (result.data || []);
     productsList = products;
@@ -804,8 +804,8 @@ async function handleProductSubmit(event) {
 
   const method = editingProductId ? 'PUT' : 'POST';
   const endpoint = editingProductId 
-    ? `http://localhost:5000/api/products/${editingProductId}` 
-    : 'http://localhost:5000/api/products';
+    ? `https://mj-digital-backend-3.onrender.com/api/products/${editingProductId}` 
+    : 'https://mj-digital-backend-3.onrender.com/api/products';
 
   try {
     const res = await fetch(endpoint, {
@@ -846,7 +846,7 @@ async function deleteProduct(productId) {
   if (!confirm('Kya aap sach mein ye product delete karna chahte hain?')) return;
 
   try {
-    const res = await fetch(`http://localhost:5000/api/products/${productId}`, {
+    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/products/${productId}`, {
       method: 'DELETE'
     });
     const data = await res.json();
@@ -867,7 +867,7 @@ async function quickUpdateProduct(id, field, value) {
     const payload = {};
     payload[field] = Number(value);
 
-    const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/products/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -885,7 +885,7 @@ async function quickUpdateProduct(id, field, value) {
 
 async function updateProductStatus(id, status) {
   try {
-    const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/products/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
@@ -1001,7 +1001,7 @@ async function loadAdminTravelPackages() {
   const container = document.getElementById('travelList');
 
   try {
-    const res = await fetch('http://localhost:5000/api/travel-packages');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
     const result = await res.json();
     const packages = Array.isArray(result) ? result : (result.data || []);
     cachedTravelPackages = packages;
@@ -1095,7 +1095,7 @@ async function handleTravelSubmit(event) {
   }
 
   try {
-    const res = await fetch('http://localhost:5000/api/travel-packages', {
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages', {
       method: 'POST',
       body: formData
     });
@@ -1118,7 +1118,7 @@ async function handleTravelSubmit(event) {
 async function deleteTravelPackage(id) {
   if (!confirm('Kya aap sach me is travel package ko delete karna chahte hain?')) return;
   try {
-    const res = await fetch(`http://localhost:5000/api/travel-packages/${id}`, { method: 'DELETE' });
+    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}`, { method: 'DELETE' });
     const data = await res.json();
     if (res.ok && data.success) {
       loadAdminTravelPackages();
@@ -1133,7 +1133,7 @@ async function deleteTravelPackage(id) {
 
 async function updateTravelStatus(id, newStatus) {
   try {
-    const res = await fetch(`http://localhost:5000/api/travel-packages/${id}/status`, {
+    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus })
@@ -1152,7 +1152,7 @@ async function updateTravelStatus(id, newStatus) {
 
 async function quickUpdateTravelPrice(id, newPrice) {
   try {
-    const res = await fetch(`http://localhost:5000/api/travel-packages/${id}/quick-update`, {
+    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}/quick-update`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ price: Number(newPrice) })
@@ -1211,7 +1211,7 @@ async function handleEditTravelSubmit(event) {
   };
 
   try {
-    const res = await fetch(`http://localhost:5000/api/travel-packages/${id}`, {
+    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -1246,7 +1246,7 @@ window.closeEditTravelModal = () => closeModal('editTravelModal');
 // ==========================================
 async function loadParentCategoryDropdown() {
   try {
-    const res = await fetch('http://localhost:5000/api/categories');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/categories');
     const result = await res.json();
     const select = document.getElementById('parentCategorySelect');
     if (!select) return;
@@ -1267,7 +1267,7 @@ async function loadCategoriesCatalog() {
   const prodCatSelect = document.getElementById('prodCategory') || document.getElementById('prodCat');
 
   try {
-    const res = await fetch('http://localhost:5000/api/categories');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/categories');
     const result = await res.json();
     const categories = Array.isArray(result) ? result : (result.data || []);
 
@@ -1326,7 +1326,7 @@ async function handleCategorySubmit(event) {
   }
 
   try {
-    const res = await fetch('http://localhost:5000/api/categories', {
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -1352,7 +1352,7 @@ async function deleteCategory(id) {
   if (!confirm('Kya aap sach mein is category ko delete karna chahte hain?')) return;
 
   try {
-    const res = await fetch(`http://localhost:5000/api/categories/${id}`, {
+    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/categories/${id}`, {
       method: 'DELETE'
     });
     const data = await res.json();
@@ -1575,7 +1575,7 @@ async function loadAdminOrders() {
   const tbody = document.getElementById('ordersTableBody');
 
   try {
-    const res = await fetch('http://localhost:5000/api/orders');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/orders');
     const result = await res.json();
     const rawOrders = Array.isArray(result) ? result : (result.data || result.orders || []);
 
@@ -1762,14 +1762,14 @@ document.addEventListener('change', async function(e) {
       const payload = { status: newStatus };
       if (newStatus !== 'Cancelled') payload.cancelReason = '';
 
-      let res = await fetch(`http://localhost:5000/api/orders/${rawId}/status`, {
+      let res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${rawId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       if (!res.ok) {
-        res = await fetch(`http://localhost:5000/api/orders/${rawId}`, {
+        res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${rawId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -1833,14 +1833,14 @@ document.addEventListener('change', async function(e) {
         cancelReason: newStatus === 'Cancelled' ? 'Cancelled by Admin' : ''
       };
 
-      let res = await fetch(`http://localhost:5000/api/orders/${rawId}/status`, {
+      let res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${rawId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       if (!res.ok) {
-        res = await fetch(`http://localhost:5000/api/orders/${rawId}`, {
+        res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${rawId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -1884,14 +1884,14 @@ window.changeActiveOrderStatus = async function(newStatus) {
       cancelReason: newStatus === 'Cancelled' ? 'Cancelled by Admin' : ''
     };
 
-    let res = await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
+    let res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${orderId}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
-      res = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${orderId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -1991,7 +1991,7 @@ async function renderMediaGrid() {
   if (!container) return;
 
   try {
-    const res = await fetch('http://localhost:5000/api/media');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/media');
     const result = await res.json();
     const mediaList = result.success ? result.data : [];
 
@@ -2051,7 +2051,7 @@ async function handleMediaUpload() {
   }
 
   try {
-    const res = await fetch('http://localhost:5000/api/media', {
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/media', {
       method: 'POST',
       body: formData
     });
@@ -2084,7 +2084,7 @@ async function renderLogsTable(logsToRender = null) {
 
   try {
     if (!logsToRender) {
-      const res = await fetch('http://localhost:5000/api/audit-logs');
+      const res = await fetch('https://mj-digital-backend-3.onrender.com/api/audit-logs');
       const result = await res.json();
       currentDatabaseLogs = (result && result.success && result.data) ? result.data : [];
     } else {
@@ -2198,7 +2198,7 @@ function exportLogsCSV() {
 async function clearActivityLogs() {
   if (!confirm('Kya aap sabhi purane audit logs database se permanently clear karna chahte hain?')) return;
   try {
-    const res = await fetch('http://localhost:5000/api/audit-logs', { method: 'DELETE' });
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/audit-logs', { method: 'DELETE' });
     const data = await res.json();
     if (res.ok && data.success) {
       alert('Sabhi audit activity logs database se clear ho gaye!');
@@ -2250,7 +2250,7 @@ async function savePlatformSettings() {
   };
 
   try {
-    const res = await fetch('http://localhost:5000/api/settings', {
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settingsData)
@@ -2276,7 +2276,7 @@ async function savePlatformSettings() {
 
 async function loadPlatformSettings() {
   try {
-    const res = await fetch('http://localhost:5000/api/settings');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/settings');
     const result = await res.json();
     const data = (result && result.success && result.data) ? result.data : JSON.parse(localStorage.getItem('mj_platform_settings') || '{}');
 
@@ -2350,7 +2350,7 @@ async function handleAdminLogin(event) {
   if (errorEl) errorEl.classList.add('hidden');
 
   try {
-    const response = await fetch('http://localhost:5000/api/auth/login', {
+    const response = await fetch('https://mj-digital-backend-3.onrender.com/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -2442,7 +2442,7 @@ setInterval(() => {
 
 async function fetchAndRenderSitePolicies() {
   try {
-    const res = await fetch('http://localhost:5000/api/cms/policies');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/cms/policies');
     const result = await res.json();
 
     if (res.ok && result.success && Array.isArray(result.data)) {

@@ -316,7 +316,7 @@ app.post(['/api/products', '/api/items'], upload.any(), async (req, res) => {
 
     if (req.files && req.files.length > 0) {
       req.files.forEach(file => {
-        imageList.push(`http://localhost:5000/uploads/${file.filename}`);
+        imageList.push(`https://mj-digital-backend-3.onrender.com/uploads/${file.filename}`);
       });
     }
 
@@ -423,7 +423,7 @@ app.put(['/api/products/:id', '/api/items/:id'], upload.any(), async (req, res) 
     }
 
     if (req.files && req.files.length > 0) {
-      let newImages = req.files.map(f => `http://localhost:5000/uploads/${f.filename}`);
+      let newImages = req.files.map(f => `https://mj-digital-backend-3.onrender.com/uploads/${f.filename}`);
       updateFields.$push = { images: {$each: newImages } };
       if (!body.imageUrl) updateFields.imageUrl = newImages[0];
     }
@@ -526,7 +526,7 @@ app.post('/api/travel-packages', upload.array('images', 5), async (req, res) => 
 
     if (req.files && req.files.length > 0) {
       req.files.forEach(file => {
-        imageList.push(`http://localhost:5000/uploads/${file.filename}`);
+        imageList.push(`https://mj-digital-backend-3.onrender.com/uploads/${file.filename}`);
       });
     }
 
@@ -938,7 +938,7 @@ app.post('/api/media', upload.single('mediaFile'), async (req, res) => {
     let fileSize = req.body.size || '1.0 MB';
 
     if (req.file) {
-      fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+      fileUrl = `https://mj-digital-backend-3.onrender.com/uploads/${req.file.filename}`;
       fileName = req.body.name || req.file.originalname;
       fileSize = (req.file.size / (1024 * 1024)).toFixed(1) + ' MB';
     }

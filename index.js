@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://mj-digital-backend-3.onrender.com/api';
 
 // Universal Safe Category Matcher (Strict Category Mapping)
 function matchCategory(productCategory, targetTab) {
@@ -241,7 +241,7 @@ let sitePoliciesCache = {};
 
 async function fetchAllSitePolicies() {
   try {
-    const res = await fetch('http://localhost:5000/api/cms/policies');
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/cms/policies');
     const result = await res.json();
     const data = Array.isArray(result) ? result : (result.data || []);
 
