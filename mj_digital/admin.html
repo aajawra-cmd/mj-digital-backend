@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M J DIGITAL - Enterprise Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  </head>
+  <body class="bg-gray-100 font-sans text-gray-800">
+
+    <!-- Admin Authentication Overlay Screen -->
+    <div id="adminAuthScreen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl space-y-6 text-center">
+        <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto text-white text-xl font-extrabold shadow-lg shadow-blue-500/30">
+          MJ
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">Admin Authentication</h2>
+          <p class="text-xs text-gray-500 mt-1">Access restricted to authorized personnel</p>
+        </div>
+
+        <form onsubmit="handleAdminLogin(event)" class="space-y-4 text-left">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">Admin Email / Mobile</label>
+            <div class="relative">
+              <i class="fa-regular fa-envelope absolute left-3.5 top-3 text-gray-400 text-xs"></i>
+              <input type="text" id="authEmailInput" required value="admin@mjdigital.in" class="w-full border rounded-xl pl-9 pr-3 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
+            <div class="relative">
+              <i class="fa-solid fa-lock absolute left-3.5 top-3 text-gray-400 text-xs"></i>
+              <input type="password" id="authPasswordInput" required placeholder="admin" class="w-full border rounded-xl pl-9 pr-3 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-xs shadow-md transition">
+            Authenticate & Login
+          </button>
+        </form>
+        <p id="authErrorMsg" class="hidden text-rose-500 text-xs font-semibold"></p>
+      </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="flex h-screen overflow-hidden">
+      <!-- UNIFORM SIDEBAR -->
+      <aside class="w-64 bg-white border-r border-gray-100 flex flex-col justify-between p-4 z-10 shrink-0 select-none">
+        <div class="space-y-6">
+          <!-- Brand Logo & Name -->
+          <div class="flex items-center gap-3 px-2">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-blue-500/20">
+              MJ
+            </div>
+            <div>
+              <h1 class="font-bold text-sm text-gray-900 tracking-tight leading-tight">M J DIGITAL</h1>
+              <p class="text-[10px] text-gray-400 font-medium tracking-wider uppercase">E-Com & Travel</p>
+            </div>
+          </div>
+
+          <!-- Navigation Menus -->
+          <div class="space-y-4">
+            <!-- Section: MAIN -->
+            <div class="space-y-1">
+              <p class="px-3 text-[10px] font-bold text-gray-400 tracking-wider uppercase">Main</p>
+              <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-blue-600 bg-blue-50 transition">
+                <i class="fa-solid fa-table-cells-large w-4 text-center text-sm"></i>
+                <span>Dashboard Overview</span>
+              </button>
+            </div>
+
+            <!-- Section: CATALOG & TRAVEL -->
+            <div class="space-y-1">
+              <p class="px-3 text-[10px] font-bold text-gray-400 tracking-wider uppercase">Catalog & Travel</p>
+              <button onclick="switchTab('products'); if(typeof loadAdminProducts === 'function') loadAdminProducts();" id="nav-products" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="fa-solid fa-box-archive w-4 text-center text-sm"></i>
+                <span>Products (E-Com)</span>
+              </button>
+              <button onclick="switchTab('travel'); if(typeof loadAdminTravelPackages === 'function') loadAdminTravelPackages();" id="nav-travel" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                <i class="fa-solid fa-plane-departure w-4 text-center text-sm"></i>
+                <span>Travel Packages</span>
+              </button>
+              <button onclick="switchTab('categories'); if(typeof loadCategoriesCatalog === 'function') loadCategoriesCatalog();" id="nav-categories" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
+                <i class="fa-solid fa-layer-group w-4 text-center text-sm"></i>
+                <span>Categories & Sub</span>
+              </button>
+            </div>
+
+            <!-- Section: SALES & ORDERS -->
+            <div class="space-y-1">
+              <p class="px-3 text-[10px] font-bold text-gray-400 tracking-wider uppercase">Sales & Orders</p>
+              <button onclick="switchTab('orders'); if(typeof loadAdminOrders === 'function') loadAdminOrders();" id="nav-orders" class="nav-item w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
+                <div class="flex items-center gap-3">
+                  <i class="fa-solid fa-receipt w-4 text-center text-sm"></i>
+                  <span>Orders & Bookings</span>
+                </div>
+                <span id="sidebarOrdersBadge" class="bg-blue-100 text-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+              </button>
+            </div>
+
+            <!-- Section: SYSTEM & CONTENT -->
+            <div class="space-y-1">
+              <p class="px-3 text-[10px] font-bold text-gray-400 tracking-wider uppercase">System & Content</p>
+              <button onclick="switchTab('cms'); if(typeof loadCmsPoliciesFromBackend === 'function') loadCmsPoliciesFromBackend();" id="nav-cms" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
+                <i class="fa-solid fa-file-contract w-4 text-center text-sm"></i>
+                <span>CMS & Legal Content</span>
+              </button>
+              <button onclick="switchTab('media'); if(typeof renderMediaGrid === 'function') renderMediaGrid();" id="nav-media" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
+                <i class="fa-solid fa-photo-film w-4 text-center text-sm"></i>
+                <span>Media Library</span>
+              </button>
+              <button onclick="switchTab('audit'); if(typeof renderLogsTable === 'function') renderLogsTable();" id="nav-audit" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
+                <i class="fa-solid fa-shield-halved w-4 text-center text-sm"></i>
+                <span>Audit Activity Logs</span>
+              </button>
+              <button onclick="switchTab('settings'); if(typeof loadPlatformSettings === 'function') loadPlatformSettings();" id="nav-settings" class="nav-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
+                <i class="fa-solid fa-sliders w-4 text-center text-sm"></i>
+                <span>Platform Settings</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Profile Badge Footer -->
+        <div class="pt-4 border-t border-gray-100 flex items-center justify-between px-2">
+          <div class="flex items-center gap-3 truncate">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+              MA
+            </div>
+            <div class="truncate leading-tight">
+              <p id="sidebarAdminName" class="text-xs font-bold text-gray-800 truncate">M. J. Admin</p>
+              <p class="text-[10px] text-gray-400">Super Administrator</p>
+            </div>
+          </div>
+          <button type="button" onclick="handleAdminLogout()" title="Logout Session" class="text-gray-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition">
+            <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN WRAPPER -->
+      <div class="flex-1 flex flex-col overflow-y-auto">
+        <!-- HEADER -->
+        <header class="bg-white border-b px-5 py-3 flex justify-between items-center sticky top-0 z-20">
+          <div class="relative w-96">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+            <input type="text" placeholder="Global search products, bookings, logs..." class="w-full bg-gray-50 border rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-blue-500">
+          </div>
+
+          <!-- Header Right Actions -->
+          <div class="flex items-center gap-3 relative">
+            <!-- Notifications Bell -->
+            <div class="relative">
+              <button 
+                type="button" 
+                onclick="toggleDropdown(event, 'notificationsDropdown')" 
+                class="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition outline-none"
+              >
+                <i class="fa-solid fa-bell text-lg"></i>
+                <span 
+                  id="notificationBadge" 
+                  class="absolute top-1 right-1 min-w-[18px] h-[18px] bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-sm"
+                  style="display: none;"
+                >
+                  0
+                </span>
+              </button>
+
+              <div 
+                id="notificationsDropdown" 
+                class="hidden absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden"
+              >
+                <div class="p-4 text-center text-xs text-gray-400">Loading alerts...</div>
+              </div>
+            </div>
+
+            <!-- Create New Button -->
+            <div class="relative">
+              <button 
+                type="button" 
+                onclick="toggleDropdown(event, 'createDropdownMenu')" 
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm transition"
+              >
+                <i class="fa-solid fa-plus text-xs"></i> Create New
+              </button>
+
+              <div id="createDropdownMenu" class="hidden absolute right-0 top-12 w-48 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-50 text-xs font-semibold">
+                <button type="button" onclick="openModal('addProductModal'); closeAllDropdowns();" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+                  <i class="fa-solid fa-box text-blue-500 w-4"></i> New Product
+                </button>
+                <button type="button" onclick="openModal('addTravelModal'); closeAllDropdowns();" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+                  <i class="fa-solid fa-plane text-emerald-500 w-4"></i> New Travel Package
+                </button>
+                <button type="button" onclick="openModal('addCategoryModal'); closeAllDropdowns();" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+                  <i class="fa-solid fa-folder text-amber-500 w-4"></i> New Category
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- CONTENT SECTIONS -->
+        <main class="p-6 flex-1">
+          <!-- DASHBOARD SECTION -->
+          <section id="dashboardSection" class="tab-content space-y-6">
+            <div class="flex justify-between items-center">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-800">System Dashboard Overview</h2>
+                <p class="text-xs text-gray-500">Real-time performance metrics for E-Commerce & Travel business.</p>
+              </div>
+              
+              <div class="flex items-center gap-2">
+                <select id="dashboardTimeframeSelect" onchange="handleTimeframeChange(this.value)" class="text-xs font-semibold px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm outline-none cursor-pointer text-gray-700 hover:border-blue-500 transition">
+                  <option value="monthly">This Year (Monthly)</option>
+                  <option value="weekly">This Month (Weekly)</option>
+                  <option value="daily">This Week (Daily)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-4 gap-5">
+              <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-md transition">
+                <div>
+                  <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">TOTAL REVENUE</p>
+                  <h3 id="statTotalRevenue" class="text-2xl font-bold text-gray-900">₹0</h3>
+                  <span id="statRevenueGrowth" class="text-xs font-semibold text-emerald-600 inline-flex items-center gap-1 mt-1">
+                    <i class="fa-solid fa-arrow-trend-up"></i> +0% vs last month
+                  </span>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                  <i class="fa-solid fa-indian-rupee-sign text-xl"></i>
+                </div>
+              </div>
+
+              <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-md transition">
+                <div>
+                  <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">ACTIVE PRODUCTS</p>
+                  <h3 id="statTotalProducts" class="text-2xl font-extrabold text-gray-900 mt-1">0 Items</h3>
+                  <span id="statProductCategories" class="text-xs font-semibold text-blue-600 inline-flex items-center gap-1 mt-1">
+                    <i class="fa-solid fa-box-open"></i> 0 Categories
+                  </span>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-tr from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-purple-200">
+                  <i class="fa-solid fa-cart-shopping text-xl"></i>
+                </div>
+              </div>
+
+              <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-md transition">
+                <div>
+                  <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">TRAVEL PACKAGES</p>
+                  <h3 id="statTotalTravel" class="text-2xl font-extrabold text-gray-900 mt-1">0 Packages</h3>
+                  <span id="statTravelDestinations" class="text-xs font-semibold text-amber-600 inline-flex items-center gap-1 mt-1">
+                    <i class="fa-solid fa-location-dot"></i> 0 Destinations
+                  </span>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-200">
+                  <i class="fa-solid fa-plane-up text-xl"></i>
+                </div>
+              </div>
+
+              <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between hover:shadow-md transition">
+                <div>
+                  <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">ORDERS & BOOKINGS</p>
+                  <h3 id="statTotalOrders" class="text-2xl font-extrabold text-gray-900 mt-1">0 Total</h3>
+                  <span id="statOrdersFulfillment" class="text-xs font-semibold text-emerald-600 inline-flex items-center gap-1 mt-1">
+                    <i class="fa-solid fa-circle-check"></i> 100% Fulfilled
+                  </span>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-tr from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-200">
+                  <i class="fa-solid fa-receipt text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Revenue Chart + Live Activity Feed -->
+            <div class="grid grid-cols-3 gap-5">
+              <div class="col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100">Revenue Overview (E-Commerce vs Travel)</h3>
+                    <p class="text-[11px] text-gray-400">Monthly Breakdown</p>
+                  </div>
+                  <div class="flex items-center gap-4 text-xs font-semibold">
+                    <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300"><span class="w-3 h-3 rounded bg-indigo-600"></span> Products (₹)</span>
+                    <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-300"><span class="w-3 h-3 rounded bg-emerald-500"></span> Travel Packages (₹)</span>
+                  </div>
+                </div>
+                <div class="relative h-72 w-full">
+                  <canvas id="revenueChart"></canvas>
+                </div>
+              </div>
+
+              <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-4 flex flex-col justify-between">
+                <div>
+                  <div class="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 pb-3">
+                    <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100">Live Activity Feed</h3>
+                    <button type="button" onclick="switchTab('audit')" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 text-xs font-semibold transition">
+                      View All
+                    </button>
+                  </div>
+
+                  <ul id="liveActivityFeedList" class="space-y-4 pt-3.5 text-xs">
+                    <li class="text-xs text-gray-400 py-3 text-center">Syncing live logs...</li>
+                  </ul>
+                </div>
+
+                <p class="text-[10px] text-gray-400 pt-3 border-t border-gray-100 dark:border-gray-700 text-center">
+                  Syncing real-time system logs
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- PRODUCTS SECTION -->
+          <section id="productsSection" class="tab-content hidden space-y-4">
+            <div class="flex justify-between items-center flex-wrap gap-3">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-800">Products Catalog</h2>
+                <p class="text-xs text-gray-500">Manage products, stock inventory, and categories</p>
+              </div>
+
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                  <input type="text" id="prodSearchInput" oninput="filterProductsTable()" placeholder="Search product name..." class="bg-white border rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-44">
+                </div>
+
+                <select id="prodCategoryFilter" onchange="filterProductsTable()" class="bg-white border rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="all">All Categories</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Fashion">Fashion</option>
+                  <option value="Mobiles">Mobiles</option>
+                  <option value="Services">Services</option>
+                </select>
+
+                <select id="prodStatusFilter" onchange="filterProductsTable()" class="bg-white border rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="all">All Status</option>
+                  <option value="Active">Active</option>
+                  <option value="Out of Stock">Out of Stock</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+
+                <button type="button" onclick="openModal('csvModal')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition">
+                  <i class="fa-solid fa-file-csv text-sm"></i> Bulk CSV Import
+                </button>
+
+                <button type="button" onclick="openModal('addProductModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition">
+                  <i class="fa-solid fa-plus"></i> Add Product
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl border overflow-hidden shadow-sm">
+              <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 border-b text-xs text-gray-500 uppercase">
+                  <tr>
+                    <th class="p-3">Product Name</th>
+                    <th class="p-3">Brand</th>
+                    <th class="p-3">Category</th>
+                    <th class="p-3">Price</th>
+                    <th class="p-3">Stock</th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="productsTableBody" class="divide-y text-sm text-gray-700"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- TRAVEL SECTION -->
+          <section id="travelSection" class="tab-content hidden space-y-4">
+            <div class="flex justify-between items-center">
+              <h2 class="text-2xl font-bold text-gray-800">Travel Packages</h2>
+              <button type="button" onclick="openModal('addTravelModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+                + Add Travel Package
+              </button>
+            </div>
+            <div id="travelList" class="grid grid-cols-3 gap-4">
+               <!-- Dynamic travel packages -->
+            </div>
+          </section>
+
+          <!-- CATEGORIES SECTION -->
+          <section id="categoriesSection" class="tab-content hidden space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-xl font-bold text-gray-800">Categories & Subcategories</h2>
+                <p class="text-xs text-gray-500">Manage catalog taxonomy for both E-commerce and Travel</p>
+              </div>
+              <button type="button" onclick="openModal('addCategoryModal')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition">
+                <i class="fa-solid fa-plus text-xs"></i> Add New Category
+              </button>
+            </div>
+
+            <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase font-semibold">
+                  <tr>
+                    <th class="py-3.5 px-4">Category Name</th>
+                    <th class="py-3.5 px-4">Type</th>
+                    <th class="py-3.5 px-4">Parent Category</th>
+                    <th class="py-3.5 px-4">Slug</th>
+                    <th class="py-3.5 px-4 text-center">Status</th>
+                    <th class="py-3.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="categoryTableBody" class="divide-y divide-gray-100 text-gray-700"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- ORDERS & BOOKINGS SECTION -->
+          <section id="ordersSection" class="tab-content hidden space-y-5">
+            <div class="flex justify-between items-center flex-wrap gap-3">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900">Orders & Bookings Management</h2>
+                <p class="text-xs text-gray-500 mt-1">Track customer orders, travel reservations, payments, and delivery statuses.</p>
+              </div>
+              
+              <!-- Filters -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="relative">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                  <input type="text" id="orderSearchInput" oninput="filterOrdersTable()" placeholder="Search ID or Customer..." class="bg-white border rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-700 shadow-xs focus:outline-none focus:ring-1 focus:ring-blue-500 w-48">
+                </div>
+
+                <select id="orderTypeFilter" onchange="filterOrdersTable()" class="bg-white border rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm outline-none">
+                  <option value="all">All Channels</option>
+                  <option value="mobile">Mobile</option>
+                  <option value="fashion">Fashion</option>
+                  <option value="electronics">Electronics</option>
+                  <option value="services">Services</option>
+                  <option value="travel">Travel Package</option>
+                </select>
+
+                <select id="orderStatusFilter" onchange="filterOrdersTable()" class="bg-white border rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm outline-none">
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="in transit">In Transit</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase font-semibold">
+                  <tr>
+                    <th class="py-3.5 px-4">Order / Booking ID</th>
+                    <th class="py-3.5 px-4">Customer</th>
+                    <th class="py-3.5 px-4">Type</th>
+                    <th class="py-3.5 px-4">Amount</th>
+                    <th class="py-3.5 px-4">Payment Info</th>
+                    <th class="py-3.5 px-4">Status</th>
+                    <th class="py-3.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersTableBody" class="divide-y divide-gray-100 text-gray-700">
+                  <!-- Dynamic Rows Rendered Here -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- CMS & LEGAL POLICIES SECTION -->
+          <section id="cmsSection" class="tab-content hidden space-y-5">
+            <!-- Top Header -->
+            <div class="flex justify-between items-start">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900">CMS & Legal Policies</h2>
+                <p class="text-xs text-gray-500 mt-1">Edit platform terms, privacy policy, refund policy, and customer FAQs.</p>
+              </div>
+              <button type="button" onclick="saveCmsContent()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition">
+                <i class="fa-solid fa-floppy-disk text-xs"></i> Save Changes
+              </button>
+            </div>
+
+            <!-- Navigation Sub-Tabs -->
+            <div class="flex gap-6 border-b border-gray-200 text-xs font-semibold text-gray-500">
+              <button type="button" class="cms-tab text-blue-600 border-b-2 border-blue-600 pb-2 transition font-bold" onclick="switchCmsTab('terms', this)">Terms & Conditions</button>
+              <button type="button" class="cms-tab hover:text-gray-800 pb-2 transition text-gray-500" onclick="switchCmsTab('privacy', this)">Privacy Policy</button>
+              <button type="button" class="cms-tab hover:text-gray-800 pb-2 transition text-gray-500" onclick="switchCmsTab('refund', this)">Refund & Cancellation</button>
+              <button type="button" class="cms-tab hover:text-gray-800 pb-2 transition text-gray-500" onclick="switchCmsTab('additional', this)">Additional Terms & Details</button>
+              <button type="button" class="cms-tab hover:text-gray-800 pb-2 transition text-gray-500" onclick="switchCmsTab('faq', this)">FAQ Manager</button>
+            </div>
+
+            <!-- Rich Text Editor View -->
+            <div id="cmsEditorContainer" class="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-4">
+              <div class="flex items-center gap-2 bg-gray-50 border border-gray-200/80 rounded-xl px-4 py-2 text-xs font-bold text-gray-700 select-none">
+                <button type="button" onmousedown="event.preventDefault()" onclick="formatDoc('bold')" title="Bold" class="w-7 h-7 flex items-center justify-center rounded hover:bg-white hover:shadow-xs transition">B</button>
+                <button type="button" onmousedown="event.preventDefault()" onclick="formatDoc('italic')" title="Italic" class="w-7 h-7 flex items-center justify-center rounded hover:bg-white hover:shadow-xs transition italic font-serif">I</button>
+                <button type="button" onmousedown="event.preventDefault()" onclick="formatDoc('underline')" title="Underline" class="w-7 h-7 flex items-center justify-center rounded hover:bg-white hover:shadow-xs transition underline">U</button>
+                <span class="text-gray-300 mx-1">|</span>
+                <button type="button" onmousedown="event.preventDefault()" onclick="formatDoc('insertUnorderedList')" title="Bullet List" class="px-2.5 py-1 flex items-center gap-1 rounded hover:bg-white hover:shadow-xs transition">• List</button>
+                <button type="button" onmousedown="event.preventDefault()" onclick="formatDoc('formatBlock', 'h2')" title="Heading 2" class="px-2 py-1 rounded hover:bg-white hover:shadow-xs transition">H2</button>
+                <button type="button" onmousedown="event.preventDefault()" onclick="formatDoc('formatBlock', 'h3')" title="Heading 3" class="px-2 py-1 rounded hover:bg-white hover:shadow-xs transition">H3</button>
+              </div>
+              <div id="cmsEditor" contenteditable="true" oninput="if(typeof autoSyncCmsContent === 'function') autoSyncCmsContent()" class="min-h-[380px] p-5 border border-gray-200 rounded-xl text-xs text-gray-700 leading-relaxed outline-none focus:border-blue-500 bg-white transition space-y-2">
+              </div>
+            </div>
+
+            <!-- Dedicated FAQ Manager View -->
+            <div id="cmsFaqContainer" class="hidden space-y-4">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-900 text-base">Frequently Asked Questions</h3>
+                <button type="button" onclick="addNewFaqItem()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+                  + Add FAQ Question
+                </button>
+              </div>
+
+              <div id="faqListContainer" class="space-y-3">
+                <!-- Dynamic FAQ Cards -->
+              </div>
+            </div>
+          </section>
+
+          <!-- MEDIA ASSET LIBRARY SECTION -->
+          <section id="mediaSection" class="tab-content hidden space-y-6">
+            <div class="flex justify-between items-start">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900">Media Asset Library</h2>
+                <p class="text-xs text-gray-500 mt-1">Upload, view, copy links, and organize catalog images.</p>
+              </div>
+              <button type="button" onclick="openModal('uploadMediaModal')" class="bg-[#0e7490] hover:bg-[#155e75] text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition">
+                <i class="fa-solid fa-cloud-arrow-up text-sm"></i> Upload New Media
+              </button>
+            </div>
+
+            <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-lg">
+                  <i class="fa-solid fa-hard-drive"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-gray-800">Cloud Storage Consumption</p>
+                  <p class="text-[11px] text-gray-500">2.4 GB of 10.0 GB Used (24%)</p>
+                </div>
+              </div>
+              <div class="w-72 bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                <div class="bg-teal-500 h-2.5 rounded-full" style="width: 24%"></div>
+              </div>
+            </div>
+
+            <div id="mediaGridContainer" class="grid grid-cols-4 gap-5">
+              <!-- Dynamic Media Cards -->
+            </div>
+          </section>
+
+          <!-- AUDIT ACTIVITY LOGS SECTION -->
+          <section id="auditSection" class="tab-content hidden space-y-5">
+            <div class="flex justify-between items-start flex-wrap gap-3">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900">Audit Activity Logs</h2>
+                <p class="text-xs text-gray-500 mt-1">Track admin sessions, catalog modifications, deletions, and security events.</p>
+              </div>
+              
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="exportLogsCSV()" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition">
+                  <i class="fa-solid fa-arrow-down-to-line text-xs"></i> Export Logs
+                </button>
+                <button type="button" onclick="clearActivityLogs()" class="bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-semibold px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition">
+                  <i class="fa-regular fa-trash-can text-xs"></i> Clear Old
+                </button>
+              </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="flex items-center justify-between gap-3 bg-white p-3 rounded-xl border border-gray-100 shadow-xs flex-wrap">
+              <div class="relative flex-1 min-w-[220px]">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                <input type="text" id="logSearchInput" oninput="filterLogsTable()" placeholder="Search action, user or details..." class="w-full bg-gray-50 border rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+
+              <div class="flex items-center gap-2">
+                <select id="logActionFilter" onchange="filterLogsTable()" class="bg-white border rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs focus:outline-none">
+                  <option value="all">All Actions</option>
+                  <option value="CREATE">CREATE</option>
+                  <option value="UPDATE">UPDATE</option>
+                  <option value="DELETE">DELETE</option>
+                  <option value="AUTH">AUTH</option>
+                </select>
+
+                <select id="logSeverityFilter" onchange="filterLogsTable()" class="bg-white border rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-xs focus:outline-none">
+                  <option value="all">All Status</option>
+                  <option value="Success">Success</option>
+                  <option value="Warning">Warning</option>
+                  <option value="Danger">Danger</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Logs Table -->
+            <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase font-semibold">
+                  <tr>
+                    <th class="py-3.5 px-4">Timestamp</th>
+                    <th class="py-3.5 px-4">Administrator</th>
+                    <th class="py-3.5 px-4">Action</th>
+                    <th class="py-3.5 px-4">Description</th>
+                    <th class="py-3.5 px-4">IP Address</th>
+                    <th class="py-3.5 px-4 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="logsTableBody" class="divide-y divide-gray-100 text-gray-700">
+                  <!-- Dynamic Logs Rendered Here -->
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- PLATFORM SETTINGS SECTION -->
+          <section id="settingsSection" class="tab-content hidden space-y-6">
+            <div class="flex justify-between items-start">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900">Platform Settings</h2>
+                <p class="text-xs text-gray-500 mt-1">Configure business identity, regional preferences, payment gateways, and system alerts.</p>
+              </div>
+              <button type="button" onclick="savePlatformSettings()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 transition">
+                <i class="fa-solid fa-floppy-disk text-xs"></i> Save Settings
+              </button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6">
+              <!-- Left 2 Cols: Business & Regional Form -->
+              <div class="col-span-2 space-y-5">
+                <!-- General Identity Card -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs space-y-4">
+                  <h3 class="font-bold text-gray-800 text-sm border-b pb-2.5">Business & Store Profile</h3>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 mb-1">Store / Business Name</label>
+                      <input type="text" id="settingStoreName" value="M J DIGITAL" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 mb-1">Support Email</label>
+                      <input type="email" id="settingEmail" value="support@mjdigital.in" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 mb-1">Support Phone</label>
+                      <input type="text" id="settingPhone" value="+91 830 666 9999" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 mb-1">Store Currency</label>
+                      <select id="settingCurrency" class="w-full border rounded-lg p-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="INR" selected>INR (₹) - Indian Rupee</option>
+                        <option value="USD">USD ($) - US Dollar</option>
+                        <option value="AED">AED (د.إ) - UAE Dirham</option>
+                      </select>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Store Physical Address</label>
+                        <textarea id="settingAddress" rows="2" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-800">GF5, Imran Residency, Near Silver Duplex, Chhipa Society, Danilimda, Ahmedabad, Gujarat - 380028, India</textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Payment Gateways Card -->
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs space-y-4">
+                  <div class="flex justify-between items-center border-b pb-2.5">
+                    <h3 class="font-bold text-gray-800 text-sm">Payment Gateway Configuration</h3>
+                    <span class="text-[10px] bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-full">Multi-Option Ready</span>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 mb-1">Primary Gateway Provider</label>
+                      <select id="settingGateway" class="w-full border rounded-lg p-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="razorpay" selected>Razorpay (Standard)</option>
+                        <option value="cashfree">Cashfree Payments</option>
+                        <option value="phonepe">PhonePe PG</option>
+                        <option value="stripe">Stripe Global</option>
+                        <option value="paytm">Paytm Payment Gateway</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 mb-1">Gateway Environment</label>
+                      <select id="settingEnv" class="w-full border rounded-lg p-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <option value="sandbox">Sandbox / Testing Mode</option>
+                        <option value="live" selected>Production / Live Mode</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="pt-2">
+                    <label class="block text-xs font-bold text-gray-700 mb-2">Accepted Payment Channels & Methods</label>
+                    <div class="grid grid-cols-3 gap-3 text-xs">
+                      <label class="border rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition">
+                        <div class="flex items-center gap-2">
+                          <i class="fa-solid fa-mobile-screen-button text-blue-600"></i>
+                          <span class="font-semibold text-gray-800">UPI Instant</span>
+                        </div>
+                        <input type="checkbox" id="pay_upi" checked class="accent-blue-600 cursor-pointer">
+                      </label>
+
+                      <label class="border rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition">
+                        <div class="flex items-center gap-2">
+                          <i class="fa-regular fa-credit-card text-emerald-600"></i>
+                          <span class="font-semibold text-gray-800">Debit / Credit Cards</span>
+                        </div>
+                        <input type="checkbox" id="pay_cards" checked class="accent-blue-600 cursor-pointer">
+                      </label>
+
+                      <label class="border rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition">
+                        <div class="flex items-center gap-2">
+                          <i class="fa-solid fa-building-columns text-purple-600"></i>
+                          <span class="font-semibold text-gray-800">Net Banking</span>
+                        </div>
+                        <input type="checkbox" id="pay_netbanking" checked class="accent-blue-600 cursor-pointer">
+                      </label>
+
+                      <label class="border rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition">
+                        <div class="flex items-center gap-2">
+                          <i class="fa-solid fa-wallet text-amber-600"></i>
+                          <span class="font-semibold text-gray-800">Digital Wallets</span>
+                        </div>
+                        <input type="checkbox" id="pay_wallets" checked class="accent-blue-600 cursor-pointer">
+                      </label>
+
+                      <label class="border rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition">
+                        <div class="flex items-center gap-2">
+                          <i class="fa-solid fa-award text-rose-500"></i>
+                          <span class="font-semibold text-gray-800">Reward Points</span>
+                        </div>
+                        <input type="checkbox" id="pay_rewards" class="accent-blue-600 cursor-pointer">
+                      </label>
+
+                      <label class="border rounded-xl p-2.5 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition">
+                        <div class="flex items-center gap-2">
+                          <i class="fa-solid fa-hand-holding-dollar text-teal-600"></i>
+                          <span class="font-semibold text-gray-800">Pay on Delivery</span>
+                        </div>
+                        <input type="checkbox" id="pay_cod" checked class="accent-blue-600 cursor-pointer">
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right 1 Col: System Feature Toggles -->
+              <div class="space-y-5">
+                <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-xs space-y-4">
+                  <h3 class="font-bold text-gray-800 text-sm border-b pb-2.5">System Preferences</h3>
+                  
+                  <div class="space-y-3.5 text-xs">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <p class="font-semibold text-gray-800">Email Alerts on New Order</p>
+                        <p class="text-[10px] text-gray-400">Admin ko immediate alert bhejein</p>
+                      </div>
+                      <input type="checkbox" id="toggleOrderEmail" checked class="accent-blue-600 w-4 h-4 cursor-pointer">
+                    </div>
+
+                    <div class="flex items-center justify-between border-t pt-3">
+                      <div>
+                        <p class="font-semibold text-gray-800">Travel Booking Inquiries</p>
+                        <p class="text-[10px] text-gray-400">Customer leads direct SMS bhejein</p>
+                      </div>
+                      <input type="checkbox" id="toggleBookingSms" checked class="accent-blue-600 w-4 h-4 cursor-pointer">
+                    </div>
+
+                    <div class="flex items-center justify-between border-t pt-3">
+                      <div>
+                        <p class="font-semibold text-gray-800">Maintenance Mode</p>
+                        <p class="text-[10px] text-gray-400">Store par under maintenance dikhayein</p>
+                      </div>
+                      <input type="checkbox" id="toggleMaintenance" class="accent-blue-600 w-4 h-4 cursor-pointer">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <!-- MODALS -->
+    <!-- 1. Add Product Modal -->
+    <div id="addProductModal" class="hidden fixed inset-0 bg-black/50 z-50 justify-center items-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-4xl p-5 space-y-3 shadow-2xl max-h-[96vh] flex flex-col">
+        <div class="flex justify-between items-center border-b pb-3">
+          <div>
+            <h3 class="font-bold text-lg text-gray-800">Add New Product</h3>
+            <p class="text-xs text-gray-400">Enter product details, pricing, and key specifications</p>
+          </div>
+          <button type="button" onclick="closeModal('addProductModal')" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+        </div>
+
+        <form onsubmit="handleProductSubmit(event)" class="space-y-4 overflow-y-auto pr-1 flex-1">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Product Title *</label>
+                <input type="text" id="prodTitle" name="title" placeholder="e.g. iPhone 15 Pro Max" required class="w-full border rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-blue-500">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Brand Name</label>
+                <input type="text" id="prodBrand" name="brand" placeholder="e.g. Apple, Samsung" class="w-full border rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-blue-500">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Category *</label>
+                <select id="prodCat" name="category" required class="w-full border rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-blue-500">
+                  <option value="" disabled selected>Select Category</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Fashion">Fashion</option>
+                  <option value="Mobiles">Mobiles</option>
+                  <option value="Services">Services</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Product Image</label>
+                <div class="space-y-2">
+                  <input type="file" id="prodImageFile" name="imageFiles" multiple accept="image/*" class="w-full border rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-blue-500">
+                  <div class="text-[11px] text-gray-400 font-medium text-center">— YA FIR IMAGE URL PASTE KAREIN —</div>
+                  <input type="url" id="prodImage" name="imageUrl" placeholder="https://example.com/image.jpg" class="w-full border rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div id="prodImagePreviewContainer" class="mt-2 hidden">
+                  <img id="prodImagePreview" src="" alt="Preview" class="w-20 h-20 object-cover rounded border p-1 shadow-sm">
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1">Price (₹) *</label>
+                  <input type="number" id="prodPrice" name="price" placeholder="e.g. 150000" required class="w-full border rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1">Discount Price (₹)</label>
+                  <input type="number" id="prodDiscountPrice" name="discountPrice" placeholder="e.g. 139999" class="w-full border rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">Stock Quantity</label>
+                <input type="number" id="prodStock" name="stock" placeholder="e.g. 50" class="w-full border rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none">
+              </div>
+
+              <div class="border rounded-xl p-3 bg-gray-50/50 space-y-2">
+                <div class="flex justify-between items-center">
+                  <label class="text-xs font-bold text-gray-700">Technical Specifications</label>
+                  <button type="button" onclick="addSpecRow()" class="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                    <i class="fa-solid fa-plus text-[10px]"></i> Add Spec
+                  </button>
+                </div>
+                <div id="specsContainer" class="space-y-2 max-h-36 overflow-y-auto pr-1"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label class="text-xs font-bold text-gray-700 block mb-1">Detailed Description</label>
+            <textarea name="detailed_description" rows="3" placeholder="Enter complete product overview..." class="w-full border rounded-lg p-2.5 text-xs text-gray-800 outline-none focus:border-blue-600 resize-y border-gray-300"></textarea>
+          </div>
+
+          <!-- DYNAMIC VARIANT BUILDER SECTION -->
+          <div class="border-t border-gray-200 pt-3 mt-2">
+            <div class="flex justify-between items-center mb-2">
+              <div>
+                <h4 class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                  <i class="fa-solid fa-layer-group text-blue-600"></i>
+                  Configuration & Pricing Matrix (Live Variant Builder)
+                </h4>
+                <p class="text-[10px] text-gray-500">Color, RAM, Storage ya Size ke hisaab se alag-alag price set karein.</p>
+              </div>
+              <button type="button" onclick="addVariantRow()" class="px-2.5 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                <i class="fa-solid fa-plus text-[10px]"></i> Add Variant Row
+              </button>
+            </div>
+
+            <!-- Variant rows dynamic container -->
+            <div id="variantRowsContainer" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+              <!-- Rows will be injected by JavaScript -->
+            </div>
+          </div>
+
+          <!-- ACTION BUTTONS -->
+          <div class="flex justify-end gap-2 border-t pt-3">
+            <button type="button" onclick="closeModal('addProductModal')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-2 rounded-lg text-xs font-semibold transition">Cancel</button>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-xs font-semibold shadow-md transition">Save Product</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 2. Add Travel Package Modal -->
+    <div id="addTravelModal" class="hidden fixed inset-0 bg-black/50 z-50 justify-center items-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-4xl p-5 space-y-4 shadow-2xl max-h-[92vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div>
+            <h2 class="text-lg font-bold text-gray-800">Add New Travel Package</h2>
+            <p class="text-xs text-gray-500">Configure destination, duration, tiered pricing, and itinerary</p>
+          </div>
+          <button type="button" onclick="closeModal('addTravelModal')" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+
+        <form id="travelPackageForm" onsubmit="handleTravelSubmit(event)" class="space-y-3 overflow-y-auto pr-1 flex-1">
+          <div class="grid grid-cols-2 gap-4 items-start">
+            <div class="space-y-2.5">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Package Title *</label>
+                <input type="text" name="title" required placeholder="e.g. Bali Tropical Escape" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Destination / Country *</label>
+                <input type="text" name="destination" required placeholder="e.g. Indonesia / Bali" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none">
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1">Duration (Days) *</label>
+                  <input type="number" name="days" required placeholder="e.g. 5" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1">Duration (Nights) *</label>
+                  <input type="number" name="nights" required placeholder="e.g. 4" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none">
+                </div>
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-gray-700">Tour Images (URL or Files)</label>
+                <input type="url" name="imageUrl" placeholder="Paste online image URL (optional)" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none">
+                <input type="file" name="images" multiple accept="image/*" class="w-full border border-gray-300 rounded-lg px-3 py-1 text-xs text-gray-800 focus:outline-none bg-white">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Inclusions (Comma separated)</label>
+                <input type="text" name="inclusions" placeholder="e.g. 4-Star Villa, Breakfast, Transfers" class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Day-wise Itinerary</label>
+                <textarea name="itinerary" rows="2" placeholder="Day 1: Airport Pickup & Check-in..." class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none resize-none"></textarea>
+              </div>
+            </div>
+
+            <div class="space-y-2.5">
+              <label class="block text-xs font-bold text-gray-700">Tiered Pricing Options *</label>
+              
+              <div class="border border-gray-200 rounded-xl p-2.5 bg-gray-50/60 space-y-1.5">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-600">Standard Tier</span>
+                <input type="number" name="standardPrice" required placeholder="Price (₹) e.g. 35000" class="w-full border border-gray-300 rounded-lg px-2.5 py-1 text-xs focus:border-emerald-600 focus:outline-none">
+                <input type="text" name="standardDesc" placeholder="e.g. 3-Star Hotel, Non-AC Cab" class="w-full border border-gray-300 rounded-lg px-2.5 py-1 text-xs focus:border-emerald-600 focus:outline-none">
+              </div>
+
+              <div class="border border-gray-200 rounded-xl p-2.5 bg-gray-50/60 space-y-1.5">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600">Deluxe Tier</span>
+                <input type="number" name="deluxePrice" placeholder="Price (₹) e.g. 45000" class="w-full border border-gray-300 rounded-lg px-2.5 py-1 text-xs focus:border-emerald-600 focus:outline-none">
+                <input type="text" name="deluxeDesc" placeholder="e.g. 4-Star Resort, AC Sedan" class="w-full border border-gray-300 rounded-lg px-2.5 py-1 text-xs focus:border-emerald-600 focus:outline-none">
+              </div>
+
+              <div class="border border-gray-200 rounded-xl p-2.5 bg-gray-50/60 space-y-1.5">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Luxury / VIP Tier</span>
+                <input type="number" name="luxuryPrice" placeholder="Price (₹) e.g. 65000" class="w-full border border-gray-300 rounded-lg px-2.5 py-1 text-xs focus:border-emerald-600 focus:outline-none">
+                <input type="text" name="luxuryDesc" placeholder="e.g. 5-Star Private Pool Villa" class="w-full border border-gray-300 rounded-lg px-2.5 py-1 text-xs focus:border-emerald-600 focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 mt-2">
+            <button type="button" onclick="closeModal('addTravelModal')" class="px-4 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+            <button type="submit" class="px-5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-sm">Save Package</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Travel Package Modal -->
+    <div id="editTravelModal" class="hidden fixed inset-0 bg-black/50 z-50 justify-center items-center p-4 overflow-y-auto">
+      <div class="bg-white rounded-2xl w-full max-w-2xl p-6 space-y-4 shadow-2xl my-8">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+          <h3 class="text-base font-bold text-gray-800">Edit Travel Package</h3>
+          <button type="button" onclick="closeEditTravelModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+
+        <form id="editTravelForm" onsubmit="handleEditTravelSubmit(event)" class="space-y-4">
+          <input type="hidden" id="editTravelId" name="id">
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Package Title *</label>
+              <input type="text" id="editTravelTitle" name="title" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Destination *</label>
+              <input type="text" id="editTravelDestination" name="destination" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Days *</label>
+              <input type="number" id="editTravelDays" name="days" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Nights *</label>
+              <input type="number" id="editTravelNights" name="nights" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs">
+            </div>
+          </div>
+
+          <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-3">
+            <span class="text-xs font-bold text-gray-700">Pricing Tiers (₹)</span>
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="block text-[11px] font-medium text-gray-600 mb-1">Standard Tier Price *</label>
+                <input type="number" id="editStandardPrice" name="standardPrice" required class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-gray-600 mb-1">Deluxe Tier Price</label>
+                <input type="number" id="editDeluxePrice" name="deluxePrice" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-gray-600 mb-1">Luxury / VIP Price</label>
+                <input type="number" id="editLuxuryPrice" name="luxuryPrice" class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs">
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Inclusions (Comma separated)</label>
+            <input type="text" id="editTravelInclusions" name="inclusions" placeholder="Flights, 4-Star Hotel, Breakfast" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs">
+          </div>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" onclick="closeEditTravelModal()" class="px-4 py-2 border rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 3. Add Category Modal -->
+    <div id="addCategoryModal" class="hidden fixed inset-0 bg-black/50 z-50 justify-center items-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div>
+            <h3 class="text-base font-bold text-gray-800">Add Category / Subcategory</h3>
+            <p class="text-xs text-gray-500">Define parent group or create a sub-tier</p>
+          </div>
+          <button type="button" onclick="closeModal('addCategoryModal')" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+        </div>
+
+        <form id="categoryForm" onsubmit="handleCategorySubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Category Name *</label>
+            <input type="text" name="name" required placeholder="e.g. Mobiles, International Tours" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:border-blue-600 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Catalog Section *</label>
+            <select name="type" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:border-blue-600 focus:outline-none bg-white">
+              <option value="ecommerce">E-Commerce</option>
+              <option value="travel">Travel Packages</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Parent Category (Optional)</label>
+            <select name="parentId" id="parentCategorySelect" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:border-blue-600 focus:outline-none bg-white">
+              <option value="">None (Top-Level Category)</option>
+            </select>
+            <span class="text-[10px] text-gray-400 mt-1 block">Subcategory banane ke liye parent select karein.</span>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-3 border-t border-gray-100">
+            <button type="button" onclick="closeModal('addCategoryModal')" class="px-4 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+            <button type="submit" class="px-5 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">Save Category</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 4. Bulk CSV Modal -->
+    <div id="csvModal" class="hidden fixed inset-0 bg-black/50 z-50 justify-center items-center p-4">
+      <div class="bg-white rounded-xl w-full max-w-md p-5 space-y-4">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 class="font-bold">Bulk CSV Upload</h3>
+          <button type="button" onclick="closeModal('csvModal')" class="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <input type="file" id="csvFileInput" accept=".csv" class="w-full border p-2 rounded-lg text-sm">
+        <button type="button" onclick="processCSV()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-semibold text-sm">Import Now</button>
+      </div>
+    </div>
+
+    <!-- 5. Upload Media Modal -->
+    <div id="uploadMediaModal" class="hidden fixed inset-0 bg-black/50 z-50 justify-center items-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b pb-3">
+          <h3 class="font-bold text-gray-800 text-base">Upload Asset</h3>
+          <button type="button" onclick="closeModal('uploadMediaModal')" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+        </div>
+
+        <div class="space-y-3">
+          <label class="block text-xs font-bold text-gray-700">Choose Image File</label>
+          <input type="file" id="mediaUploadInput" accept="image/*" class="w-full border rounded-lg p-2 text-xs bg-gray-50 focus:outline-none">
+          
+          <label class="block text-xs font-bold text-gray-700 mt-2">File Title / Label (Optional)</label>
+          <input type="text" id="mediaTitleInput" placeholder="e.g. iphone-banner.jpg" class="w-full border rounded-lg p-2 text-xs outline-none focus:ring-1 focus:ring-teal-500">
+        </div>
+
+        <div class="flex justify-end gap-2 border-t pt-3">
+          <button type="button" onclick="closeModal('uploadMediaModal')" class="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-200 transition">Cancel</button>
+          <button type="button" onclick="handleMediaUpload()" class="bg-[#0e7490] hover:bg-[#155e75] text-white px-5 py-1.5 rounded-lg text-xs font-semibold shadow transition">Upload</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Order Details Modal -->
+    <div id="orderDetailsModal" class="hidden fixed inset-0 bg-black/50 z-50 justify-center items-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b pb-3">
+          <div>
+            <h3 class="font-bold text-lg text-gray-800">Order Details</h3>
+            <p id="modalOrderId" class="text-xs text-gray-400 font-mono">ID: -</p>
+          </div>
+          <button type="button" onclick="closeModal('orderDetailsModal')" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+        </div>
+
+        <div class="space-y-3 text-sm">
+          <div class="bg-gray-50 p-3.5 rounded-xl flex justify-between items-center">
+            <div>
+              <p class="text-[10px] text-gray-400 font-bold tracking-wider">CUSTOMER</p>
+              <p id="modalCustomerName" class="font-semibold text-gray-800">-</p>
+              <p id="modalCustomerContact" class="text-xs text-gray-500">-</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[10px] text-gray-400 font-bold tracking-wider mb-1">STATUS</p>
+              <span id="modalOrderStatus" class="bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold px-3 py-1 rounded-full">-</span>
+            </div>
+          </div>
+
+          <div class="border border-gray-100 rounded-xl p-3.5 space-y-2">
+            <p class="text-[10px] text-gray-400 font-bold tracking-wider border-b pb-1">ITEMS / PACKAGE</p>
+            <div class="flex justify-between text-xs font-medium text-gray-800 pt-1">
+              <span id="modalItemTitle">-</span>
+              <span id="modalItemPrice" class="font-bold text-blue-600">₹0</span>
+            </div>
+            <div class="flex justify-between text-[11px] text-gray-400 pt-1 border-t">
+              <span>Payment Method</span>
+              <span id="modalPaymentInfo" class="font-medium text-gray-700">-</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-between items-center border-t">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-gray-500 font-medium">Update:</span>
+            <select id="updateStatusSelect" onchange="changeActiveOrderStatus(this.value)" class="text-xs border border-amber-400 bg-amber-50 text-amber-800 font-bold rounded-full px-3 py-1 outline-none shadow-xs cursor-pointer focus:ring-2 focus:ring-amber-500">
+              <option value="Pending">Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="In Transit">In Transit</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" onclick="closeModal('orderDetailsModal')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-semibold transition">Close</button>
+            <button type="button" onclick="openOrderReceipt()" class="btn btn-primary bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">Receipt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
