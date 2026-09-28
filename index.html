@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FILE-01 | VERSION: 10.4 | FULL UNIFIED FIXED MJ DIGITAL PORTAL -->
+<!-- FILE-01 | VERSION: 10.5 | FULL UNIFIED FIXED MJ DIGITAL PORTAL -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -268,7 +268,7 @@
             <div class="row g-4" id="allCatalogGrid"></div>
         </div>
 
-        <!-- 3. FULL-PAGE ITEM DETAILS VIEW (RESPONSIVE GALLERY & LINKED VARIANTS) -->
+        <!-- 3. FULL-PAGE ITEM DETAILS VIEW (RESPONSIVE GALLERY & LINKED VARIANTS WITH DISCOUNT VISIBILITY) -->
         <div id="page-item-details" class="page-view">
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb" id="dynamicBreadcrumbNav">
@@ -301,10 +301,19 @@
                             </div>
                         </div>
 
+                        <!-- AMAZON / FLIPKART STYLE DISCOUNT PRICING BLOCK -->
                         <div class="bg-light p-3 rounded-3 border mb-3">
-                            <div class="d-flex align-items-baseline gap-3">
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
                                 <h2 class="fw-bold text-primary display-5 mb-0" id="pageDetailPrice">₹0</h2>
+        
+                                <div id="pageDetailOriginalPriceBox" style="display: none;" class="d-flex align-items-center gap-2">
+                                    <span class="text-muted text-decoration-line-through fs-5" id="pageDetailOriginalPrice">₹0</span>
+                                    <span class="badge bg-danger text-white rounded-pill px-2.5 py-1.5 fw-bold" id="pageDetailDiscountPercent" style="font-size: 12px;">0% OFF</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
                                 <span class="text-muted small fw-semibold" id="pageDetailUnit">M.R.P. Inclusive of all taxes</span>
+                                <span class="text-success small fw-bold" id="pageDetailSavingsText" style="display: none;">You Save ₹0</span>
                             </div>
                         </div>
 
@@ -1099,7 +1108,8 @@
                 ? `<video src="${img}" class="img-fluid" muted style="max-height: 150px; object-fit: contain;"></video>`
                 : `<img src="${img}" alt="${item.title || item.name}" class="img-fluid" style="max-height: 150px; object-fit: contain;" onerror="this.src='https://placehold.co/150'">`;
 
-            const price = Number(item.price || 0).toLocaleString('en-IN');
+            const currentPrice = Number(item.discountPrice ? item.discountPrice : (item.price || 0)).toLocaleString('en-IN');
+            const originalMrp = (item.discountPrice && item.discountPrice < item.price) ? Number(item.price).toLocaleString('en-IN') : null;
             const title = item.title || item.name || 'Product';
             const isWish = myWishlist.some(w => String(w.id) === String(item._id));
 
@@ -1114,7 +1124,10 @@
                             <h6 class="fw-bold fs-5 text-dark line-clamp-1">${title}</h6>
                         </div>
                         <div>
-                            <h4 class="text-primary fw-bold my-2">₹${price}</h4>
+                            <div class="d-flex align-items-center justify-content-center gap-2 my-2">
+                                <h4 class="text-primary fw-bold mb-0">₹${currentPrice}</h4>
+                                ${originalMrp ? `<span class="text-muted text-decoration-line-through small">₹${originalMrp}</span>` : ''}
+                            </div>
                             <div class="d-flex gap-2 mt-2">
                                 <button type="button" onclick="handleAddToCartClick(event, '${item._id}', false)" class="btn btn-brand flex-grow-1 py-2">
                                     <i class="fa-solid fa-bag-shopping me-1"></i> Add to Bag
@@ -1202,7 +1215,7 @@
                 if (item.isTravelItem || item.destination) {
                     return Number(item.pricingTiers?.standard?.price || item.price || 0);
                 }
-                return Number(item.price || 0);
+                return Number(item.discountPrice ? item.discountPrice : (item.price || 0));
             };
 
             if (sortType === 'low-high') {
@@ -1308,10 +1321,11 @@
 
         function sortCategoryProducts(catKey, sortOrder) {
             let list = [...categoryMemory[catKey].filtered];
+            const getPrice = (item) => Number(item.discountPrice ? item.discountPrice : (item.price || 0));
             if (sortOrder === 'low-high') {
-                list.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+                list.sort((a, b) => getPrice(a) - getPrice(b));
             } else if (sortOrder === 'high-low') {
-                list.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+                list.sort((a, b) => getPrice(b) - getPrice(a));
             }
             const gridMap = {
                 mobile: 'mobileGrid',
@@ -1519,14 +1533,38 @@
             `;
         }
 
-        function renderTravelGrid(list) {
-            const grid = document.getElementById('travelGrid');
-            if (!grid) return;
-            if (list.length === 0) {
-                grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-plane-slash fs-2 mb-2 d-block text-secondary opacity-50"></i><p class="small fw-semibold mb-0">No travel packages found matching criteria.</p></div>';
-                return;
+        // ========================================================
+        // LIVE DYNAMIC DISCOUNT PRICING HELPER
+        // ========================================================
+        function applyDiscountPriceDisplay(finalPrice, originalMrp) {
+            const priceEl = document.getElementById('pageDetailPrice');
+            const origBox = document.getElementById('pageDetailOriginalPriceBox');
+            const origPriceEl = document.getElementById('pageDetailOriginalPrice');
+            const discountBadge = document.getElementById('pageDetailDiscountPercent');
+            const savingsText = document.getElementById('pageDetailSavingsText');
+
+            if (!priceEl) return;
+
+            finalPrice = Number(finalPrice) || 0;
+            originalMrp = Number(originalMrp) || 0;
+
+            priceEl.innerText = `₹${finalPrice.toLocaleString('en-IN')}`;
+
+            if (originalMrp > finalPrice) {
+                const diff = originalMrp - finalPrice;
+                const percent = Math.round((diff / originalMrp) * 100);
+
+                if (origBox) origBox.style.display = 'inline-flex';
+                if (origPriceEl) origPriceEl.innerText = `₹${originalMrp.toLocaleString('en-IN')}`;
+                if (discountBadge) discountBadge.innerText = `${percent}% OFF`;
+                if (savingsText) {
+                    savingsText.innerText = `You Save ₹${diff.toLocaleString('en-IN')} (${percent}%)`;
+                    savingsText.style.display = 'inline-block';
+                }
+            } else {
+                if (origBox) origBox.style.display = 'none';
+                if (savingsText) savingsText.style.display = 'none';
             }
-            grid.innerHTML = list.map(t => createTravelCardHTML(t)).join('');
         }
 
         // ========================================================
@@ -1563,8 +1601,7 @@
                             <p class="small text-muted mt-1.5" id="travelTierDescription">${tiers[0].desc}</p>
                         </div>
                     `;
-                    const priceEl = document.getElementById('pageDetailPrice');
-                    if (priceEl) priceEl.innerText = `₹${Number(tiers[0].price).toLocaleString('en-IN')}`;
+                    applyDiscountPriceDisplay(tiers[0].price, 0);
                     return;
                 }
             }
@@ -1590,9 +1627,11 @@
 
             if (cat.includes('service') || (!hasAnyConfig && !hasAnyOpts)) {
                 container.innerHTML = '';
-                const priceEl = document.getElementById('pageDetailPrice');
-                const pToShow = item.discountPrice ? item.discountPrice : item.price;
-                if (priceEl) priceEl.innerText = `₹${Number(pToShow || 0).toLocaleString('en-IN')}`;
+                const basePrice = Number(item.price || item.basePrice || 0);
+                const baseDiscount = item.discountPrice ? Number(item.discountPrice) : null;
+                const finalSelling = (baseDiscount && baseDiscount < basePrice) ? baseDiscount : basePrice;
+                const originalMrp = (baseDiscount && baseDiscount < basePrice) ? basePrice : 0;
+                applyDiscountPriceDisplay(finalSelling, originalMrp);
                 return;
             }
 
@@ -1747,48 +1786,96 @@
             updateDynamicPriceFromVariants(item);
         }
 
-        function updateDynamicPriceFromVariants(item) {
-            if (!item) return;
-            let parsed = item.variants;
-            if (typeof parsed === 'string' && parsed.trim() !== '') {
-                try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
-            }
-            const configs = Array.isArray(parsed) ? parsed : (parsed?.configurations || []);
-            const defaultBasePrice = item.discountPrice ? item.discountPrice : (item.price || item.basePrice || 0);
+        // PRICE CALCULATOR WITH DYNAMIC DISCOUNT SHOWING
+        function applyDiscountPriceDisplay(finalPrice, originalMrp) {
+    const priceEl = document.getElementById('pageDetailPrice');
+    const origBox = document.getElementById('pageDetailOriginalPriceBox');
+    const origPriceEl = document.getElementById('pageDetailOriginalPrice');
+    const discountBadge = document.getElementById('pageDetailDiscountPercent');
+    const savingsText = document.getElementById('pageDetailSavingsText');
 
-            if (!configs || configs.length === 0) {
-                const priceEl = document.getElementById('pageDetailPrice');
-                if (priceEl) priceEl.innerText = `₹${Number(defaultBasePrice).toLocaleString('en-IN')}`;
-                return;
-            }
+    if (!priceEl) return;
 
-            const selColor = String(currentVariantSelectionMap['color'] || '').trim().toLowerCase();
-            const selConfig = String(currentVariantSelectionMap['config'] || '').trim().toLowerCase();
-            const selStorage = String(currentVariantSelectionMap['storage'] || '').trim().toLowerCase();
-            const selSize = String(currentVariantSelectionMap['size'] || '').trim().toLowerCase();
+    finalPrice = Number(finalPrice) || 0;
+    originalMrp = Number(originalMrp) || 0;
 
-            const matched = configs.find(c => {
-                let ok = true;
-                const cColor = String(c.color || c.colour || '').trim().toLowerCase();
-                const cSize = String(c.size || '').trim().toLowerCase();
-                const cComb = `${c.ram || ''} / ${c.storage || ''}`.trim().toLowerCase();
-                const cRom = String(c.storage || '').trim().toLowerCase();
+    priceEl.innerText = `₹${finalPrice.toLocaleString('en-IN')}`;
 
-                if (selColor && cColor && cColor !== selColor) ok = false;
-                if (selSize && cSize && cSize !== selSize) ok = false;
-                if (selConfig && cComb && cComb !== selConfig) ok = false;
-                if (selStorage && !selConfig && cRom && cRom !== selStorage) ok = false;
-                return ok;
-            });
+    if (originalMrp > finalPrice) {
+        const diff = originalMrp - finalPrice;
+        const percent = Math.round((diff / originalMrp) * 100);
 
-            const resolvedConfig = matched || configs[0];
-            const finalPrice = (resolvedConfig && resolvedConfig.discountPrice) 
-                ? resolvedConfig.discountPrice 
-                : ((resolvedConfig && resolvedConfig.price > 0) ? resolvedConfig.price : defaultBasePrice);
-
-            const priceEl = document.getElementById('pageDetailPrice');
-            if (priceEl) priceEl.innerText = `₹${Number(finalPrice).toLocaleString('en-IN')}`;
+        if (origBox) origBox.style.display = 'inline-flex';
+        if (origPriceEl) origPriceEl.innerText = `₹${originalMrp.toLocaleString('en-IN')}`;
+        if (discountBadge) discountBadge.innerText = `${percent}% OFF`;
+        if (savingsText) {
+            savingsText.innerText = `You Save ₹${diff.toLocaleString('en-IN')} (${percent}%)`;
+            savingsText.style.display = 'inline-block';
         }
+    } else {
+        if (origBox) origBox.style.display = 'none';
+        if (savingsText) savingsText.style.display = 'none';
+    }
+}
+
+function updateDynamicPriceFromVariants(item) {
+    if (!item) return;
+    let parsed = item.variants;
+    if (typeof parsed === 'string' && parsed.trim() !== '') {
+        try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+    }
+    const configs = Array.isArray(parsed) ? parsed : (parsed?.configurations || []);
+
+    const productBasePrice = Number(item.price || item.basePrice || 0);
+    const productBaseDiscount = (item.discountPrice !== null && item.discountPrice !== undefined && item.discountPrice !== '') 
+        ? Number(item.discountPrice) 
+        : null;
+
+    if (!configs || configs.length === 0) {
+        const finalSelling = (productBaseDiscount && productBaseDiscount < productBasePrice) ? productBaseDiscount : productBasePrice;
+        const originalMrp = (productBaseDiscount && productBaseDiscount < productBasePrice) ? productBasePrice : 0;
+        applyDiscountPriceDisplay(finalSelling, originalMrp);
+        return;
+    }
+
+    const selColor = String(currentVariantSelectionMap['color'] || '').trim().toLowerCase();
+    const selConfig = String(currentVariantSelectionMap['config'] || '').trim().toLowerCase();
+    const selStorage = String(currentVariantSelectionMap['storage'] || '').trim().toLowerCase();
+
+    const matched = configs.find(c => {
+        let ok = true;
+        const cColor = String(c.color || c.colour || '').trim().toLowerCase();
+        const cComb = `${c.ram || ''} / ${c.storage || ''}`.trim().toLowerCase();
+        const cRom = String(c.storage || '').trim().toLowerCase();
+
+        if (selColor && cColor && cColor !== selColor) ok = false;
+        if (selConfig && cComb && cComb !== selConfig) ok = false;
+        if (selStorage && !selConfig && cRom && cRom !== selStorage) ok = false;
+        return ok;
+    });
+
+    const resolvedConfig = matched || configs[0];
+
+    let finalSelling = productBasePrice;
+    let originalMrp = 0;
+
+    if (resolvedConfig) {
+        const varRegularPrice = Number(resolvedConfig.price) || productBasePrice;
+        const varDiscountPrice = (resolvedConfig.discountPrice !== undefined && resolvedConfig.discountPrice !== null && resolvedConfig.discountPrice !== '')
+            ? Number(resolvedConfig.discountPrice)
+            : null;
+
+        if (varDiscountPrice && varDiscountPrice < varRegularPrice) {
+            finalSelling = varDiscountPrice;
+            originalMrp = varRegularPrice;
+        } else if (varRegularPrice > 0) {
+            finalSelling = varRegularPrice;
+            originalMrp = 0;
+        }
+    }
+
+    applyDiscountPriceDisplay(finalSelling, originalMrp);
+}
 
         function onTravelTierSelect(tierName, tierPrice) {
             currentVariantSelectionMap['tier'] = tierName;
@@ -1798,8 +1885,7 @@
                 const span = block.querySelector('.selected-val');
                 if (span) span.innerText = tierName;
             }
-            const priceEl = document.getElementById('pageDetailPrice');
-            if (priceEl) priceEl.innerText = `₹${Number(tierPrice).toLocaleString('en-IN')}`;
+            applyDiscountPriceDisplay(tierPrice, 0);
             if (currentSelectedProductForPricing?.pricingTiers) {
                 const key = tierName.toLowerCase().includes('standard') ? 'standard' : (tierName.toLowerCase().includes('deluxe') ? 'deluxe' : 'luxury');
                 const descEl = document.getElementById('travelTierDescription');
@@ -1842,7 +1928,6 @@
             if (!item) return;
 
             const title = item.title || item.name || 'Item Overview';
-            const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.discountPrice ? item.discountPrice : (item.price || 0));
             const mainImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300');
             const desc = item.description || item.overview || 'Verified manufacturer quality guarantee.';
             
@@ -1865,17 +1950,17 @@
             const thumbStrip = document.getElementById('pageDetailThumbnails');
             if (thumbStrip) {
                 thumbStrip.innerHTML = currentGalleryMedia.map((m, idx) => {
+                    const safeUrl = resolveMediaUrl(m.url);
                     const content = m.type === 'video'
                         ? `<div class="w-100 h-100 bg-dark text-white d-flex align-items-center justify-content-center"><i class="fa-solid fa-play" style="font-size: 11px;"></i></div>`
-                        : `<img src="${m.url}" class="w-100 h-100 object-fit-cover">`;
+                        : `<img src="${safeUrl}" class="w-100 h-100 object-fit-cover" onerror="this.src='https://placehold.co/60'">`;
                     return `<div class="v-thumb-item ${idx === 0 ? 'active' : ''}" onclick="selectGalleryMedia(${idx})">${content}</div>`;
                 }).join('');
             }
 
             updateDynamicBreadcrumb(item, isTravel);
             document.getElementById('pageDetailTitle').innerText = title;
-            document.getElementById('pageDetailPrice').innerText = `₹${Number(price).toLocaleString('en-IN')}`;
-            document.getElementById('pageDetailUnit').innerText = isTravel ? 'Per Person' : 'M.R.P. Inclusive of taxes';
+            document.getElementById('pageDetailUnit').innerText = isTravel ? 'Per Person' : 'M.R.P. Inclusive of all taxes';
             document.getElementById('pageDetailDesc').innerText = desc;
             document.getElementById('pageDetailBuyText').innerText = isTravel ? 'Book Now' : 'Buy Now';
 
@@ -1933,19 +2018,34 @@
             renderMediaView(index);
         }
 
+        function resolveMediaUrl(url) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500';
+            }
+            const clean = url.trim();
+            if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('data:')) {
+                return clean;
+            }
+            if (clean.startsWith('/uploads/')) {
+                return `https://mj-digital-backend-3.onrender.com${clean}`;
+            }
+            return `https://mj-digital-backend-3.onrender.com/uploads/${clean}`;
+        }
+
         function renderMediaView(index) {
             const media = currentGalleryMedia[index] || currentGalleryMedia[0];
             const box = document.getElementById('pageDetailMediaBox');
             if (box && media) {
+                const safeUrl = resolveMediaUrl(media.url);
                 if (media.type === 'video') {
                     box.innerHTML = `
-                        <video controls autoplay muted playsinline class="rounded-3 shadow-xs">
-                            <source src="${media.url}" type="video/mp4">
+                        <video controls autoplay muted playsinline class="rounded-3 shadow-xs" style="max-height: 380px; width: 100%;">
+                            <source src="${safeUrl}" type="video/mp4">
                             Your browser does not support video playback.
                         </video>
                     `;
                 } else {
-                    box.innerHTML = `<img src="${media.url}" class="img-fluid rounded-3" onerror="this.src='https://placehold.co/300'">`;
+                    box.innerHTML = `<img src="${safeUrl}" class="img-fluid rounded-3" style="max-height: 380px; object-fit: contain;" onerror="this.src='https://placehold.co/400x400?text=Product+Image'">`;
                 }
             }
         }
@@ -1996,7 +2096,7 @@
             }
 
             const title = item.title || item.name || 'Item';
-            const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.price || item.basePrice || 95899);
+            const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.discountPrice ? item.discountPrice : (item.price || item.basePrice || 95899));
             const img = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300');
             const type = isTravel ? 'Travel' : 'Product';
 

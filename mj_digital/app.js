@@ -530,15 +530,15 @@ function addVariantRow(color = '', ram = '', storage = '', size = '', price = ''
   const rowId = 'var_' + Date.now() + Math.random().toString(36).substr(2, 4);
   const row = document.createElement('div');
   row.id = rowId;
-  row.className = 'grid grid-cols-7 gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200 variant-row-item';
+  row.className = 'grid grid-cols-7 gap-2 items-center bg-gray-50 p-2.5 rounded-xl border border-gray-200 variant-row-item';
 
   row.innerHTML = `
-    <input type="text" placeholder="Colour (e.g. Red)" value="${color}" class="col-var-color border p-1.5 rounded text-xs bg-white outline-none">
-    <input type="text" placeholder="RAM (e.g. 12)" value="${ram}" class="col-var-ram border p-1.5 rounded text-xs bg-white outline-none">
-    <input type="text" placeholder="Storage (e.g. 256)" value="${storage}" class="col-var-storage border p-1.5 rounded text-xs bg-white outline-none">
-    <input type="text" placeholder="Size (e.g. 6.1)" value="${size}" class="col-var-size border p-1.5 rounded text-xs bg-white outline-none">
-    <input type="number" placeholder="Price (₹)" value="${price}" class="col-var-price border p-1.5 rounded text-xs font-bold text-gray-700 bg-white outline-none">
-    <input type="number" placeholder="Discount (₹)" value="${discountPrice}" class="col-var-discount border p-1.5 rounded text-xs font-bold text-blue-600 bg-white outline-none">
+    <input type="text" placeholder="Colour (e.g. silver)" value="${color}" class="col-var-color border border-gray-300 p-2 rounded-lg text-xs bg-white outline-none focus:border-blue-500">
+    <input type="text" placeholder="RAM (e.g. 12)" value="${ram}" class="col-var-ram border border-gray-300 p-2 rounded-lg text-xs bg-white outline-none focus:border-blue-500">
+    <input type="text" placeholder="Storage (e.g. 256)" value="${storage}" class="col-var-storage border border-gray-300 p-2 rounded-lg text-xs bg-white outline-none focus:border-blue-500">
+    <input type="text" placeholder="Size (e.g. 6.1)" value="${size}" class="col-var-size border border-gray-300 p-2 rounded-lg text-xs bg-white outline-none focus:border-blue-500">
+    <input type="number" placeholder="Price (₹) *" value="${price}" class="col-var-price border border-gray-300 p-2 rounded-lg text-xs font-bold text-gray-800 bg-white outline-none focus:border-blue-500">
+    <input type="number" placeholder="Discount (₹)" value="${discountPrice}" class="col-var-discount border border-blue-300 p-2 rounded-lg text-xs font-bold text-blue-600 bg-white outline-none focus:border-blue-600">
     <div class="text-right">
       <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-500 hover:text-rose-700 text-xs font-bold p-1">
         ✕ Remove
@@ -566,7 +566,7 @@ function collectVariantsMatrix() {
     const size = r.querySelector('.col-var-size')?.value.trim() || '';
     const price = Number(r.querySelector('.col-var-price')?.value || 0);
     const discInput = r.querySelector('.col-var-discount')?.value;
-    const discountPrice = (discInput !== '' && discInput !== undefined) ? Number(discInput) : null;
+    const discountPrice = (discInput !== '' && discInput !== undefined && discInput !== null) ? Number(discInput) : null;
 
     if (price > 0 || color || ram || storage || size) {
       if (color) options.colors.add(color);
@@ -584,6 +584,17 @@ function collectVariantsMatrix() {
       });
     }
   });
+
+  return {
+    variantOptions: {
+      colors: Array.from(options.colors),
+      ram: Array.from(options.ram),
+      storage: Array.from(options.storage),
+      sizes: Array.from(options.sizes)
+    },
+    configurations: configs
+  };
+}
 
   return {
     variantOptions: {
