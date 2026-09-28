@@ -208,12 +208,10 @@ async function sendWhatsAppAndSMS(order) {
   const title = order.itemDetails?.title || 'Selected Item';
   const amount = Number(order.totalAmount || 0).toLocaleString('en-IN');
 
-  const messageText = `Hi${name}! M J DIGITAL order #${shortId} for "${title}" (Amount: ₹${amount}) confirm ho gaya hai. Status: Processing. Inquiries: +91 830 666 9999`;
+  const messageText = `Hi ${name}! M J DIGITAL order #${shortId} for "${title}" (Amount: ₹${amount}) confirm ho gaya hai. Status: Processing. Inquiries: +91 830 666 9999`;
 
-  // Console log verify karega ki trigger hua
   console.log(`📲 Notification Triggered for +91 ${phone}: ${messageText}`);
 
-  // Agar Fast2SMS API key ho toh .env se uthayega
   if (process.env.FAST2SMS_API_KEY && phone.length === 10) {
     try {
       await axios.post('https://www.fast2sms.com/dev/bulkV2', {
@@ -336,7 +334,7 @@ function parseSpecifications(reqBody, directSpecs) {
   const keys = Object.keys(reqBody || {});
   const indexedMap = {};
   keys.forEach(k => {
-    const match = k.match(/\[(\d+)\]\[(key\vert{}value\vert{}name\vert{}val)\]/i);
+    const match = k.match(/\[(\d+)\]\[(key|value|name|val)\]/i);
     if (match) {
       const idx = match[1];
       const field = match[2].toLowerCase();
@@ -367,7 +365,7 @@ function parseVariants(variantsInput) {
 // ------------------------------------------
 // E-COMMERCE / PRODUCT ROUTES
 // ------------------------------------------
-app.post(['/api/products', '/api/items'], upload.any(), async (req, res) => {
+app.post(['/api/products', '/api/items'], verifyAdminToken, upload.any(), async (req, res) => {
   try {
     const {
       title, name, brand, category, price, discountPrice, stock,
@@ -449,7 +447,7 @@ app.get(['/api/products/:id', '/api/items/:id'], async (req, res) => {
   }
 });
 
-app.put(['/api/products/:id', '/api/items/:id'], upload.any(), async (req, res) => {
+app.put(['/api/products/:id', '/api/items/:id'], verifyAdminToken, upload.any(), async (req, res) => {
   try {
     const body = req.body;
     let updateFields = {};
@@ -515,7 +513,7 @@ app.put(['/api/products/:id', '/api/items/:id'], upload.any(), async (req, res) 
   }
 });
 
-app.patch(['/api/products/:id', '/api/items/:id', '/api/products/:id/quick-update', '/api/items/:id/quick-update'], async (req, res) => {
+app.patch(['/api/products/:id', '/api/items/:id', '/api/products/:id/quick-update', '/api/items/:id/quick-update'], verifyAdminToken, async (req, res) => {
   try {
     const { price, stock, status } = req.body;
     let updateFields = {};
@@ -548,7 +546,7 @@ app.patch(['/api/products/:id', '/api/items/:id', '/api/products/:id/quick-updat
   }
 });
 
-app.patch(['/api/products/:id/status', '/api/items/:id/status'], async (req, res) => {
+app.patch(['/api/products/:id/status', '/api/items/:id/status'], verifyAdminToken, async (req, res) => {
   try {
     const { status } = req.body;
     const updated = await Product.findByIdAndUpdate(
@@ -562,7 +560,7 @@ app.patch(['/api/products/:id/status', '/api/items/:id/status'], async (req, res
   }
 });
 
-app.delete(['/api/products/:id', '/api/items/:id'], async (req, res) => {
+app.delete(['/api/products/:id', '/api/items/:id'], verifyAdminToken, async (req, res) => {
   try {
     const deleted = await Product.findByIdAndDelete(req.params.id);
     if (!deleted) {
@@ -577,7 +575,7 @@ app.delete(['/api/products/:id', '/api/items/:id'], async (req, res) => {
 // ------------------------------------------
 // TRAVEL PACKAGES BACKEND API
 // ------------------------------------------
-app.post('/api/travel-packages', upload.array('images', 5), async (req, res) => {
+app.post('/api/travel-packages', verifyAdminToken, upload.array('images', 5), async (req, res) => {
   try {
     const {
       title, destination, days, nights, imageUrl, price, inclusions, itinerary,
@@ -644,7 +642,7 @@ app.get('/api/travel-packages', async (req, res) => {
   }
 });
 
-app.delete('/api/travel-packages/:id', async (req, res) => {
+app.delete('/api/travel-packages/:id', verifyAdminToken, async (req, res) => {
   try {
     const deleted = await TravelPackage.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ success: false, message: 'Not found' });
@@ -655,7 +653,7 @@ app.delete('/api/travel-packages/:id', async (req, res) => {
   }
 });
 
-app.patch('/api/travel-packages/:id/status', async (req, res) => {
+app.patch('/api/travel-packages/:id/status', verifyAdminToken, async (req, res) => {
   try {
     const { status } = req.body;
     if (!status) return res.status(400).json({ success: false, message: 'Status is required' });
@@ -671,7 +669,7 @@ app.patch('/api/travel-packages/:id/status', async (req, res) => {
   }
 });
 
-app.patch(['/api/travel-packages/:id', '/api/travel-packages/:id/quick-update'], async (req, res) => {
+app.patch(['/api/travel-packages/:id', '/api/travel-packages/:id/quick-update'], verifyAdminToken, async (req, res) => {
   try {
     const { price } = req.body;
     if (price === undefined) {
@@ -696,7 +694,7 @@ app.patch(['/api/travel-packages/:id', '/api/travel-packages/:id/quick-update'],
   }
 });
 
-app.put('/api/travel-packages/:id', async (req, res) => {
+app.put('/api/travel-packages/:id', verifyAdminToken, async (req, res) => {
   try {
     const {
       title, destination, days, nights, standardPrice, standardDesc,
@@ -737,6 +735,43 @@ app.put('/api/travel-packages/:id', async (req, res) => {
 });
 
 // ------------------------------------------
+// TRAVEL CUSTOM QUOTE / CALLBACK INQUIRY API
+// ------------------------------------------
+app.post('/api/travel-inquiry', async (req, res) => {
+  try {
+    const { name, phone, email, packageTitle, travelDate, travelers, notes } = req.body;
+
+    const botToken = process.env.TELEGRAM_BOT_TOKEN || '8963399353:AAGHMCxboeojbwSH6E4Hze61N3_gcNVHaY0';
+    const chatId = process.env.TELEGRAM_CHAT_ID || '8612147860';
+
+    const leadMessage = `✈️ *NEW TRAVEL INQUIRY / CUSTOM QUOTE*
+━━━━━━━━━━━━━━━━━━
+👤 *Lead Name:* ${name || 'Prospective Traveler'}
+📞 *Phone:* ${phone || 'N/A'}
+📧 *Email:* ${email || 'N/A'}
+🏝️ *Package:* ${packageTitle || 'Custom Destination'}
+📅 *Travel Date:* ${travelDate || 'Not specified'}
+👥 *Travelers:* ${travelers || 1}
+📝 *Notes:* ${notes || 'None'}
+━━━━━━━━━━━━━━━━━━
+📍 *Location:* Danilimda Desk / Online Portal`;
+
+    if (botToken && chatId) {
+      await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        chat_id: chatId,
+        text: leadMessage,
+        parse_mode: 'Markdown'
+      });
+    }
+
+    res.status(200).json({ success: true, message: 'Inquiry received! Travel desk will contact you soon.' });
+  } catch (err) {
+    console.error('Travel Inquiry Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ------------------------------------------
 // ORDERS & BOOKINGS ROUTES (WITH AUTO-EMAIL & STOCK DEDUCTION)
 // ------------------------------------------
 app.post('/api/orders', async (req, res) => {
@@ -764,6 +799,7 @@ app.post('/api/orders', async (req, res) => {
     });
 
     const saved = await newOrder.save();
+    
     // Instant Free Telegram Alert
     sendTelegramOrderNotification(saved).catch(err => console.error("Telegram background error:", err));
 
@@ -832,14 +868,12 @@ const handleOrderStatusUpdate = async (req, res) => {
     const updateData = { status: status.trim() };
     if (cancelReason !== undefined) updateData.cancelReason = cancelReason;
 
-    // Direct MongoDB ID se update, validation bypass (runValidators: false) taaki enum block na kare
     let updated = await Order.findByIdAndUpdate(
       orderId,
       { $set: updateData },
       { new: true, runValidators: false }
     );
 
-    // Fallback search agar ID short ya custom ho
     if (!updated) {
       updated = await Order.findOneAndUpdate(
         { $or: [{ _id: orderId }, { id: orderId }] },
@@ -860,13 +894,13 @@ const handleOrderStatusUpdate = async (req, res) => {
   }
 };
 
-// Routes binding for Order Status
-app.put('/api/orders/:id', handleOrderStatusUpdate);
-app.patch('/api/orders/:id', handleOrderStatusUpdate);
-app.put('/api/orders/:id/status', handleOrderStatusUpdate);
-app.patch('/api/orders/:id/status', handleOrderStatusUpdate);
-app.put('/api/order/:id', handleOrderStatusUpdate);
-app.patch('/api/order/:id', handleOrderStatusUpdate);
+// Routes binding for Order Status (Protected with verifyAdminToken)
+app.put('/api/orders/:id', verifyAdminToken, handleOrderStatusUpdate);
+app.patch('/api/orders/:id', verifyAdminToken, handleOrderStatusUpdate);
+app.put('/api/orders/:id/status', verifyAdminToken, handleOrderStatusUpdate);
+app.patch('/api/orders/:id/status', verifyAdminToken, handleOrderStatusUpdate);
+app.put('/api/order/:id', verifyAdminToken, handleOrderStatusUpdate);
+app.patch('/api/order/:id', verifyAdminToken, handleOrderStatusUpdate);
 
 // GET CATEGORY-WISE REVENUE ANALYTICS
 app.get('/api/analytics/category-revenue', async (req, res) => {
@@ -973,7 +1007,7 @@ app.get('/api/cms/policies', async (req, res) => {
   }
 });
 
-app.put('/api/cms/policies/:key', async (req, res) => {
+app.put('/api/cms/policies/:key', verifyAdminToken, async (req, res) => {
   try {
     const { key } = req.params;
     const { content } = req.body;
@@ -1002,7 +1036,7 @@ app.get('/api/categories', async (req, res) => {
   }
 });
 
-app.post('/api/categories', async (req, res) => {
+app.post('/api/categories', verifyAdminToken, async (req, res) => {
   try {
     const { name, type, parentId } = req.body;
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -1021,7 +1055,7 @@ app.post('/api/categories', async (req, res) => {
   }
 });
 
-app.delete('/api/categories/:id', async (req, res) => {
+app.delete('/api/categories/:id', verifyAdminToken, async (req, res) => {
   try {
     const deleted = await Category.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ success: false, message: 'Category not found' });
@@ -1051,7 +1085,7 @@ app.get('/api/media', async (req, res) => {
   }
 });
 
-app.post('/api/media', upload.single('mediaFile'), async (req, res) => {
+app.post('/api/media', verifyAdminToken, upload.single('mediaFile'), async (req, res) => {
   try {
     let fileUrl = req.body.url;
     let fileName = req.body.name || 'Uploaded Asset';
@@ -1086,7 +1120,7 @@ const auditLogSchema = new mongoose.Schema({
 });
 const AuditLog = mongoose.models.AuditLog || mongoose.model('AuditLog', auditLogSchema);
 
-app.get('/api/audit-logs', async (req, res) => {
+app.get('/api/audit-logs', verifyAdminToken, async (req, res) => {
   try {
     const logs = await AuditLog.find().sort({ _id: -1 }).limit(100);
     res.json({ success: true, data: logs });
@@ -1095,7 +1129,7 @@ app.get('/api/audit-logs', async (req, res) => {
   }
 });
 
-app.post('/api/audit-logs', async (req, res) => {
+app.post('/api/audit-logs', verifyAdminToken, async (req, res) => {
   try {
     const log = new AuditLog(req.body);
     await log.save();
@@ -1105,7 +1139,7 @@ app.post('/api/audit-logs', async (req, res) => {
   }
 });
 
-app.delete('/api/audit-logs', async (req, res) => {
+app.delete('/api/audit-logs', verifyAdminToken, async (req, res) => {
   try {
     await AuditLog.deleteMany({});
     res.json({ success: true, message: 'All logs cleared' });
@@ -1149,7 +1183,7 @@ app.get('/api/settings', async (req, res) => {
   }
 });
 
-app.put('/api/settings', async (req, res) => {
+app.put('/api/settings', verifyAdminToken, async (req, res) => {
   try {
     const updated = await PlatformSetting.findOneAndUpdate(
       { singletonKey: 'MJ_MAIN_SETTINGS' },
@@ -1197,7 +1231,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ==========================================
-// 8. SERVER LISTENER
+// 8. SERVER LISTENER & KEEP-ALIVE PINGER
 // ==========================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
