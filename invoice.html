@@ -8,17 +8,174 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; padding: 40px 0; color: #0f172a; }
-        .invoice-card { max-width: 900px; margin: auto; background: #fff; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.06); padding: 44px; border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
-        .invoice-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 8px; background: linear-gradient(90deg, #2563eb, #06b6d4); }
-        .stamp-badge { border: 2px dashed #16a34a; color: #16a34a; font-weight: 800; padding: 4px 16px; border-radius: 8px; display: inline-block; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
-        .table-custom thead th { background: #0f172a; color: #fff; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px; }
-        .table-custom tbody td { padding: 12px; border-color: #e2e8f0; font-size: 13.5px; }
-        .highlight-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: #f1f5f9; 
+            padding: 25px 0; 
+            color: #0f172a; 
+        }
+        .invoice-card { 
+            max-width: 820px; 
+            margin: auto; 
+            background: #fff; 
+            border-radius: 16px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.06); 
+            padding: 28px; 
+            border: 1px solid #e2e8f0; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        .invoice-card::before { 
+            content: ''; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            height: 6px; 
+            background: linear-gradient(90deg, #2563eb, #06b6d4); 
+        }
+        .stamp-badge { 
+            border: 2px dashed #16a34a; 
+            color: #16a34a; 
+            font-weight: 800; 
+            padding: 3px 12px; 
+            border-radius: 8px; 
+            display: inline-block; 
+            text-transform: uppercase; 
+            font-size: 11.5px; 
+            letter-spacing: 0.8px; 
+        }
+        .table-custom thead th { 
+            background: #0f172a; 
+            color: #fff; 
+            font-size: 11px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            padding: 8px 10px; 
+        }
+        .table-custom tbody td { 
+            padding: 8px 10px; 
+            border-color: #e2e8f0; 
+            font-size: 12px; 
+        }
+        .highlight-box { 
+            background: #f8fafc; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 12px; 
+        }
+
+        /* ========================================================
+           1. HTML2PDF SINGLE-PAGE STRICT FIT
+           ======================================================== */
+        .pdf-export-mode {
+            max-width: 100% !important;
+            width: 760px !important;
+            padding: 16px 20px !important;
+            margin: 0 auto !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        .pdf-export-mode .highlight-box {
+            padding: 8px 12px !important;
+            margin-bottom: 6px !important;
+        }
+        .pdf-export-mode .table-custom th, 
+        .pdf-export-mode .table-custom td {
+            padding: 5px 6px !important;
+            font-size: 10px !important;
+        }
+        .pdf-export-mode .table-responsive {
+            margin-bottom: 8px !important;
+        }
+        .pdf-export-mode .row.g-3.mb-4 {
+            margin-bottom: 8px !important;
+        }
+        .pdf-export-mode .border-top.pt-3 {
+            padding-top: 6px !important;
+            margin-bottom: 0 !important;
+        }
+
+        /* ========================================================
+           2. BROWSER PRINT PREVIEW (Ctrl+P) 1-PAGE PERFECTION
+           ======================================================== */
         @media print {
-            body { padding: 0; background: #fff; }
-            .invoice-card { box-shadow: none; border: none; padding: 20px; max-width: 100%; }
-            .no-print { display: none !important; }
+            @page {
+                size: A4 portrait;
+                margin: 5mm 6mm !important;
+            }
+
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+                height: 100% !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Buttons screen se complete hide */
+            .no-print,
+            .mt-4.text-center.no-print,
+            #downloadPdfBtn,
+            button {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* Main Card Compact Scaling */
+            .invoice-card {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 10px 14px !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+            }
+
+            .invoice-card::before {
+                height: 4px !important;
+            }
+
+            .invoice-card .d-flex.justify-content-between.border-bottom {
+                padding-bottom: 6px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .highlight-box {
+                padding: 8px 10px !important;
+            }
+
+            .table-responsive {
+                margin-bottom: 6px !important;
+            }
+
+            .table-custom thead th {
+                padding: 5px 6px !important;
+                font-size: 10px !important;
+            }
+
+            .table-custom tbody td {
+                padding: 4px 6px !important;
+                font-size: 10px !important;
+            }
+
+            .row.g-3.mb-4 {
+                margin-bottom: 6px !important;
+            }
+
+            .border-top.pt-3 {
+                padding-top: 5px !important;
+                margin-bottom: 0 !important;
+            }
+
+            .border-top.pt-3 p {
+                margin-bottom: 0 !important;
+            }
         }
     </style>
 </head>
@@ -26,49 +183,48 @@
 
     <div class="invoice-card">
         <!-- HEADER -->
-        <div class="d-flex justify-content-between align-items-start pb-4 border-bottom mb-4">
+        <div class="d-flex justify-content-between align-items-start pb-3 border-bottom mb-3">
             <div>
-                <h2 class="fw-extrabold text-primary mb-1"><i class="fa-solid fa-cube me-2"></i>M J DIGITAL</h2>
-                <p class="small text-muted mb-1">Premium Flagship Store & Travel Experience Portal</p>
-                <p class="small text-muted mb-0">GF5, Imran Residency, Near Silver Duplex, Chhipa Society,</p>
-                <p class="small text-muted mb-0">Danilimda, Ahmedabad, Gujarat – 380028, India</p>
-                <p class="small text-muted mb-0">GSTIN: <strong>24AAAFM1234F1Z5</strong> | Support: +91 830 666 9999</p>
+                <h3 class="fw-extrabold text-primary mb-1"><i class="fa-solid fa-cube me-2"></i>M J DIGITAL</h3>
+                <p class="small text-muted mb-0" style="font-size: 11px;">Premium Flagship Store & Travel Experience Portal</p>
+                <p class="small text-muted mb-0" style="font-size: 11px;">GF5, Imran Residency, Near Silver Duplex, Chhipa Society,</p>
+                <p class="small text-muted mb-0" style="font-size: 11px;">Danilimda, Ahmedabad, Gujarat – 380028, India</p>
+                <p class="small text-muted mb-0" style="font-size: 11px;">GSTIN: <strong>24AAAFM1234F1Z5</strong> | Support: +91 830 666 9999</p>
             </div>
             <div class="text-end">
-                <h4 class="fw-bold text-dark mb-2">TAX INVOICE</h4>
-                <div class="stamp-badge mb-2" id="paymentStampBadge">
+                <h5 class="fw-bold text-dark mb-1">TAX INVOICE</h5>
+                <div class="stamp-badge mb-1" id="paymentStampBadge">
                   <i class="fa-solid fa-circle-check me-1"></i> PAYMENT CONFIRMED
                 </div>
-                <p class="small text-muted mb-1"><strong>Invoice No:</strong> <span id="invNo" class="text-dark fw-bold">#INV-9842</span></p>
-                <!-- ORDER NO PRINT ROW -->
-                <p class="small text-muted mb-1"><strong>Order No:</strong> <span id="orderNo" class="text-primary fw-bold font-monospace">#ORD-9842</span></p>
-                <p class="small text-muted mb-0"><strong>Invoice Date:</strong> <span id="invDate" class="text-dark">26 Sept 2026</span></p>
+                <p class="small text-muted mb-0" style="font-size: 11.5px;"><strong>Invoice No:</strong> <span id="invNo" class="text-dark fw-bold">#INV-9842</span></p>
+                <p class="small text-muted mb-0" style="font-size: 11.5px;"><strong>Order No:</strong> <span id="orderNo" class="text-primary fw-bold font-monospace">#ORD-9842</span></p>
+                <p class="small text-muted mb-0" style="font-size: 11.5px;"><strong>Invoice Date:</strong> <span id="invDate" class="text-dark">26 Sept 2026</span></p>
             </div>
         </div>
 
         <!-- BILLED TO & DISPATCH INFO -->
-        <div class="row g-3 mb-4">
+        <div class="row g-2 mb-3">
             <div class="col-md-6">
                 <div class="highlight-box h-100">
-                    <span class="text-muted small fw-bold text-uppercase d-block mb-2"><i class="fa-solid fa-user me-1 text-primary"></i> Customer Details</span>
-                    <h6 class="fw-bold text-dark mb-1" id="custName">Mohsin J</h6>
-                    <p class="small text-muted mb-1">Email: <span id="custEmail">mjdigitalworlds@gmail.com</span></p>
-                    <p class="small text-muted mb-0">Contact: +91 830 666 9999 | Gujarat, India</p>
+                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 10px;"><i class="fa-solid fa-user me-1 text-primary"></i> Customer Details</span>
+                    <h6 class="fw-bold text-dark mb-1" id="custName" style="font-size: 13px;">Mohsin J</h6>
+                    <p class="small text-muted mb-0" style="font-size: 11px;">Email: <span id="custEmail">mjdigitalworlds@gmail.com</span></p>
+                    <p class="small text-muted mb-0" style="font-size: 11px;">Contact: +91 830 666 9999 | Gujarat, India</p>
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="highlight-box h-100">
-                    <span class="text-muted small fw-bold text-uppercase d-block mb-2"><i class="fa-solid fa-receipt me-1 text-primary"></i> Billing Information</span>
-                    <p class="small mb-1"><strong>Place of Supply:</strong> State Code 24 (Gujarat)</p>
-                    <p class="small mb-1"><strong>Mode of Payment:</strong> <span id="paymentModeText" class="fw-semibold text-dark">Pre-Approved Online / UPI Verified</span></p>
-                    <p class="small mb-0"><strong>Fulfillment Status:</strong> <span class="text-success fw-bold">Dispatched via Speed Freight</span></p>
+                    <span class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 10px;"><i class="fa-solid fa-receipt me-1 text-primary"></i> Billing Information</span>
+                    <p class="small mb-0" style="font-size: 11px;"><strong>Place of Supply:</strong> State Code 24 (Gujarat)</p>
+                    <p class="small mb-0" style="font-size: 11px;"><strong>Mode of Payment:</strong> <span id="paymentModeText" class="fw-semibold text-dark">Pre-Approved Online / UPI Verified</span></p>
+                    <p class="small mb-0" style="font-size: 11px;"><strong>Fulfillment Status:</strong> <span class="text-success fw-bold">Dispatched via Speed Freight</span></p>
                 </div>
             </div>
         </div>
 
         <!-- ITEMS TABLE (DYNAMIC ITEM-WISE HSN TAX GRID) -->
-        <div class="table-responsive mb-4">
-            <table class="table table-bordered table-custom align-middle">
+        <div class="table-responsive mb-3">
+            <table class="table table-bordered table-custom align-middle mb-0">
                 <thead>
                     <tr>
                         <th style="width: 5%;" class="text-center">Sl.</th>
@@ -84,36 +240,40 @@
                 </thead>
                 <tbody id="invoiceItemsTableBody">
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading statutory invoice items...</td>
+                        <td colspan="9" class="text-center text-muted py-3"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading statutory invoice items...</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <!-- AMOUNT IN WORDS & TOTALS SUMMARY -->
-        <div class="row g-3 mb-4 align-items-start">
+        <div class="row g-2 mb-3 align-items-start">
             <div class="col-md-7">
-                <div class="p-3 bg-light border rounded-3 h-100">
-                    <span class="text-muted text-uppercase fw-bold d-block" style="font-size: 11px;">Amount in Words:</span>
-                    <strong class="text-dark fs-6 d-block mt-1" id="amountInWordsText">Zero Rupees Only</strong>
+                <div class="p-2.5 bg-light border rounded-3 h-100" style="padding: 10px 14px;">
+                    <span class="text-muted text-uppercase fw-bold d-block" style="font-size: 10px;">Amount in Words:</span>
+                    <strong class="text-dark d-block mt-0.5" id="amountInWordsText" style="font-size: 12.5px;">Zero Rupees Only</strong>
                 </div>
             </div>
             <div class="col-md-5">
-                <div class="border rounded-3 p-3 bg-white shadow-xs">
-                    <div class="d-flex justify-content-between small py-1 text-muted">
+                <div class="border rounded-3 p-2.5 bg-white shadow-xs" style="padding: 10px 14px;">
+                    <div class="d-flex justify-content-between small py-0.5 text-muted" style="font-size: 11px;">
                         <span>Total Taxable Subtotal:</span>
                         <strong id="subTotal" class="text-dark">₹0.00</strong>
                     </div>
-                    <div class="d-flex justify-content-between small py-1 text-muted">
+                    <div class="d-flex justify-content-between small py-0.5 text-muted" id="cgstRow" style="font-size: 11px;">
                         <span>Total CGST:</span>
                         <strong id="cgstVal" class="text-dark">₹0.00</strong>
                     </div>
-                    <div class="d-flex justify-content-between small py-1 text-muted">
+                    <div class="d-flex justify-content-between small py-0.5 text-muted" id="sgstRow" style="font-size: 11px;">
                         <span>Total SGST:</span>
                         <strong id="sgstVal" class="text-dark">₹0.00</strong>
                     </div>
-                    <hr class="my-2">
-                    <div class="d-flex justify-content-between fw-bold fs-5 text-primary">
+                    <div class="d-flex justify-content-between small py-0.5 text-muted" id="igstRow" style="display: none; font-size: 11px;">
+                        <span>Total IGST:</span>
+                        <strong id="igstVal" class="text-dark">₹0.00</strong>
+                    </div>
+                    <hr class="my-1">
+                    <div class="d-flex justify-content-between fw-bold text-primary" style="font-size: 14px;">
                         <span>Grand Total:</span>
                         <span id="grandTotal">₹0.00</span>
                     </div>
@@ -122,22 +282,22 @@
         </div>
 
         <!-- FOOTER TERMS WITH E.&O.E. & SYSTEM DIFFERENCE CLAUSE -->
-        <div class="border-top pt-3 small text-secondary mb-3">
-            <div class="row g-2 mb-2" style="font-size: 11.5px;">
+        <div class="border-top pt-2 small text-secondary mb-2" style="font-size: 10.5px;">
+            <div class="row g-1 mb-1">
                 <div class="col-12">
                     <strong class="text-dark">Terms & Conditions / Declarations:</strong>
-                    <ol class="ps-3 mb-1 mt-1 leading-normal">
+                    <ol class="ps-3 mb-0 mt-0.5" style="line-height: 1.35;">
                         <li><strong>Errors and Omissions Excepted (E. & O.E.):</strong> All invoices are computerized. In case of any system, typographical, technical, or statutory tariff calculation error resulting in an undercharge or tariff differential, <strong>the customer agrees and undertakes to remit the differential balance amount</strong> upon notification.</li>
                         <li>Goods once sold are covered under respective OEM warranty policies. Travel bookings are subject to carrier and hotel partner service rules.</li>
                         <li>All disputes are strictly subject to Ahmedabad Jurisdiction, Gujarat only.</li>
                     </ol>
                 </div>
             </div>
-            <p class="mb-0 text-center text-muted" style="font-size: 11px;">This is an authenticated computer-generated legal tax invoice issued under Rule 46 of CGST Rules 2017.</p>
+            <p class="mb-0 text-center text-muted" style="font-size: 10px;">This is an authenticated computer-generated legal tax invoice issued under Rule 46 of CGST Rules 2017.</p>
         </div>
 
         <!-- PRINT / ACTION BUTTONS -->
-        <div class="mt-4 text-center no-print">
+        <div class="mt-3 text-center no-print">
           <button id="downloadPdfBtn" onclick="downloadInvoicePDF()" class="btn btn-success px-4 py-2 rounded-pill me-2 fw-semibold">
             <i class="fa-solid fa-file-pdf me-1"></i> Download PDF Invoice
           </button>
@@ -180,11 +340,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rawId = String(order._id || order.id || orderId);
     const shortId = rawId.length > 6 ? rawId.slice(-6).toUpperCase() : rawId.toUpperCase();
     
-    // Set Invoice No
     const invNoEl = document.getElementById('invNo');
     if (invNoEl) invNoEl.innerText = `#INV-${shortId}`;
 
-    // Set Order No (Short Format ya Complete ID)
     const orderNoEl = document.getElementById('orderNo');
     if (orderNoEl) {
       orderNoEl.innerText = `#ORD-${shortId}`;
@@ -204,7 +362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const emailEl = document.getElementById('custEmail');
     if (emailEl) emailEl.innerText = order.customerEmail || order.customer?.email || 'mjdigitalworlds@gmail.com';
 
-    // DYNAMIC PAYMENT MODE & STAMP BADGE MAPPING
+    // Payment Mode & Stamp Mapping
     const gateway = String(order.paymentGateway || '').toLowerCase();
     const payStatus = String(order.paymentStatus || '').toLowerCase();
     const paymentModeEl = document.getElementById('paymentModeText');
@@ -241,7 +399,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }];
     }
 
-    // 4. Dynamic Item-Wise HSN & GST Calculation (Strict 2-Decimal Currency Precision)
+    // 4. Dynamic Item-Wise HSN & GST Calculation
     let grandTaxable = 0;
     let grandCgst = 0;
     let grandSgst = 0;
@@ -279,13 +437,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         const qty = Number(item.quantity || item.qty || 1);
         const itemTotal = Number(item.price || 0);
 
-        // Strict 2-decimal backward calculations
+        // State detection (Gujarat = Intra-state CGST+SGST, Other = Inter-state IGST)
+        const buyerAddr = String(order.shippingAddress || '').toLowerCase();
+        const isGujarat = buyerAddr.includes('gujarat') || buyerAddr.includes('ahmedabad') || buyerAddr.includes('380028') || buyerAddr === '';
+
         const taxable = Number((itemTotal / (1 + (taxRate / 100))).toFixed(2));
         const totalTaxAmt = Number((itemTotal - taxable).toFixed(2));
         
-        // Equal split with 1 paisa adjustment balance
-        const cgstAmt = Number((totalTaxAmt / 2).toFixed(2));
-        const sgstAmt = Number((totalTaxAmt - cgstAmt).toFixed(2));
+        let cgstAmt = 0;
+        let sgstAmt = 0;
+        let igstAmt = 0;
+
+        if (isGujarat) {
+          cgstAmt = Number((totalTaxAmt / 2).toFixed(2));
+          sgstAmt = Number((totalTaxAmt - cgstAmt).toFixed(2));
+        } else {
+          igstAmt = totalTaxAmt;
+        }
+
         const unitPrice = Number((taxable / qty).toFixed(2));
 
         grandTaxable += taxable;
@@ -300,7 +469,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td class="text-center">${index + 1}</td>
             <td>
               <strong class="text-dark d-block">${itemTitle}</strong>
-              <span class="text-muted" style="font-size: 10.5px;">Statutory Taxable Supply</span>
+              <span class="text-muted" style="font-size: 10px;">Statutory Taxable Supply</span>
             </td>
             <td class="text-center font-monospace fw-bold text-secondary">${hsnCode}</td>
             <td class="text-end">₹${formatINR(unitPrice)}</td>
@@ -314,7 +483,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }).join('');
     }
 
-    // Format Totals with mandatory 2 decimal places
     const formatINR = (val) => val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     const setElem = (id, val) => {
@@ -323,11 +491,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     setElem('subTotal', `₹${formatINR(grandTaxable)}`);
-    setElem('cgstVal', `₹${formatINR(grandCgst)}`);
-    setElem('sgstVal', `₹${formatINR(grandSgst)}`);
-    setElem('grandTotal', `₹${formatINR(grandTotal)}`);
+    
+    const cgstRow = document.getElementById('cgstRow');
+    const sgstRow = document.getElementById('sgstRow');
+    const igstRow = document.getElementById('igstRow');
 
-    // Amount In Words
+    if (grandCgst > 0 || grandSgst > 0) {
+      if (cgstRow) cgstRow.style.display = 'flex';
+      if (sgstRow) sgstRow.style.display = 'flex';
+      if (igstRow) igstRow.style.display = 'none';
+      setElem('cgstVal', `₹${formatINR(grandCgst)}`);
+      setElem('sgstVal', `₹${formatINR(grandSgst)}`);
+    } else {
+      if (cgstRow) cgstRow.style.display = 'none';
+      if (sgstRow) sgstRow.style.display = 'none';
+      if (igstRow) igstRow.style.display = 'flex';
+      setElem('igstVal', `₹${formatINR(grandTotal - grandTaxable)}`);
+    }
+
+    setElem('grandTotal', `₹${formatINR(grandTotal)}`);
     setElem('amountInWordsText', convertNumberToWords(Math.round(grandTotal)) + ' Only');
 
   } catch (err) {
@@ -335,7 +517,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// Indian Currency Words Converter
 function convertNumberToWords(amount) {
   const words = [
     '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
@@ -377,33 +558,36 @@ function convertNumberToWords(amount) {
 
 function downloadInvoicePDF() {
   const element = document.querySelector('.invoice-card');
-  const btn = document.getElementById('downloadPdfBtn');
+  const actionButtons = document.querySelector('.no-print');
   const invText = document.getElementById('invNo')?.innerText?.replace('#', '') || 'INVOICE';
 
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i> Generating PDF...`;
+  // 1. Buttons ko PDF me aane se rokne ke liye temporarily hide karein
+  if (actionButtons) {
+    actionButtons.style.setProperty('display', 'none', 'important');
   }
 
+  // 2. Compact single-page fit mode lagayein
+  element.classList.add('pdf-export-mode');
+
   const opt = {
-    margin: [8, 8, 8, 8],
-    filename: `${invText}_M_J_DIGITAL.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    margin:       [4, 4, 4, 4],
+    filename:     `${invText}_M_J_DIGITAL.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
   html2pdf().set(opt).from(element).save().then(() => {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = `<i class="fa-solid fa-file-pdf me-1"></i> Download PDF Invoice`;
+    element.classList.remove('pdf-export-mode');
+    if (actionButtons) {
+      actionButtons.style.removeProperty('display');
     }
   }).catch(err => {
-    console.error("PDF generation error:", err);
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = `<i class="fa-solid fa-file-pdf me-1"></i> Download PDF Invoice`;
+    element.classList.remove('pdf-export-mode');
+    if (actionButtons) {
+      actionButtons.style.removeProperty('display');
     }
+    console.error("PDF generation error:", err);
   });
 }
 </script>

@@ -18,6 +18,26 @@ const JWT_SECRET = process.env.JWT_SECRET || 'MJ_DIGITAL_SECRET_KEY_2026';
 const app = express();
 
 // ==========================================
+// JWT AUTH GUARD FOR SENSITIVE ADMIN ACTIONS
+// ==========================================
+function verifyAdminToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Access Denied: Admin Token Missing' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ success: false, message: 'Invalid or Expired Admin Session' });
+    }
+    req.admin = user;
+    next();
+  });
+}
+
+// ==========================================
 // 1. MIDDLEWARES & STATIC FOLDERS
 // ==========================================
 app.use(cors({
@@ -188,7 +208,7 @@ async function sendWhatsAppAndSMS(order) {
   const title = order.itemDetails?.title || 'Selected Item';
   const amount = Number(order.totalAmount || 0).toLocaleString('en-IN');
 
-  const messageText = `Namaste ${name}! M J DIGITAL order #${shortId} for "${title}" (Amount: ₹${amount}) confirm ho gaya hai. Status: Processing. Inquiries: +91 830 666 9999`;
+  const messageText = `Hi${name}! M J DIGITAL order #${shortId} for "${title}" (Amount: ₹${amount}) confirm ho gaya hai. Status: Processing. Inquiries: +91 830 666 9999`;
 
   // Console log verify karega ki trigger hua
   console.log(`📲 Notification Triggered for +91 ${phone}: ${messageText}`);
@@ -747,22 +767,31 @@ app.post('/api/orders', async (req, res) => {
     // Instant Free Telegram Alert
     sendTelegramOrderNotification(saved).catch(err => console.error("Telegram background error:", err));
 
-    // Inventory Stock Auto-Deduction
-    if (finalOrderType.toLowerCase() === 'product' && itemDetails?.itemId) {
-      try {
-        const updatedProduct = await Product.findByIdAndUpdate(
-          itemDetails.itemId,
-          { $inc: { stock: -(Number(itemDetails.quantity) || 1) } },
-          { new: true }
-        );
+    // Inventory Stock Auto-Deduction (Multi-Item Safe)
+    const itemsToDeduct = Array.isArray(req.body.items) && req.body.items.length > 0 
+      ? req.body.items 
+      : (req.body.itemDetails ? [req.body.itemDetails] : []);
 
-        if (updatedProduct && updatedProduct.stock <= 0) {
-          await Product.findByIdAndUpdate(itemDetails.itemId, {
-            $set: { stock: 0, status: 'Out of Stock' }
-          });
+    for (const it of itemsToDeduct) {
+      const pId = it.id || it.itemId || it.productId;
+      const deductQty = Number(it.qty || it.quantity || 1);
+
+      if (pId) {
+        try {
+          const updatedProd = await Product.findByIdAndUpdate(
+            pId,
+            { $inc: { stock: -deductQty } },
+            { new: true }
+          );
+
+          if (updatedProd && updatedProd.stock <= 0) {
+            await Product.findByIdAndUpdate(pId, {
+              $set: { stock: 0, status: 'Out of Stock' }
+            });
+          }
+        } catch (stockErr) {
+          console.error("Stock deduction warning for item:", pId, stockErr.message);
         }
-      } catch (stockErr) {
-        console.error("Stock update error:", stockErr.message);
       }
     }
 
@@ -1174,6 +1203,17 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
+
+// Render Server Sleep Prevention (Every 10 minutes)
+const KEEP_ALIVE_URL = 'https://mj-digital-backend-3.onrender.com/api/products';
+setInterval(async () => {
+  try {
+    const pingRes = await axios.get(KEEP_ALIVE_URL);
+    console.log(`[Keep-Alive] Self ping success - Status: ${pingRes.status} at ${new Date().toLocaleTimeString('en-IN')}`);
+  } catch (err) {
+    console.warn('[Keep-Alive] Ping notice:', err.message);
+  }
+}, 10 * 60 * 1000);
 
 app.get('/api/analytics/monthly-revenue', async (req, res) => {
   try {

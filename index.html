@@ -2344,7 +2344,7 @@
               const formattedTotal = Number(grandTotal || 0).toLocaleString('en-IN');
               const invoiceUrl = `https://mj-digital-backend-3.onrender.com/invoice.html?id=${rawId}`;
 
-              const messageText = `Namaste ${name}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ₹${formattedTotal}) successfully place ho gaya hai.\n\n📄 Tax Invoice Download: ${invoiceUrl}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
+              const messageText = `Hi${name}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ₹${formattedTotal}) successfully place ho gaya hai.\n\n📄 Tax Invoice Download: ${invoiceUrl}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
 
               const targetPhone = phone.length === 10 ? `91${phone}` : '918306669999';
               const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(messageText)}`;
@@ -2391,7 +2391,7 @@
                     const shortId = latestOrder ? latestOrder.shortId : 'LATEST';
                     const invoiceLink = `https://mj-digital-backend-3.onrender.com/invoice.html?id=${rawId}`;
 
-                    const msgText = `Namaste ${custName}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ${totalAmount}) successfully receive ho gaya hai.\n\n📄 Tax Invoice Download: ${invoiceLink}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
+                    const msgText = `Hi${custName}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ${totalAmount}) successfully receive ho gaya hai.\n\n📄 Tax Invoice Download: ${invoiceLink}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
         
                     const targetNumber = custPhone.length === 10 ? `91${custPhone}` : '918306669999';
                     const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(msgText)}`;
