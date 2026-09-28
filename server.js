@@ -56,7 +56,7 @@ if (!fs.existsSync(uploadDir)) {
 app.use('/uploads', express.static(uploadDir));
 
 // ==========================================
-// 2. MULTER FILE UPLOAD CONFIGURATION
+// 2. MULTER FILE UPLOAD (IMAGES & VIDEOS)
 // ==========================================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -68,7 +68,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 } // Support video files up to 50MB
 });
 
 // ==========================================
@@ -101,7 +101,6 @@ const mailTransporter = nodemailer.createTransport({
 
 async function sendOrderConfirmationEmail(order) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log("⚠️ EMAIL_USER ya EMAIL_PASS .env mein nahi hai. Email skip hua.");
     return false;
   }
 
@@ -110,7 +109,6 @@ async function sendOrderConfirmationEmail(order) {
     : 'mjdigitalworlds@gmail.com';
 
   const recipient = `${customerEmail}, mjdigitalworlds@gmail.com`;
-
   const shortId = String(order._id || order.id || Date.now()).slice(-4).toUpperCase();
   const currentStatus = order.status || 'Processing';
   const payStatus = order.paymentStatus || 'Paid';
@@ -147,24 +145,19 @@ async function sendOrderConfirmationEmail(order) {
   };
 
   try {
-    const info = await mailTransporter.sendMail(mailOptions);
-    console.log("✅ Order confirmation email sent:", info.messageId);
+    await mailTransporter.sendMail(mailOptions);
     return true;
   } catch (err) {
-    console.error("❌ Email sending error:", err.message);
     return false;
   }
 }
 
-// 100% FREE AUTOMATED TELEGRAM BOT ALERT
+// AUTOMATED TELEGRAM BOT ALERT
 async function sendTelegramOrderNotification(order) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN || '8963399353:AAGHMCxboeojbwSH6E4Hze61N3_gcNVHaY0';
   const chatId = process.env.TELEGRAM_CHAT_ID || '8612147860';
 
-  if (!botToken || !chatId) {
-    console.log("ℹ️ Telegram credentials missing, skipping alert.");
-    return;
-  }
+  if (!botToken || !chatId) return;
 
   const rawId = String(order._id || order.id || Date.now());
   const shortId = rawId.length > 6 ? rawId.slice(-6).toUpperCase() : rawId.toUpperCase();
@@ -195,9 +188,8 @@ async function sendTelegramOrderNotification(order) {
       text: message,
       parse_mode: 'Markdown'
     });
-    console.log(`✅ Instant Telegram alert delivered to chat ${chatId} for #ORD-${shortId}`);
   } catch (err) {
-    console.error("Telegram alert error:", err.response?.data?.description || err.message);
+    console.error("Telegram alert error:", err.message);
   }
 }
 
@@ -210,8 +202,6 @@ async function sendWhatsAppAndSMS(order) {
 
   const messageText = `Hi ${name}! M J DIGITAL order #${shortId} for "${title}" (Amount: ₹${amount}) confirm ho gaya hai. Status: Processing. Inquiries: +91 830 666 9999`;
 
-  console.log(`📲 Notification Triggered for +91 ${phone}: ${messageText}`);
-
   if (process.env.FAST2SMS_API_KEY && phone.length === 10) {
     try {
       await axios.post('https://www.fast2sms.com/dev/bulkV2', {
@@ -223,10 +213,7 @@ async function sendWhatsAppAndSMS(order) {
       }, {
         headers: { 'authorization': process.env.FAST2SMS_API_KEY }
       });
-      console.log(`✅ SMS successfully delivered to +91 ${phone}`);
-    } catch (apiErr) {
-      console.warn('SMS gateway delivery note:', apiErr.response?.data?.message || apiErr.message);
-    }
+    } catch (apiErr) {}
   }
   return true;
 }
@@ -318,7 +305,7 @@ function parseSpecifications(reqBody, directSpecs) {
     if (Array.isArray(directSpecs)) {
       return directSpecs.map(s => ({
         key: String(s.key || s.name || '').trim(),
-        value: String(s.value || '').trim()
+        value: String(s.value || s.val || '').trim()
       })).filter(s => s.key || s.value);
     }
     if (typeof directSpecs === 'string') {
@@ -399,7 +386,7 @@ app.post(['/api/products', '/api/items'], verifyAdminToken, upload.any(), async 
       brand: (brand || '').trim(),
       category: (category || 'Fashion').trim(),
       price: Number(price) || 0,
-      discountPrice: discountPrice ? Number(discountPrice) : null,
+      discountPrice: (discountPrice !== '' && discountPrice !== undefined && discountPrice !== null) ? Number(discountPrice) : null,
       stock: numStock,
       imageUrl: primaryImage,
       images: imageList,
@@ -457,7 +444,7 @@ app.put(['/api/products/:id', '/api/items/:id'], verifyAdminToken, upload.any(),
     if (body.category) updateFields.category = String(body.category).trim();
     if (body.price !== undefined && body.price !== '') updateFields.price = Number(body.price);
 
-    // FIXED: Discount price check
+    // FIXED: Strict Discount Price parsing
     if (body.discountPrice !== undefined) {
       updateFields.discountPrice = (body.discountPrice !== '' && body.discountPrice !== null) 
         ? Number(body.discountPrice) 
@@ -477,7 +464,7 @@ app.put(['/api/products/:id', '/api/items/:id'], verifyAdminToken, upload.any(),
     }
     if (body.type) updateFields.type = body.type;
 
-    // FIXED: Specs & Variants parsing
+    // FIXED: Specifications & Variants JSON parsing
     const parsedSpecs = parseSpecifications(body, body.specifications || body.specs);
     if (parsedSpecs.length > 0 || body.specifications !== undefined) {
       updateFields.specifications = parsedSpecs;
@@ -487,20 +474,23 @@ app.put(['/api/products/:id', '/api/items/:id'], verifyAdminToken, upload.any(),
       updateFields.variants = parseVariants(body.variants);
     }
 
-    if (body.imageUrl && String(body.imageUrl).trim() !== '') {
-      updateFields.imageUrl = String(body.imageUrl).trim();
+    let newlyUploadedFiles = [];
+    if (req.files && req.files.length > 0) {
+      newlyUploadedFiles = req.files.map(f => `https://mj-digital-backend-3.onrender.com/uploads/${f.filename}`);
     }
 
-    if (req.files && req.files.length > 0) {
-      let newImages = req.files.map(f => `https://mj-digital-backend-3.onrender.com/uploads/${f.filename}`);
-      updateFields.$push = { images: {$each: newImages } };
-      if (!body.imageUrl) updateFields.imageUrl = newImages[0];
+    if (body.imageUrl && String(body.imageUrl).trim() !== '') {
+      updateFields.imageUrl = String(body.imageUrl).trim();
+    } else if (newlyUploadedFiles.length > 0) {
+      updateFields.imageUrl = newlyUploadedFiles[0];
     }
 
     const cleanUpdateSet = Object.fromEntries(Object.entries(updateFields).filter(([k]) => k !== '$push'));
-    const finalUpdateQuery = updateFields.$push 
-      ? { $set: cleanUpdateSet, $push: updateFields.$push } 
-      : { $set: cleanUpdateSet };
+    let finalUpdateQuery = { $set: cleanUpdateSet };
+
+    if (newlyUploadedFiles.length > 0) {
+      finalUpdateQuery.$push = { images: { $each: newlyUploadedFiles } };
+    }
 
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
@@ -547,7 +537,6 @@ app.patch(['/api/products/:id', '/api/items/:id', '/api/products/:id/quick-updat
 
     res.json({ success: true, message: 'Updated successfully', data: updated });
   } catch (err) {
-    console.error('Product update error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -634,7 +623,6 @@ app.post('/api/travel-packages', verifyAdminToken, upload.array('images', 5), as
     await packageDoc.save();
     res.status(201).json({ success: true, message: 'Saved successfully', data: packageDoc });
   } catch (error) {
-    console.error('Travel Package Save Error:', error);
     res.status(400).json({ success: false, message: error.message });
   }
 });
@@ -654,7 +642,6 @@ app.delete('/api/travel-packages/:id', verifyAdminToken, async (req, res) => {
     if (!deleted) return res.status(404).json({ success: false, message: 'Not found' });
     res.json({ success: true, message: 'Deleted successfully' });
   } catch (err) {
-    console.error('Delete Travel Error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -772,7 +759,6 @@ app.post('/api/travel-inquiry', async (req, res) => {
 
     res.status(200).json({ success: true, message: 'Inquiry received! Travel desk will contact you soon.' });
   } catch (err) {
-    console.error('Travel Inquiry Error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -806,10 +792,10 @@ app.post('/api/orders', async (req, res) => {
 
     const saved = await newOrder.save();
     
-    // Instant Free Telegram Alert
-    sendTelegramOrderNotification(saved).catch(err => console.error("Telegram background error:", err));
+    // Instant Telegram Alert
+    sendTelegramOrderNotification(saved).catch(() => {});
 
-    // Inventory Stock Auto-Deduction (Multi-Item Safe)
+    // Inventory Stock Auto-Deduction
     const itemsToDeduct = Array.isArray(req.body.items) && req.body.items.length > 0 
       ? req.body.items 
       : (req.body.itemDetails ? [req.body.itemDetails] : []);
@@ -831,18 +817,15 @@ app.post('/api/orders', async (req, res) => {
               $set: { stock: 0, status: 'Out of Stock' }
             });
           }
-        } catch (stockErr) {
-          console.error("Stock deduction warning for item:", pId, stockErr.message);
-        }
+        } catch (stockErr) {}
       }
     }
 
-    sendOrderConfirmationEmail(saved).catch(err => console.error("Email send failed in background:", err));
-    sendWhatsAppAndSMS(saved).catch(err => console.error("SMS background error:", err));
+    sendOrderConfirmationEmail(saved).catch(() => {});
+    sendWhatsAppAndSMS(saved).catch(() => {});
 
     res.status(201).json({ success: true, message: 'Order placed successfully!', data: saved });
   } catch (err) {
-    console.error('Order creation error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -857,7 +840,6 @@ app.get('/api/orders', async (req, res) => {
       orders: orders
     });
   } catch (err) {
-    console.error('Error fetching orders:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
@@ -892,15 +874,12 @@ const handleOrderStatusUpdate = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order database me nahi mila' });
     }
 
-    console.log(`✅ Order ${orderId} updated to: ${updated.status}`);
     return res.json({ success: true, data: updated, message: 'Status updated successfully' });
   } catch (err) {
-    console.error('Order status update error:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 };
 
-// Routes binding for Order Status (Protected with verifyAdminToken)
 app.put('/api/orders/:id', verifyAdminToken, handleOrderStatusUpdate);
 app.patch('/api/orders/:id', verifyAdminToken, handleOrderStatusUpdate);
 app.put('/api/orders/:id/status', verifyAdminToken, handleOrderStatusUpdate);
@@ -947,7 +926,6 @@ app.get('/api/analytics/category-revenue', async (req, res) => {
       totals: Object.values(categoryTotals)
     });
   } catch (err) {
-    console.error("Analytics fetch error:", err);
     res.status(500).json({ error: "Failed to aggregate category revenue" });
   }
 });
@@ -967,7 +945,6 @@ app.post('/api/payment/create-order', async (req, res) => {
     const order = await razorpay.orders.create(options);
     res.json({ success: true, order });
   } catch (err) {
-    console.error("Razorpay order creation error details:", err);
     res.status(500).json({ success: false, message: err.message || "Order creation failed" });
   }
 });
@@ -988,7 +965,6 @@ app.post('/api/payment/verify', async (req, res) => {
       res.status(400).json({ success: false, message: "Invalid signature verification" });
     }
   } catch (err) {
-    console.error("Signature verification error:", err);
     res.status(500).json({ success: false, message: "Verification error" });
   }
 });

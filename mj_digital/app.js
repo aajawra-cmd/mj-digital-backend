@@ -522,21 +522,23 @@ window.updateChartData = updateChartData;
 // ==========================================
 // 6. LIVE PRODUCTS CATALOG & DYNAMIC VARIANT BUILDER
 // ==========================================
-function addVariantRow(color = '', ram = '', storage = '', size = '', price = '') {
+// FEATURE 3 FIX: ADD VARIANT ROW WITH REGULAR + DISCOUNT PRICE
+function addVariantRow(color = '', ram = '', storage = '', size = '', price = '', discountPrice = '') {
   const container = document.getElementById('variantRowsContainer');
   if (!container) return;
 
   const rowId = 'var_' + Date.now() + Math.random().toString(36).substr(2, 4);
   const row = document.createElement('div');
   row.id = rowId;
-  row.className = 'grid grid-cols-6 gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200 variant-row-item';
+  row.className = 'grid grid-cols-7 gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200 variant-row-item';
 
   row.innerHTML = `
     <input type="text" placeholder="Colour (e.g. Red)" value="${color}" class="col-var-color border p-1.5 rounded text-xs bg-white outline-none">
     <input type="text" placeholder="RAM (e.g. 12)" value="${ram}" class="col-var-ram border p-1.5 rounded text-xs bg-white outline-none">
     <input type="text" placeholder="Storage (e.g. 256)" value="${storage}" class="col-var-storage border p-1.5 rounded text-xs bg-white outline-none">
-    <input type="text" placeholder="Size (e.g. 6.1 inch)" value="${size}" class="col-var-size border p-1.5 rounded text-xs bg-white outline-none">
-    <input type="number" placeholder="Price (₹)" value="${price}" class="col-var-price border p-1.5 rounded text-xs font-bold text-blue-600 bg-white outline-none">
+    <input type="text" placeholder="Size (e.g. 6.1)" value="${size}" class="col-var-size border p-1.5 rounded text-xs bg-white outline-none">
+    <input type="number" placeholder="Price (₹)" value="${price}" class="col-var-price border p-1.5 rounded text-xs font-bold text-gray-700 bg-white outline-none">
+    <input type="number" placeholder="Discount (₹)" value="${discountPrice}" class="col-var-discount border p-1.5 rounded text-xs font-bold text-blue-600 bg-white outline-none">
     <div class="text-right">
       <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-500 hover:text-rose-700 text-xs font-bold p-1">
         ✕ Remove
@@ -563,6 +565,8 @@ function collectVariantsMatrix() {
     const storage = r.querySelector('.col-var-storage')?.value.trim() || '';
     const size = r.querySelector('.col-var-size')?.value.trim() || '';
     const price = Number(r.querySelector('.col-var-price')?.value || 0);
+    const discInput = r.querySelector('.col-var-discount')?.value;
+    const discountPrice = (discInput !== '' && discInput !== undefined) ? Number(discInput) : null;
 
     if (price > 0 || color || ram || storage || size) {
       if (color) options.colors.add(color);
@@ -570,7 +574,14 @@ function collectVariantsMatrix() {
       if (storage) options.storage.add(storage);
       if (size) options.sizes.add(size);
 
-      configs.push({ color, ram, storage, size, price: Number(price) || 0 });
+      configs.push({
+        color,
+        ram,
+        storage,
+        size,
+        price: Number(price) || 0,
+        discountPrice: discountPrice
+      });
     }
   });
 
@@ -613,7 +624,12 @@ async function loadAdminProducts() {
       }
 
       tbody.innerHTML = products.map(prod => {
-        const img = (prod.images && prod.images[0]) || prod.imageUrl || 'https://placehold.co/50';
+        const firstMedia = (prod.images && prod.images[0]) || prod.imageUrl || 'https://placehold.co/50';
+        const isVid = firstMedia.endsWith('.mp4') || firstMedia.endsWith('.webm');
+        const mediaHtml = isVid 
+          ? `<div class="w-10 h-10 rounded-lg border bg-slate-900 flex items-center justify-center text-white"><i class="fa-solid fa-play text-xs"></i></div>`
+          : `<img src="${firstMedia}" class="w-10 h-10 object-cover rounded-lg border" onerror="this.src='https://placehold.co/50'">`;
+        
         const price = prod.price || 0;
         const stock = prod.stock ?? 0;
         const status = prod.status || (stock > 0 ? 'Active' : 'Out of Stock');
@@ -626,7 +642,7 @@ async function loadAdminProducts() {
         return `
           <tr class="border-b border-gray-100 hover:bg-gray-50/50 transition">
             <td class="p-3 flex items-center gap-3">
-              <img src="${img}" class="w-10 h-10 object-cover rounded-lg border">
+              ${mediaHtml}
               <div>
                 <span class="font-bold text-gray-800 block">${prod.title || prod.name || 'Untitled'}</span>
                 <span class="text-xs text-gray-400">${prod.brand || '-'}</span>
@@ -679,6 +695,7 @@ async function loadAdminProducts() {
   }
 }
 
+// FEATURE 2 FIX: OPEN EDIT PRODUCT MODAL STRICT POPULATION
 function openEditProductModal(id) {
   const prod = productsList.find(p => String(p._id) === String(id));
   if (!prod) {
@@ -697,7 +714,7 @@ function openEditProductModal(id) {
   setVal('prodBrand', prod.brand || '');
   setVal('prodCat', prod.category || 'Fashion');
   setVal('prodPrice', prod.price !== undefined ? prod.price : '');
-  setVal('prodDiscountPrice', prod.discountPrice !== undefined && prod.discountPrice !== null ? prod.discountPrice : '');
+  setVal('prodDiscountPrice', (prod.discountPrice !== undefined && prod.discountPrice !== null) ? prod.discountPrice : '');
   setVal('prodStock', prod.stock ?? 0);
   setVal('prodImage', prod.imageUrl || (prod.images && prod.images[0]) || '');
   
@@ -720,7 +737,7 @@ function openEditProductModal(id) {
     }
   }
 
-  // Variant Rows Population
+  // Variant Rows Population with Discount Price
   const vCont = document.getElementById('variantRowsContainer');
   if (vCont) {
     vCont.innerHTML = '';
@@ -730,7 +747,7 @@ function openEditProductModal(id) {
     }
     const configs = Array.isArray(parsedV) ? parsedV : (parsedV?.configurations || []);
     if (Array.isArray(configs) && configs.length > 0) {
-      configs.forEach(c => addVariantRow(c.color || '', c.ram || '', c.storage || '', c.size || '', c.price || ''));
+      configs.forEach(c => addVariantRow(c.color || '', c.ram || '', c.storage || '', c.size || '', c.price || '', c.discountPrice || ''));
     }
   }
 
@@ -741,6 +758,7 @@ function openEditProductModal(id) {
 }
 window.openEditProductModal = openEditProductModal;
 
+// FEATURE 2 & 4 FIX: SUBMIT WITH STRICT DISCOUNT, SPECS & MULTI-MEDIA
 async function handleProductSubmit(event) {
   event.preventDefault();
   const form = event.target;
@@ -800,7 +818,8 @@ async function handleProductSubmit(event) {
   formData.set('variants', JSON.stringify(variantData));
   if (imageUrl) formData.set('imageUrl', imageUrl);
 
-  const fileInput = form.querySelector('input[type="file"]');
+  // FEATURE 4 FIX: Append Multiple Image and Video Files
+  const fileInput = document.getElementById('prodImageFile') || form.querySelector('input[type="file"]');
   if (fileInput && fileInput.files.length > 0) {
     formData.delete('images');
     Array.from(fileInput.files).forEach(file => {
@@ -988,13 +1007,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// FEATURE 4 FIX: MULTI-FILE PREVIEW (IMAGE & VIDEO)
 document.addEventListener('change', (e) => {
   if (e.target && e.target.id === 'prodImageFile') {
-    const file = e.target.files[0];
-    const preview = document.getElementById('prodImagePreview');
+    const files = e.target.files;
     const container = document.getElementById('prodImagePreviewContainer');
-    if (file && preview && container) {
-      preview.src = URL.createObjectURL(file);
+    if (files && files.length > 0 && container) {
+      container.innerHTML = '';
+      Array.from(files).forEach(f => {
+        const fileUrl = URL.createObjectURL(f);
+        if (f.type.startsWith('video/')) {
+          const vid = document.createElement('video');
+          vid.src = fileUrl;
+          vid.className = 'w-16 h-16 object-cover rounded border p-1 shadow-sm bg-black';
+          vid.muted = true;
+          container.appendChild(vid);
+        } else {
+          const img = document.createElement('img');
+          img.src = fileUrl;
+          img.className = 'w-16 h-16 object-cover rounded border p-1 shadow-sm';
+          container.appendChild(img);
+        }
+      });
       container.classList.remove('hidden');
     }
   }

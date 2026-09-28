@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FILE-01 | VERSION: 10.3 | FULL UNIFIED FIXED MJ DIGITAL PORTAL -->
+<!-- FILE-01 | VERSION: 10.4 | FULL UNIFIED FIXED MJ DIGITAL PORTAL -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -21,9 +21,7 @@
             flex-direction: column;
             min-height: 100vh;
         }
-        .cursor-pointer {
-            cursor: pointer !important;
-        }
+        .cursor-pointer { cursor: pointer !important; }
         .main-wrapper { flex: 1; }
         .navbar-custom { 
             background: rgba(15, 23, 42, 0.95); 
@@ -147,10 +145,16 @@
         footer p, footer span, footer .small { color: #cbd5e1 !important; }
         footer a { color: #93c5fd !important; text-decoration: none; }
         footer a:hover { color: #38bdf8 !important; }
-        .v-thumb-strip { display: flex; flex-direction: column; gap: 10px; max-height: 410px; overflow-y: auto; padding-right: 4px; flex-shrink: 0; }
-        .v-thumb-item { width: 58px; height: 58px; border-radius: 8px; border: 2px solid #cbd5e1; overflow: hidden; cursor: pointer; background: #fff; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        
+        /* Media & Gallery View Styles */
+        .v-thumb-strip { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; flex-shrink: 0; }
+        .v-thumb-item { width: 62px; height: 62px; border-radius: 10px; border: 2px solid #cbd5e1; overflow: hidden; cursor: pointer; background: #fff; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
         .v-thumb-item.active { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3); }
         .v-thumb-item img, .v-thumb-item video { width: 100%; height: 100%; object-fit: cover; }
+        .media-main-box { width: 100%; height: 420px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 10px; }
+        .media-main-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .media-main-box video { width: 100%; height: 100%; object-fit: contain; background: #000; border-radius: 12px; }
+
         .variant-pill { border: 1px solid #cbd5e1; background: #fff; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .variant-pill.active { border-color: #2563eb; background: #eff6ff; color: #2563eb; box-shadow: 0 0 0 1px #2563eb; }
         .brand-chip-btn { font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: #fff; color: #475569; cursor: pointer; transition: all 0.2s ease; }
@@ -158,15 +162,6 @@
         .payment-radio-card { border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; cursor: pointer; background: #ffffff; transition: all 0.2s ease; }
         .payment-radio-card:hover { border-color: var(--primary); background: #f8fafc; }
         .payment-radio-card input:checked + div strong { color: var(--primary); }
-        @media print {
-            body * { visibility: hidden !important; }
-            #dynamicBillModal, #dynamicBillModal * { visibility: visible !important; }
-            #dynamicBillModal { position: fixed !important; left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; background: #ffffff !important; z-index: 999999 !important; overflow: visible !important; }
-            .modal-dialog { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; transform: none !important; }
-            .modal-content { border: none !important; box-shadow: none !important; padding: 15px !important; }
-            .btn-close, .modal-content .d-flex.gap-2 { display: none !important; }
-            @page { size: A4 portrait; margin: 10mm; }
-        }
     </style>
 </head>
 <body>
@@ -199,19 +194,16 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-3">
-                    <!-- Wishlist Icon with Hand Cursor -->
                     <a href="javascript:void(0)" class="text-light position-relative cursor-pointer text-decoration-none" onclick="navigateTo('page-wishlist')" style="cursor: pointer;" title="Wishlist">
                         <i class="fa-regular fa-heart fs-5"></i>
                         <span id="wishCount" class="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">0</span>
                     </a>
 
-                    <!-- Shopping Bag Icon with Hand Cursor -->
                     <a href="javascript:void(0)" class="text-light position-relative cursor-pointer text-decoration-none" onclick="navigateTo('page-cart')" style="cursor: pointer;" title="Shopping Bag">
                         <i class="fa-solid fa-bag-shopping fs-5"></i>
                         <span id="cartCount" class="badge bg-primary rounded-circle position-absolute top-0 start-100 translate-middle">0</span>
                     </a>
 
-                    <!-- Account Button -->
                     <button class="btn btn-outline-info btn-sm rounded-pill px-3" style="cursor: pointer;" id="profileNavBtn" onclick="checkAuthAndNavigate()">
                         <i class="fa-solid fa-user me-1"></i> Account
                     </button>
@@ -276,7 +268,7 @@
             <div class="row g-4" id="allCatalogGrid"></div>
         </div>
 
-        <!-- 3. FULL-PAGE ITEM DETAILS VIEW -->
+        <!-- 3. FULL-PAGE ITEM DETAILS VIEW (RESPONSIVE GALLERY & LINKED VARIANTS) -->
         <div id="page-item-details" class="page-view">
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb" id="dynamicBreadcrumbNav">
@@ -291,7 +283,7 @@
                     <div class="col-lg-5">
                         <div class="d-flex gap-3 align-items-start sticky-top" style="top: 90px;">
                             <div id="pageDetailThumbnails" class="v-thumb-strip"></div>
-                            <div id="pageDetailMediaBox" class="bg-white rounded-4 p-4 d-flex align-items-center justify-content-center border flex-grow-1 shadow-sm" style="height: 420px;"></div>
+                            <div id="pageDetailMediaBox" class="media-main-box flex-grow-1 shadow-sm"></div>
                         </div>
                     </div>
 
@@ -672,7 +664,7 @@
                 <div class="col-md-9">
                     <div class="card-custom p-4">
                         <div id="p-orders" class="profile-tab-content">
-                            <!-- VIEW 1: AMAZON STYLE ORDERS LIST WITH SEARCH & FILTER -->
+                            <!-- VIEW 1: ORDERS LIST -->
                             <div id="ordersListView">
                                 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                                     <div>
@@ -695,12 +687,10 @@
                                     </div>
                                 </div>
 
-                                <div id="amazonOrdersContainer" class="d-flex flex-column gap-3">
-                                    <!-- Dynamic Cards inject honge -->
-                                </div>
+                                <div id="amazonOrdersContainer" class="d-flex flex-column gap-3"></div>
                             </div>
 
-                            <!-- VIEW 2: AMAZON STYLE FULL ORDER DETAILS TAB -->
+                            <!-- VIEW 2: ORDER DETAILS TAB -->
                             <div id="orderDetailViewTab" style="display: none;">
                                 <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
                                     <button type="button" class="btn btn-link text-decoration-none text-primary p-0 fw-semibold" onclick="backToOrdersList()">
@@ -1104,6 +1094,11 @@
 
         function createProductCardHTML(item) {
             const img = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300');
+            const isVid = img.endsWith('.mp4') || img.endsWith('.webm');
+            const mediaTag = isVid 
+                ? `<video src="${img}" class="img-fluid" muted style="max-height: 150px; object-fit: contain;"></video>`
+                : `<img src="${img}" alt="${item.title || item.name}" class="img-fluid" style="max-height: 150px; object-fit: contain;" onerror="this.src='https://placehold.co/150'">`;
+
             const price = Number(item.price || 0).toLocaleString('en-IN');
             const title = item.title || item.name || 'Product';
             const isWish = myWishlist.some(w => String(w.id) === String(item._id));
@@ -1113,7 +1108,7 @@
                     <div class="card-custom p-4 text-center h-100 d-flex flex-column justify-content-between">
                         <div onclick="openItemDetailsPage('${item._id}', false)" style="cursor: pointer;" title="Click to view full details">
                             <div class="bg-light rounded-4 p-3 mb-3 d-flex align-items-center justify-content-center" style="height: 180px;">
-                                <img src="${img}" alt="${title}" class="img-fluid" style="max-height: 150px; object-fit: contain;">
+                                ${mediaTag}
                             </div>
                             <span class="badge bg-primary-subtle text-primary mb-2 text-uppercase">${item.category || 'General'}</span>
                             <h6 class="fw-bold fs-5 text-dark line-clamp-1">${title}</h6>
@@ -1245,7 +1240,6 @@
             });
         }
 
-        // STRICT FASHION MATCHER: Service items ko bypass karega
         async function loadFashion() {
             await setupCategoryStore('fashion', 'fashionProductsGrid', 'fashionBrandChips', it => {
                 const cat = (it.category || '').toLowerCase().trim();
@@ -1253,7 +1247,6 @@
             });
         }
 
-        // STRICT SERVICES MATCHER: Fashion items ko bypass karega
         async function loadServices() {
             await setupCategoryStore('services', 'servicesProductsGrid', 'servicesBrandChips', it => {
                 const cat = (it.category || '').toLowerCase().trim();
@@ -1536,6 +1529,9 @@
             grid.innerHTML = list.map(t => createTravelCardHTML(t)).join('');
         }
 
+        // ========================================================
+        // TWO-WAY LINKED DYNAMIC VARIANT MATRIX ENGINE (RAM <-> COLOR <-> PRICE)
+        // ========================================================
         function renderCategoryVariantsDynamic(item, isTravel = false) {
             currentSelectedProductForPricing = item;
             currentVariantSelectionMap = {};
@@ -1595,53 +1591,160 @@
             if (cat.includes('service') || (!hasAnyConfig && !hasAnyOpts)) {
                 container.innerHTML = '';
                 const priceEl = document.getElementById('pageDetailPrice');
-                if (priceEl) priceEl.innerText = `₹${Number(item.price || item.basePrice || 0).toLocaleString('en-IN')}`;
+                const pToShow = item.discountPrice ? item.discountPrice : item.price;
+                if (priceEl) priceEl.innerText = `₹${Number(pToShow || 0).toLocaleString('en-IN')}`;
                 return;
             }
 
-            const colors = (opts.colors && opts.colors.length > 0) ? opts.colors : [...new Set(configs.map(c => c.color || c.colour).filter(Boolean))];
-            const rams = (opts.ram && opts.ram.length > 0) ? opts.ram : [...new Set(configs.map(c => c.ram).filter(Boolean))];
-            const roms = (opts.storage && opts.storage.length > 0) ? opts.storage : [...new Set(configs.map(c => c.storage || c.rom).filter(Boolean))];
-            const sizes = (opts.sizes && opts.sizes.length > 0) ? opts.sizes : [...new Set(configs.map(c => c.size).filter(Boolean))];
+            const firstCfg = configs[0] || {};
+            const initialRam = firstCfg.ram || '';
+            const initialStorage = firstCfg.storage || firstCfg.rom || '';
+            const initialColor = firstCfg.color || firstCfg.colour || '';
+            const initialSize = firstCfg.size || '';
 
-            const combinedConfigs = configs.filter(c => c.ram && (c.storage || c.rom)).map(c => `${c.ram} / ${c.storage || c.rom}`);
-            const uniqueCombined = [...new Set(combinedConfigs)];
+            if (initialRam && initialStorage) {
+                currentVariantSelectionMap['config'] = `${initialRam} / ${initialStorage}`;
+            } else if (initialStorage) {
+                currentVariantSelectionMap['storage'] = initialStorage;
+            }
+            if (initialColor) currentVariantSelectionMap['color'] = initialColor;
+            if (initialSize) currentVariantSelectionMap['size'] = initialSize;
 
-            let html = '';
-            if (sizes.length > 0) {
-                currentVariantSelectionMap['size'] = sizes[0];
-                html += `<div class="mb-3 variant-block-dynamic" data-attr="size"><label class="small fw-bold text-dark d-block mb-1.5">Select Size: <span class="text-primary selected-val">${sizes[0]}</span></label><div class="d-flex flex-wrap gap-2">${sizes.map((s, idx) => `<button type="button" class="variant-pill ${idx === 0 ? 'active' : ''}" onclick="onDynamicVariantSelect('size', '${s}')">${s}</button>`).join('')}</div></div>`;
-            }
-            if (uniqueCombined.length > 0) {
-                currentVariantSelectionMap['config'] = uniqueCombined[0];
-                html += `<div class="mb-3 variant-block-dynamic" data-attr="config"><label class="small fw-bold text-dark d-block mb-1.5">Configuration (RAM/Storage): <span class="text-primary selected-val">${uniqueCombined[0]}</span></label><div class="d-flex flex-wrap gap-2">${uniqueCombined.map((cfg, idx) => `<button type="button" class="variant-pill ${idx === 0 ? 'active' : ''}" onclick="onDynamicVariantSelect('config', '${cfg}')">${cfg}</button>`).join('')}</div></div>`;
-            } else {
-                if (rams.length > 0) {
-                    currentVariantSelectionMap['ram'] = rams[0];
-                    html += `<div class="mb-3 variant-block-dynamic" data-attr="ram"><label class="small fw-bold text-dark d-block mb-1.5">RAM: <span class="text-primary selected-val">${rams[0]}</span></label><div class="d-flex flex-wrap gap-2">${rams.map((r, idx) => `<button type="button" class="variant-pill ${idx === 0 ? 'active' : ''}" onclick="onDynamicVariantSelect('ram', '${r}')">${r}</button>`).join('')}</div></div>`;
-                }
-                if (roms.length > 0) {
-                    currentVariantSelectionMap['storage'] = roms[0];
-                    html += `<div class="mb-3 variant-block-dynamic" data-attr="storage"><label class="small fw-bold text-dark d-block mb-1.5">Storage (ROM): <span class="text-primary selected-val">${roms[0]}</span></label><div class="d-flex flex-wrap gap-2">${roms.map((rom, idx) => `<button type="button" class="variant-pill ${idx === 0 ? 'active' : ''}" onclick="onDynamicVariantSelect('storage', '${rom}')">${rom}</button>`).join('')}</div></div>`;
-                }
-            }
-            if (colors.length > 0) {
-                currentVariantSelectionMap['color'] = colors[0];
-                html += `<div class="mb-3 variant-block-dynamic" data-attr="color"><label class="small fw-bold text-dark d-block mb-1.5">Colour: <span class="text-primary selected-val">${colors[0]}</span></label><div class="d-flex flex-wrap gap-2">${colors.map((c, idx) => `<button type="button" class="variant-pill ${idx === 0 ? 'active' : ''}" onclick="onDynamicVariantSelect('color', '${c}')">${c}</button>`).join('')}</div></div>`;
-            }
-            container.innerHTML = html;
+            renderVariantPillsHTML(item, configs, opts);
             updateDynamicPriceFromVariants(item);
         }
 
+        function renderVariantPillsHTML(item, configs, opts) {
+            const container = document.getElementById('pageDetailVariantsContainer');
+            if (!container) return;
+
+            const colors = (opts.colors && opts.colors.length > 0) ? opts.colors : [...new Set(configs.map(c => c.color || c.colour).filter(Boolean))];
+            const sizes = (opts.sizes && opts.sizes.length > 0) ? opts.sizes : [...new Set(configs.map(c => c.size).filter(Boolean))];
+            
+            const combinedConfigs = configs.filter(c => c.ram && (c.storage || c.rom)).map(c => `${c.ram} / ${c.storage || c.rom}`);
+            const uniqueCombined = [...new Set(combinedConfigs)];
+            const pureStorage = [...new Set(configs.map(c => c.storage || c.rom).filter(Boolean))];
+
+            let html = '';
+
+            // Configuration Pill (RAM / Storage)
+            if (uniqueCombined.length > 0) {
+                const activeCfg = currentVariantSelectionMap['config'] || uniqueCombined[0];
+                currentVariantSelectionMap['config'] = activeCfg;
+                html += `
+                    <div class="mb-3 variant-block-dynamic" data-attr="config">
+                        <label class="small fw-bold text-dark d-block mb-1.5">Configuration (RAM/Storage): <span class="text-primary selected-val">${activeCfg}</span></label>
+                        <div class="d-flex flex-wrap gap-2">
+                            ${uniqueCombined.map(cfg => `
+                                <button type="button" class="variant-pill ${cfg === activeCfg ? 'active' : ''}" onclick="onDynamicVariantSelect('config', '${cfg}')">${cfg}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (pureStorage.length > 0) {
+                const activeRom = currentVariantSelectionMap['storage'] || pureStorage[0];
+                currentVariantSelectionMap['storage'] = activeRom;
+                html += `
+                    <div class="mb-3 variant-block-dynamic" data-attr="storage">
+                        <label class="small fw-bold text-dark d-block mb-1.5">Storage (ROM): <span class="text-primary selected-val">${activeRom}</span></label>
+                        <div class="d-flex flex-wrap gap-2">
+                            ${pureStorage.map(rom => `
+                                <button type="button" class="variant-pill ${rom === activeRom ? 'active' : ''}" onclick="onDynamicVariantSelect('storage', '${rom}')">${rom}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Size Pill
+            if (sizes.length > 0) {
+                const activeSize = currentVariantSelectionMap['size'] || sizes[0];
+                currentVariantSelectionMap['size'] = activeSize;
+                html += `
+                    <div class="mb-3 variant-block-dynamic" data-attr="size">
+                        <label class="small fw-bold text-dark d-block mb-1.5">Select Size: <span class="text-primary selected-val">${activeSize}</span></label>
+                        <div class="d-flex flex-wrap gap-2">
+                            ${sizes.map(s => `
+                                <button type="button" class="variant-pill ${s === activeSize ? 'active' : ''}" onclick="onDynamicVariantSelect('size', '${s}')">${s}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Colour Pill
+            if (colors.length > 0) {
+                const activeColor = currentVariantSelectionMap['color'] || colors[0];
+                currentVariantSelectionMap['color'] = activeColor;
+                html += `
+                    <div class="mb-3 variant-block-dynamic" data-attr="color">
+                        <label class="small fw-bold text-dark d-block mb-1.5">Colour: <span class="text-primary selected-val">${activeColor}</span></label>
+                        <div class="d-flex flex-wrap gap-2">
+                            ${colors.map(c => `
+                                <button type="button" class="variant-pill ${c === activeColor ? 'active' : ''}" onclick="onDynamicVariantSelect('color', '${c}')">${c}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // TWO-WAY LINKAGE LOGIC
         function onDynamicVariantSelect(attrKey, val) {
             currentVariantSelectionMap[attrKey] = val;
-            const block = document.querySelector(`.variant-block-dynamic[data-attr="${attrKey}"]`);
-            if (block) {
-                block.querySelectorAll('.variant-pill').forEach(p => p.classList.toggle('active', p.innerText.trim() === val.trim()));
-                const span = block.querySelector('.selected-val');
-                if (span) span.innerText = val;
+            const item = currentSelectedProductForPricing;
+            if (!item) return;
+
+            let parsed = item.variants;
+            if (typeof parsed === 'string' && parsed.trim() !== '') {
+                try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
             }
-            updateDynamicPriceFromVariants(currentSelectedProductForPricing);
+            const configs = Array.isArray(parsed) ? parsed : (parsed?.configurations || []);
+
+            // 1. Agar user ne Config (12 / 256) click kiya, toh linked Color auto-attach karein
+            if (attrKey === 'config' || attrKey === 'storage') {
+                const parts = String(val).split('/').map(s => s.trim().toLowerCase());
+                const matchingConfig = configs.find(c => {
+                    const cRam = String(c.ram || '').trim().toLowerCase();
+                    const cRom = String(c.storage || '').trim().toLowerCase();
+                    if (parts.length === 2) return cRam === parts[0] && cRom === parts[1];
+                    return cRom === parts[0];
+                });
+                if (matchingConfig && (matchingConfig.color || matchingConfig.colour)) {
+                    currentVariantSelectionMap['color'] = matchingConfig.color || matchingConfig.colour;
+                }
+            }
+            // 2. Agar user ne Color (silver) click kiya, toh linked Config auto-attach karein
+            else if (attrKey === 'color') {
+                const matchingColorConfig = configs.find(c => {
+                    const cColor = String(c.color || c.colour || '').trim().toLowerCase();
+                    return cColor === String(val).trim().toLowerCase();
+                });
+                if (matchingColorConfig) {
+                    if (matchingColorConfig.ram && matchingColorConfig.storage) {
+                        currentVariantSelectionMap['config'] = `${matchingColorConfig.ram} / ${matchingColorConfig.storage}`;
+                    } else if (matchingColorConfig.storage) {
+                        currentVariantSelectionMap['storage'] = matchingColorConfig.storage;
+                    }
+                }
+            }
+
+            // Sync visual buttons
+            Object.keys(currentVariantSelectionMap).forEach(key => {
+                const block = document.querySelector(`.variant-block-dynamic[data-attr="${key}"]`);
+                if (block) {
+                    const currentVal = currentVariantSelectionMap[key];
+                    block.querySelectorAll('.variant-pill').forEach(p => {
+                        p.classList.toggle('active', p.innerText.trim().toLowerCase() === currentVal.trim().toLowerCase());
+                    });
+                    const span = block.querySelector('.selected-val');
+                    if (span) span.innerText = currentVal;
+                }
+            });
+
+            updateDynamicPriceFromVariants(item);
         }
 
         function updateDynamicPriceFromVariants(item) {
@@ -1651,34 +1754,40 @@
                 try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
             }
             const configs = Array.isArray(parsed) ? parsed : (parsed?.configurations || []);
-            const defaultPrice = item.price || item.basePrice || 0;
-            
+            const defaultBasePrice = item.discountPrice ? item.discountPrice : (item.price || item.basePrice || 0);
+
             if (!configs || configs.length === 0) {
                 const priceEl = document.getElementById('pageDetailPrice');
-                if (priceEl) priceEl.innerText = `₹${Number(defaultPrice).toLocaleString('en-IN')}`;
+                if (priceEl) priceEl.innerText = `₹${Number(defaultBasePrice).toLocaleString('en-IN')}`;
                 return;
             }
 
             const selColor = String(currentVariantSelectionMap['color'] || '').trim().toLowerCase();
             const selConfig = String(currentVariantSelectionMap['config'] || '').trim().toLowerCase();
+            const selStorage = String(currentVariantSelectionMap['storage'] || '').trim().toLowerCase();
             const selSize = String(currentVariantSelectionMap['size'] || '').trim().toLowerCase();
 
-            // Match exact combination
             const matched = configs.find(c => {
                 let ok = true;
                 const cColor = String(c.color || c.colour || '').trim().toLowerCase();
                 const cSize = String(c.size || '').trim().toLowerCase();
                 const cComb = `${c.ram || ''} / ${c.storage || ''}`.trim().toLowerCase();
+                const cRom = String(c.storage || '').trim().toLowerCase();
 
                 if (selColor && cColor && cColor !== selColor) ok = false;
                 if (selSize && cSize && cSize !== selSize) ok = false;
                 if (selConfig && cComb && cComb !== selConfig) ok = false;
+                if (selStorage && !selConfig && cRom && cRom !== selStorage) ok = false;
                 return ok;
             });
 
-            const targetPrice = (matched && matched.price > 0) ? matched.price : (configs[0]?.price || defaultPrice);
+            const resolvedConfig = matched || configs[0];
+            const finalPrice = (resolvedConfig && resolvedConfig.discountPrice) 
+                ? resolvedConfig.discountPrice 
+                : ((resolvedConfig && resolvedConfig.price > 0) ? resolvedConfig.price : defaultBasePrice);
+
             const priceEl = document.getElementById('pageDetailPrice');
-            if (priceEl) priceEl.innerText = `₹${Number(targetPrice).toLocaleString('en-IN')}`;
+            if (priceEl) priceEl.innerText = `₹${Number(finalPrice).toLocaleString('en-IN')}`;
         }
 
         function onTravelTierSelect(tierName, tierPrice) {
@@ -1727,15 +1836,41 @@
             else { catLink.innerText = 'All Products'; catLink.onclick = () => navigateTo('page-all-catalog'); }
         }
 
+        // FULL ITEM DETAILS WITH CLEAN MULTI-IMAGE & NATIVE VIDEO GALLERY
         function openItemDetailsPage(id, isTravel = false) {
             const item = catalogItemsCache[id] || travelMemory.all.find(t => String(t._id) === String(id));
             if (!item) return;
+
             const title = item.title || item.name || 'Item Overview';
-            const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.price || 0);
+            const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.discountPrice ? item.discountPrice : (item.price || 0));
             const mainImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300');
             const desc = item.description || item.overview || 'Verified manufacturer quality guarantee.';
             
-            currentGalleryMedia = item.images?.length > 0 ? item.images.map(url => ({type:'image', url})) : [{type:'image', url: mainImg}];
+            // Prepare image and video media list
+            let allMedia = [];
+            if (Array.isArray(item.images) && item.images.length > 0) {
+                allMedia = item.images;
+            } else if (item.imageUrl) {
+                allMedia = [item.imageUrl];
+            } else {
+                allMedia = [mainImg];
+            }
+
+            currentGalleryMedia = allMedia.map(url => {
+                const isVideo = url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.ogg');
+                return { type: isVideo ? 'video' : 'image', url };
+            });
+
+            // Vertical Thumbnails
+            const thumbStrip = document.getElementById('pageDetailThumbnails');
+            if (thumbStrip) {
+                thumbStrip.innerHTML = currentGalleryMedia.map((m, idx) => {
+                    const content = m.type === 'video'
+                        ? `<div class="w-100 h-100 bg-dark text-white d-flex align-items-center justify-content-center"><i class="fa-solid fa-play" style="font-size: 11px;"></i></div>`
+                        : `<img src="${m.url}" class="w-100 h-100 object-fit-cover">`;
+                    return `<div class="v-thumb-item ${idx === 0 ? 'active' : ''}" onclick="selectGalleryMedia(${idx})">${content}</div>`;
+                }).join('');
+            }
 
             updateDynamicBreadcrumb(item, isTravel);
             document.getElementById('pageDetailTitle').innerText = title;
@@ -1743,6 +1878,32 @@
             document.getElementById('pageDetailUnit').innerText = isTravel ? 'Per Person' : 'M.R.P. Inclusive of taxes';
             document.getElementById('pageDetailDesc').innerText = desc;
             document.getElementById('pageDetailBuyText').innerText = isTravel ? 'Book Now' : 'Buy Now';
+
+            // Technical Specifications card render
+            const specsCont = document.getElementById('pageDetailSpecsContainer');
+            if (specsCont) {
+                let specs = item.specifications;
+                if (typeof specs === 'string') {
+                    try { specs = JSON.parse(specs); } catch(e) { specs = []; }
+                }
+                if (Array.isArray(specs) && specs.length > 0) {
+                    specsCont.innerHTML = `
+                        <h6 class="fw-bold text-dark mb-2">Technical Specifications</h6>
+                        <div class="row g-2 mb-3">
+                            ${specs.map(s => `
+                                <div class="col-sm-6">
+                                    <div class="p-2 border rounded-2 bg-light d-flex justify-content-between small">
+                                        <span class="text-muted fw-semibold">${s.key || s.name}:</span>
+                                        <span class="text-dark fw-bold">${s.value || s.val}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    specsCont.innerHTML = '';
+                }
+            }
 
             renderCategoryVariantsDynamic(item, isTravel);
             renderMediaView(0);
@@ -1765,10 +1926,28 @@
             navigateTo('page-item-details');
         }
 
+        function selectGalleryMedia(index) {
+            document.querySelectorAll('.v-thumb-item').forEach((item, idx) => {
+                item.classList.toggle('active', idx === index);
+            });
+            renderMediaView(index);
+        }
+
         function renderMediaView(index) {
             const media = currentGalleryMedia[index] || currentGalleryMedia[0];
             const box = document.getElementById('pageDetailMediaBox');
-            if (box && media) box.innerHTML = `<img src="${media.url}" class="img-fluid rounded-4" style="max-height: 380px;">`;
+            if (box && media) {
+                if (media.type === 'video') {
+                    box.innerHTML = `
+                        <video controls autoplay muted playsinline class="rounded-3 shadow-xs">
+                            <source src="${media.url}" type="video/mp4">
+                            Your browser does not support video playback.
+                        </video>
+                    `;
+                } else {
+                    box.innerHTML = `<img src="${media.url}" class="img-fluid rounded-3" onerror="this.src='https://placehold.co/300'">`;
+                }
+            }
         }
 
         async function handleUniversalSearch(queryText) {
@@ -1902,7 +2081,7 @@
                 <div class="col-md-4 col-sm-6">
                     <div class="card-custom p-3 text-center h-100 d-flex flex-column justify-content-between">
                         <div onclick="openItemDetailsPage('${item.id}', ${item.type === 'Travel'})" style="cursor: pointer;">
-                            <img src="${item.img}" class="img-fluid rounded-3 mb-3" style="height: 140px; object-fit: cover;">
+                            <img src="${item.img}" class="img-fluid rounded-3 mb-3" style="height: 140px; object-fit: cover;" onerror="this.src='https://placehold.co/140'">
                             <h6 class="fw-bold">${item.title}</h6>
                             <p class="text-primary fw-bold">₹${Number(item.price).toLocaleString('en-IN')}</p>
                         </div>
@@ -2064,7 +2243,7 @@
                 return `
                     <div class="d-flex align-items-center justify-content-between py-3 border-bottom flex-wrap gap-3">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="${item.img}" class="rounded-3 border" style="width: 65px; height: 65px; object-fit: cover;">
+                            <img src="${item.img}" class="rounded-3 border" style="width: 65px; height: 65px; object-fit: cover;" onerror="this.src='https://placehold.co/65'">
                             <div>
                                 <span class="badge ${isTravel ? 'bg-warning text-dark' : 'bg-primary-subtle text-primary'} text-uppercase mb-1" style="font-size: 10px;">
                                     ${isTravel ? 'Travel Tour' : 'Product'}
@@ -2098,7 +2277,7 @@
         function handleBuyNow(id) {
             const item = catalogItemsCache[id];
             const title = item ? (item.title || item.name) : 'Product Item';
-            const price = item ? (item.price || 0) : 0;
+            const price = item ? (item.discountPrice ? item.discountPrice : item.price) : 0;
             const img = item?.images?.[0] || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300';
             myCart = [{ id, title, price, img, type: 'Product', qty: 1 }];
             updateCartBadge();
@@ -2169,7 +2348,6 @@
             const gateway = document.querySelector('input[name="fpPaymentGateway"]:checked')?.value || 'razorpay';
             const isCod = (gateway === 'cod');
 
-            // FIX 1: Math.round lagaya taaki .5 jaisa decimal na rahe aur Razorpay crash na ho
             const rawTotal = Number(activeCheckoutData?.price) || 0;
             const totalPayable = Math.round(rawTotal);
 
@@ -2179,7 +2357,6 @@
                 return;
             }
 
-            // Category HSN & Order Type Mapping
             function getTaxInfoForItem(item) {
                 const title = String(item.title || '').toLowerCase();
                 const type = String(item.type || '').toLowerCase();
@@ -2199,7 +2376,6 @@
                 return { hsn: '998559', gstRate: 18, category: 'Product', orderType: 'Product' };
             }
 
-            // FIX 2: Split Orders Function (Ek Sath Payment, Alag Alag Order Docs)
             async function saveSplitOrdersToDatabase(payStatus, ordStatus, transactionId = '') {
                 const groupId = 'GRP-' + Date.now().toString().slice(-6);
 
@@ -2256,7 +2432,6 @@
                     triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
                     finishCheckout();
                 } else {
-                    // Razorpay Order Creation
                     const orderRes = await fetch('https://mj-digital-backend-3.onrender.com/api/payment/create-order', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -2266,7 +2441,7 @@
                     const orderData = await orderRes.json();
 
                     if (!orderRes.ok || !orderData.success) {
-                        alert('Razorpay order initialize nahi ho saka: ' + (orderData.message || 'Limit ya Key issue'));
+                        alert('Razorpay order initialize nahi ho saka.');
                         resetButton();
                         return;
                     }
@@ -2308,7 +2483,6 @@
                         },
                         modal: {
                             ondismiss: function () {
-                                // Modal band hone par button turant wapas active hoga
                                 resetButton();
                             }
                         }
@@ -2316,23 +2490,20 @@
 
                     const rzp = new Razorpay(options);
                     rzp.on('payment.failed', function (resp) {
-                        alert('Payment Fail ho gaya: ' + resp.error.description);
+                        alert('Payment Fail: ' + resp.error.description);
                         resetButton();
                     });
                     rzp.open();
                 }
             } catch (err) {
-                console.error('Checkout error:', err);
                 alert('Checkout error: ' + (err.message || 'Server connection fail'));
                 resetButton();
             }
 
-            // CUSTOMER DIRECT 1-TAP WHATSAPP NOTIFICATION TRIGGER
             function triggerCustomerWhatsAppReceipt(createdOrders, customerPhone, customerName) {
                const phone = String(customerPhone || '').replace(/[^0-9]/g, '').slice(-10);
                const name = customerName || 'Customer';
 
-              // Order Details Extract Karein
               let orderData = {};
               if (Array.isArray(createdOrders) && createdOrders.length > 0) {
                 orderData = createdOrders[0]?.data || createdOrders[0] || {};
@@ -2356,12 +2527,11 @@
               const formattedTotal = Number(grandTotal || 0).toLocaleString('en-IN');
               const invoiceUrl = `https://mj-digital-backend-3.onrender.com/invoice.html?id=${rawId}`;
 
-              const messageText = `Hi${name}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ₹${formattedTotal}) successfully place ho gaya hai.\n\n📄 Tax Invoice Download: ${invoiceUrl}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
+              const messageText = `Hi ${name}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ₹${formattedTotal}) successfully place ho gaya hai.\n\n📄 Tax Invoice Download: ${invoiceUrl}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
 
               const targetPhone = phone.length === 10 ? `91${phone}` : '918306669999';
               const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(messageText)}`;
 
-              // Direct trigger taaki browser pop-up block na kare
               const userWantsWA = confirm("🎉 Order successfully placed!\n\nKya aap WhatsApp par order confirmation aur Tax Invoice copy lena chahte hain?");
               if (userWantsWA) {
                 const newTab = window.open(waUrl, '_blank');
@@ -2372,7 +2542,6 @@
             }
 
             async function finishCheckout() {
-                // 1. Customer details form se read karein
                 const custPhone = (document.getElementById('fpCheckoutPhone')?.value || '').replace(/[^0-9]/g, '').slice(-10);
                 const custName = document.getElementById('fpCheckoutName')?.value || 'Valued Customer';
                 const totalAmount = document.getElementById('fpCheckoutTotalPayable')?.innerText || '₹0';
@@ -2381,9 +2550,8 @@
                 updateCartBadge();
                 resetButton();
 
-                // Payment method ko wapas pehle radio button (Razorpay) par set karein
                 const defaultRadio = document.querySelector('input[name="fpPaymentGateway"][value="razorpay"]');
-                    if (defaultRadio) {
+                if (defaultRadio) {
                   defaultRadio.checked = true;
                 }
 
@@ -2395,24 +2563,6 @@
                 await loadOrdersTable();
                 switchProfileTab('p-orders', document.querySelector('.profile-nav-btn'));
                 navigateTo('page-profile');
-
-                // 2. Instant 1-Tap WhatsApp Invoice Confirmation Pop-up
-                setTimeout(() => {
-                    const latestOrder = userOrders && userOrders[0];
-                    const rawId = latestOrder ? latestOrder.id : '';
-                    const shortId = latestOrder ? latestOrder.shortId : 'LATEST';
-                    const invoiceLink = `https://mj-digital-backend-3.onrender.com/invoice.html?id=${rawId}`;
-
-                    const msgText = `Hi${custName}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ${totalAmount}) successfully receive ho gaya hai.\n\n📄 Tax Invoice Download: ${invoiceLink}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
-        
-                    const targetNumber = custPhone.length === 10 ? `91${custPhone}` : '918306669999';
-                    const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(msgText)}`;
-
-                    const confirmWA = confirm("🎉 Order successfully placed!\n\nKya aap WhatsApp par order confirmation aur Tax Invoice copy lena chahte hain?");
-                    if (confirmWA) {
-                        window.open(waLink, '_blank');
-                    }
-                }, 400);
             }
         }
 
@@ -2471,8 +2621,7 @@
 
                 filterCustomerOrders();
             } catch (err) {
-                console.error('Error fetching orders:', err);
-                container.innerHTML = `<div class="text-center text-danger py-4">Error loading order history. Port 5000 check karein.</div>`;
+                container.innerHTML = `<div class="text-center text-danger py-4">Error loading order history.</div>`;
             }
         }
 
@@ -2625,13 +2774,9 @@
 
         async function buyAgainCustomerItem(targetOrderId = null) {
             let ord = null;
-
-            // 1. Agar list se direct ID aayi hai to use match karein
             if (targetOrderId) {
                 ord = userOrders.find(o => String(o.id) === String(targetOrderId) || String(o.rawItem?._id) === String(targetOrderId));
             }
-
-            // 2. Agar detail view ke button se click hua hai to header text se parse karein
             if (!ord) {
                 const detailHeadText = document.getElementById('detailOrderDateHead')?.innerText || '';
                 const match = detailHeadText.match(/Order #([A-F0-9]+)/i);
@@ -2639,10 +2784,7 @@
                 ord = userOrders.find(o => o.shortId === shortId || String(o.id).slice(-4).toUpperCase() === shortId);
             }
 
-            if (!ord) {                
-                alert('Order record nahi mila!');
-                return;
-            }
+            if (!ord) return;
 
             const raw = ord.rawItem || {};
             const itemTitle = ord.title;
@@ -2661,30 +2803,21 @@
                     travels = travelMemory?.all || [];
                 }
                 matchedItem = travels.find(t => (t.title && t.title.toLowerCase().trim() === itemTitle.toLowerCase().trim()) || String(t._id) === String(raw.itemDetails?.itemId || raw.itemDetails?.productId));
-                if (matchedItem && matchedItem.status !== 'Inactive') {
-                    isAvailable = true;
-                }
+                if (matchedItem && matchedItem.status !== 'Inactive') isAvailable = true;
             } else {
                 const products = await fetchStoreItems(true);
                 matchedItem = products.find(p => (p.title && p.title.toLowerCase().trim() === itemTitle.toLowerCase().trim()) || String(p._id) === String(raw.itemDetails?.itemId || raw.itemDetails?.productId));
-                if (matchedItem && (Number(matchedItem.stock) > 0 && matchedItem.status !== 'Out of Stock' && matchedItem.status !== 'Inactive')) {
-                    isAvailable = true;
-                }
+                if (matchedItem && (Number(matchedItem.stock) > 0 && matchedItem.status !== 'Out of Stock' && matchedItem.status !== 'Inactive')) isAvailable = true;
             }
 
             if (!isAvailable) {
-                if (isTravel) {
-                    alert('⚠️ This package is not available right now. Please explore alternative destinations on our Travels page!');
-                    navigateTo('page-travels');
-                } else {
-                    alert(`⚠️ Out of Stock! "${itemTitle}" is currently not available.`);
-                }
+                alert(`⚠️ "${itemTitle}" is currently unavailable.`);
                 return;
             }
 
             const targetPrice = isTravel 
                 ? (matchedItem.pricingTiers?.standard?.price || matchedItem.price || ord.rawAmount) 
-                : (matchedItem.price || ord.rawAmount);
+                : (matchedItem.discountPrice ? matchedItem.discountPrice : (matchedItem.price || ord.rawAmount));
 
             const img = (matchedItem.images && matchedItem.images[0]) || matchedItem.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300';
 
@@ -2708,13 +2841,6 @@
             renderCartPage();
             navigateTo('page-cart');
         }
-
-        setInterval(() => {
-            const profileOrdersTab = document.getElementById('p-orders');
-            if (profileOrdersTab && profileOrdersTab.style.display !== 'none') {
-                loadOrdersTable();
-            }
-        }, 5000);
 
         function openCancelOrderModal(orderId) {
             const order = userOrders.find(o => String(o.id) === String(orderId));
@@ -2760,7 +2886,6 @@
                     alert('Cancellation failed on server.');
                 }
             } catch (err) {
-                console.error(err);
                 alert('Network error while cancelling order.');
             } finally {
                 if (btn) {
