@@ -456,9 +456,14 @@ app.put(['/api/products/:id', '/api/items/:id'], verifyAdminToken, upload.any(),
     if (body.brand !== undefined) updateFields.brand = String(body.brand).trim();
     if (body.category) updateFields.category = String(body.category).trim();
     if (body.price !== undefined && body.price !== '') updateFields.price = Number(body.price);
+
+    // FIXED: Discount price check
     if (body.discountPrice !== undefined) {
-      updateFields.discountPrice = body.discountPrice ? Number(body.discountPrice) : null;
+      updateFields.discountPrice = (body.discountPrice !== '' && body.discountPrice !== null) 
+        ? Number(body.discountPrice) 
+        : null;
     }
+
     if (body.stock !== undefined && body.stock !== '') {
       updateFields.stock = Number(body.stock);
       if (body.status === undefined) {
@@ -472,6 +477,7 @@ app.put(['/api/products/:id', '/api/items/:id'], verifyAdminToken, upload.any(),
     }
     if (body.type) updateFields.type = body.type;
 
+    // FIXED: Specs & Variants parsing
     const parsedSpecs = parseSpecifications(body, body.specifications || body.specs);
     if (parsedSpecs.length > 0 || body.specifications !== undefined) {
       updateFields.specifications = parsedSpecs;

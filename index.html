@@ -1652,19 +1652,31 @@
             }
             const configs = Array.isArray(parsed) ? parsed : (parsed?.configurations || []);
             const defaultPrice = item.price || item.basePrice || 0;
+            
             if (!configs || configs.length === 0) {
                 const priceEl = document.getElementById('pageDetailPrice');
                 if (priceEl) priceEl.innerText = `₹${Number(defaultPrice).toLocaleString('en-IN')}`;
                 return;
             }
+
+            const selColor = String(currentVariantSelectionMap['color'] || '').trim().toLowerCase();
+            const selConfig = String(currentVariantSelectionMap['config'] || '').trim().toLowerCase();
+            const selSize = String(currentVariantSelectionMap['size'] || '').trim().toLowerCase();
+
+            // Match exact combination
             const matched = configs.find(c => {
                 let ok = true;
-                const cColor = c.color || c.colour;
-                if (currentVariantSelectionMap['color'] && cColor && String(cColor).trim().toLowerCase() !== String(currentVariantSelectionMap['color']).trim().toLowerCase()) ok = false;
-                if (currentVariantSelectionMap['size'] && c.size && String(c.size).trim().toLowerCase() !== String(currentVariantSelectionMap['size']).trim().toLowerCase()) ok = false;
+                const cColor = String(c.color || c.colour || '').trim().toLowerCase();
+                const cSize = String(c.size || '').trim().toLowerCase();
+                const cComb = `${c.ram || ''} / ${c.storage || ''}`.trim().toLowerCase();
+
+                if (selColor && cColor && cColor !== selColor) ok = false;
+                if (selSize && cSize && cSize !== selSize) ok = false;
+                if (selConfig && cComb && cComb !== selConfig) ok = false;
                 return ok;
             });
-            const targetPrice = (matched && matched.price) ? matched.price : (configs[0]?.price || defaultPrice);
+
+            const targetPrice = (matched && matched.price > 0) ? matched.price : (configs[0]?.price || defaultPrice);
             const priceEl = document.getElementById('pageDetailPrice');
             if (priceEl) priceEl.innerText = `₹${Number(targetPrice).toLocaleString('en-IN')}`;
         }

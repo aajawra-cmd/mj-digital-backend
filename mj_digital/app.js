@@ -8,20 +8,20 @@ function getAdminAuthHeaders() {
 
 function verifyAdminSessionExpiry() {
   const loginTime = localStorage.getItem('mj_admin_login_time');
+  const token = localStorage.getItem('mj_jwt_token') || sessionStorage.getItem('mj_jwt_token');
   const sessionActive = localStorage.getItem('mj_admin_session') === 'authenticated';
   const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
-  if (sessionActive && loginTime) {
-    if (Date.now() - Number(loginTime) > TWENTY_FOUR_HOURS) {
-      localStorage.removeItem('mj_jwt_token');
-      sessionStorage.removeItem('mj_jwt_token');
-      localStorage.removeItem('mj_admin_session');
-      localStorage.removeItem('mj_admin_user');
-      localStorage.removeItem('mj_admin_login_time');
-      alert('⚠️ Admin session expire ho gaya hai (24 Hours). Kripya dobara login karein.');
-      window.location.reload();
-      return false;
-    }
+  if (sessionActive && (!token || !loginTime || (Date.now() - Number(loginTime) > TWENTY_FOUR_HOURS))) {
+    localStorage.removeItem('mj_jwt_token');
+    sessionStorage.removeItem('mj_jwt_token');
+    localStorage.removeItem('mj_admin_session');
+    localStorage.removeItem('mj_admin_user');
+    localStorage.removeItem('mj_admin_login_time');
+    alert('⚠️ Admin session expire ho gaya hai. Kripya dobara login karein.');
+    const authScreen = document.getElementById('adminAuthScreen');
+    if (authScreen) authScreen.classList.remove('hidden');
+    return false;
   }
   return true;
 }
@@ -127,8 +127,18 @@ function closeModal(modalId) {
     editingProductId = null;
     const modalTitle = document.querySelector('#addProductModal h3');
     if (modalTitle) modalTitle.innerText = 'Add New Product';
+    const form = document.querySelector('#addProductModal form');
+    if (form) form.reset();
     const vCont = document.getElementById('variantRowsContainer');
     if (vCont) vCont.innerHTML = '';
+    const specsCont = document.getElementById('specsContainer');
+    if (specsCont) {
+      specsCont.innerHTML = '';
+      addSpecRow();
+      addSpecRow();
+    }
+    const prev = document.getElementById('prodImagePreviewContainer');
+    if (prev) prev.classList.add('hidden');
   }
 }
 
@@ -339,7 +349,7 @@ async function saveCmsContent() {
     }
   } catch (err) {
     console.error('Save error:', err);
-    alert('Server connect error! Check backend port 5000.');
+    alert('Server connect error!');
   }
 }
 
@@ -523,8 +533,8 @@ function addVariantRow(color = '', ram = '', storage = '', size = '', price = ''
 
   row.innerHTML = `
     <input type="text" placeholder="Colour (e.g. Red)" value="${color}" class="col-var-color border p-1.5 rounded text-xs bg-white outline-none">
-    <input type="text" placeholder="RAM (e.g. 12GB)" value="${ram}" class="col-var-ram border p-1.5 rounded text-xs bg-white outline-none">
-    <input type="text" placeholder="Storage (e.g. 256GB)" value="${storage}" class="col-var-storage border p-1.5 rounded text-xs bg-white outline-none">
+    <input type="text" placeholder="RAM (e.g. 12)" value="${ram}" class="col-var-ram border p-1.5 rounded text-xs bg-white outline-none">
+    <input type="text" placeholder="Storage (e.g. 256)" value="${storage}" class="col-var-storage border p-1.5 rounded text-xs bg-white outline-none">
     <input type="text" placeholder="Size (e.g. 6.1 inch)" value="${size}" class="col-var-size border p-1.5 rounded text-xs bg-white outline-none">
     <input type="number" placeholder="Price (₹)" value="${price}" class="col-var-price border p-1.5 rounded text-xs font-bold text-blue-600 bg-white outline-none">
     <div class="text-right">
@@ -554,13 +564,13 @@ function collectVariantsMatrix() {
     const size = r.querySelector('.col-var-size')?.value.trim() || '';
     const price = Number(r.querySelector('.col-var-price')?.value || 0);
 
-    if (price > 0) {
+    if (price > 0 || color || ram || storage || size) {
       if (color) options.colors.add(color);
       if (ram) options.ram.add(ram);
       if (storage) options.storage.add(storage);
       if (size) options.sizes.add(size);
 
-      configs.push({ color, ram, storage, size, price });
+      configs.push({ color, ram, storage, size, price: Number(price) || 0 });
     }
   });
 
@@ -678,38 +688,39 @@ function openEditProductModal(id) {
 
   editingProductId = prod._id;
 
-  const tEl = document.getElementById('prodTitle');
-  if (tEl) tEl.value = prod.title || prod.name || '';
-  const bEl = document.getElementById('prodBrand');
-  if (bEl) bEl.value = prod.brand || '';
-  const cEl = document.getElementById('prodCat');
-  if (cEl) cEl.value = prod.category || 'Fashion';
-  
-  const pEl = document.getElementById('prodPrice');
-  if (pEl) pEl.value = (prod.price !== undefined && prod.price !== null) ? prod.price : '';
-  const dEl = document.getElementById('prodDiscountPrice');
-  if (dEl) dEl.value = (prod.discountPrice !== undefined && prod.discountPrice !== null) ? prod.discountPrice : '';
-  
-  const sEl = document.getElementById('prodStock');
-  if (sEl) sEl.value = prod.stock ?? 0;
-  const imgEl = document.getElementById('prodImage');
-  if (imgEl) imgEl.value = prod.imageUrl || (prod.images && prod.images[0]) || '';
+  const setVal = (elId, val) => {
+    const el = document.getElementById(elId);
+    if (el) el.value = (val !== undefined && val !== null) ? val : '';
+  };
+
+  setVal('prodTitle', prod.title || prod.name || '');
+  setVal('prodBrand', prod.brand || '');
+  setVal('prodCat', prod.category || 'Fashion');
+  setVal('prodPrice', prod.price !== undefined ? prod.price : '');
+  setVal('prodDiscountPrice', prod.discountPrice !== undefined && prod.discountPrice !== null ? prod.discountPrice : '');
+  setVal('prodStock', prod.stock ?? 0);
+  setVal('prodImage', prod.imageUrl || (prod.images && prod.images[0]) || '');
   
   const descEl = document.querySelector('textarea[name="detailed_description"], textarea[name="description"]');
   if (descEl) descEl.value = prod.description || prod.detailedDescription || '';
 
+  // Technical Specifications Population
   const specsCont = document.getElementById('specsContainer');
   if (specsCont) {
     specsCont.innerHTML = '';
-    const specs = Array.isArray(prod.specifications) ? prod.specifications : [];
-    if (specs.length > 0) {
-      specs.forEach(s => addSpecRow(s.key || '', s.value || ''));
+    let specs = prod.specifications;
+    if (typeof specs === 'string') {
+      try { specs = JSON.parse(specs); } catch(e) { specs = []; }
+    }
+    if (Array.isArray(specs) && specs.length > 0) {
+      specs.forEach(s => addSpecRow(s.key || s.name || '', s.value || s.val || ''));
     } else {
       addSpecRow();
       addSpecRow();
     }
   }
 
+  // Variant Rows Population
   const vCont = document.getElementById('variantRowsContainer');
   if (vCont) {
     vCont.innerHTML = '';
@@ -717,9 +728,9 @@ function openEditProductModal(id) {
     if (typeof parsedV === 'string') {
       try { parsedV = JSON.parse(parsedV); } catch(e) { parsedV = {}; }
     }
-    const configs = parsedV?.configurations || [];
-    if (configs.length > 0) {
-      configs.forEach(c => addVariantRow(c.color, c.ram, c.storage, c.size, c.price));
+    const configs = Array.isArray(parsedV) ? parsedV : (parsedV?.configurations || []);
+    if (Array.isArray(configs) && configs.length > 0) {
+      configs.forEach(c => addVariantRow(c.color || '', c.ram || '', c.storage || '', c.size || '', c.price || ''));
     }
   }
 
@@ -735,50 +746,50 @@ async function handleProductSubmit(event) {
   const form = event.target;
   const formData = new FormData(form);
 
-  const title = document.getElementById('prodTitle')?.value || form.querySelector('[name="title"]')?.value || formData.get('title') || '';
-  const brand = document.getElementById('prodBrand')?.value || form.querySelector('[name="brand"]')?.value || formData.get('brand') || '';
-  const category = document.getElementById('prodCat')?.value || form.querySelector('[name="category"]')?.value || formData.get('category') || 'Fashion';
-  
+  const title = (document.getElementById('prodTitle')?.value || '').trim();
+  const brand = (document.getElementById('prodBrand')?.value || '').trim();
+  const category = (document.getElementById('prodCat')?.value || 'Fashion').trim();
   const priceInputVal = document.getElementById('prodPrice')?.value;
-  const price = Number(priceInputVal !== undefined && priceInputVal !== '' ? priceInputVal : (formData.get('price') || 0));
-  
+  const price = Number(priceInputVal || 0);
+
   const discountInputVal = document.getElementById('prodDiscountPrice')?.value;
-  const discountPrice = discountInputVal ? Number(discountInputVal) : null;
-  
-  const stock = Number(document.getElementById('prodStock')?.value || form.querySelector('[name="stock"]')?.value || formData.get('stock') || 10);
-  const imageUrl = document.getElementById('prodImage')?.value || form.querySelector('[name="imageUrl"]')?.value || formData.get('imageUrl') || '';
-  const desc = form.querySelector('[name="detailed_description"]')?.value || form.querySelector('[name="description"]')?.value || formData.get('description') || '';
+  const discountPrice = (discountInputVal !== '' && discountInputVal !== undefined && discountInputVal !== null)
+    ? Number(discountInputVal)
+    : null;
 
-  const specsContainer = document.getElementById('specsContainer');
-  const specifications = [];
-  if (specsContainer) {
-    specsContainer.querySelectorAll('.spec-row, div.flex, div').forEach(row => {
-      const inputs = row.querySelectorAll('input[type="text"]');
-      if (inputs.length >= 2) {
-        const k = String(inputs[0]?.value || '').trim();
-        const v = String(inputs[1]?.value || '').trim();
-        if (k || v) {
-          specifications.push({ key: k, value: v });
-        }
-      }
-    });
-  }
+  const stock = Number(document.getElementById('prodStock')?.value || 0);
+  const imageUrl = (document.getElementById('prodImage')?.value || '').trim();
+  const desc = form.querySelector('textarea[name="detailed_description"]')?.value || form.querySelector('textarea[name="description"]')?.value || '';
 
-  if (!title.trim()) {
+  if (!title) {
     alert('Product Name / Title likhna zaroori hai!');
     return;
   }
 
-  let variantData = collectVariantsMatrix();
+  // Parse Technical Specifications
+  const specsContainer = document.getElementById('specsContainer');
+  const specifications = [];
+  if (specsContainer) {
+    specsContainer.querySelectorAll('.spec-row').forEach(row => {
+      const k = row.querySelector('.spec-key')?.value?.trim();
+      const v = row.querySelector('.spec-val')?.value?.trim();
+      if (k || v) {
+        specifications.push({ key: k, value: v });
+      }
+    });
+  }
 
-  formData.set('title', title.trim());
-  formData.set('brand', brand.trim());
-  formData.set('category', category.trim());
+  // Parse Variant Rows Matrix
+  const variantData = collectVariantsMatrix();
+
+  formData.set('title', title);
+  formData.set('brand', brand);
+  formData.set('category', category);
   formData.set('price', price);
   if (discountPrice !== null) {
     formData.set('discountPrice', discountPrice);
   } else {
-    formData.delete('discountPrice');
+    formData.set('discountPrice', '');
   }
   formData.set('stock', stock);
   formData.set('status', stock > 0 ? 'Active' : 'Out of Stock');
@@ -792,8 +803,6 @@ async function handleProductSubmit(event) {
   const fileInput = form.querySelector('input[type="file"]');
   if (fileInput && fileInput.files.length > 0) {
     formData.delete('images');
-    formData.delete('imageFiles');
-    formData.delete('image');
     Array.from(fileInput.files).forEach(file => {
       formData.append('images', file);
     });
@@ -805,10 +814,18 @@ async function handleProductSubmit(event) {
     : 'https://mj-digital-backend-3.onrender.com/api/products';
 
   try {
+    const authHeaders = getAdminAuthHeaders();
+    if (!authHeaders.Authorization) {
+      alert("⚠️ Admin token missing hai! Kripya logout karke dobara login karein.");
+      const authScreen = document.getElementById('adminAuthScreen');
+      if (authScreen) authScreen.classList.remove('hidden');
+      return;
+    }
+
     const res = await fetch(endpoint, {
       method: method,
       headers: {
-        ...getAdminAuthHeaders()
+        ...authHeaders
       },
       body: formData
     });
@@ -816,29 +833,20 @@ async function handleProductSubmit(event) {
     const result = await res.json();
     if (res.ok && (result.success || result._id || result.data)) {
       alert(`🎉 Product successfully ${editingProductId ? 'updated' : 'saved'} ho gaya!`);
-      form.reset();
-      editingProductId = null;
-      
-      const modalTitle = document.querySelector('#addProductModal h3');
-      if (modalTitle) modalTitle.innerText = 'Add New Product';
-
-      const cont = document.getElementById('specsContainer');
-      if (cont) {
-        cont.innerHTML = '';
-        addSpecRow();
-        addSpecRow();
-      }
-      const vCont = document.getElementById('variantRowsContainer');
-      if (vCont) vCont.innerHTML = '';
-      
       closeModal('addProductModal');
       loadAdminProducts();
     } else {
-      alert('Save Error: ' + (result.message || 'Product save nahi hua.'));
+      if (res.status === 401 || res.status === 403) {
+        alert('⚠️ Admin session expire ho gaya hai. Dobara login karein.');
+        const authScreen = document.getElementById('adminAuthScreen');
+        if (authScreen) authScreen.classList.remove('hidden');
+      } else {
+        alert('Save Error: ' + (result.message || 'Product save nahi hua.'));
+      }
     }
   } catch (err) {
     console.error('Product save network error:', err);
-    alert('Server se connect nahi ho paya. Port 5000 check karein.');
+    alert('Server se connect nahi ho paya. Port 5000 / Render check karein.');
   }
 }
 
@@ -1885,7 +1893,7 @@ function getStatusBadgeStyles(statusVal) {
   }
 }
 
-// 1. Table Ke Bahar Se Status Change Karna
+// Table Ke Bahar Se Status Change Karna
 document.addEventListener('change', async function(e) {
   if (e.target && e.target.classList.contains('order-status-select')) {
     const rawId = e.target.getAttribute('data-rawid');
@@ -1938,7 +1946,7 @@ document.addEventListener('change', async function(e) {
   }
 });
 
-// 2. View Modal Ke Andar Se Status Change Karna
+// View Modal Ke Andar Se Status Change Karna
 window.changeActiveOrderStatus = async function(newStatus) {
   if (!activeSelectedOrder) {
     alert("Pehle koi order select karke modal kholiye!");
@@ -2450,7 +2458,7 @@ async function handleAdminLogin(event) {
 
     const data = await response.json();
 
-    if (response.ok && data.success) {
+    if (response.ok && data.success && data.token) {
       localStorage.setItem('mj_jwt_token', data.token);
       sessionStorage.setItem('mj_jwt_token', data.token);
       localStorage.setItem('mj_admin_session', 'authenticated');
@@ -2468,18 +2476,8 @@ async function handleAdminLogin(event) {
       return false;
     }
   } catch (err) {
-    if (email.toLowerCase() === 'admin@mjdigital.in' && (password === 'admin' || password === 'admin123')) {
-      localStorage.setItem('mj_admin_session', 'authenticated');
-      localStorage.setItem('mj_admin_user', email);
-      localStorage.setItem('mj_admin_login_time', Date.now());
-
-      const authScreen = document.getElementById('adminAuthScreen');
-      if (authScreen) authScreen.classList.add('hidden');
-      return false;
-    }
-
     if (errorEl) {
-      errorEl.innerText = 'Backend connection failed! Server check karein ya default pass: admin use karein.';
+      errorEl.innerText = 'Backend connection failed! Make sure Render server is responding.';
       errorEl.classList.remove('hidden');
     }
   }
