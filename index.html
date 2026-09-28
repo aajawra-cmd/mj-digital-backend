@@ -2317,31 +2317,45 @@
 
             // CUSTOMER DIRECT 1-TAP WHATSAPP NOTIFICATION TRIGGER
             function triggerCustomerWhatsAppReceipt(createdOrders, customerPhone, customerName) {
-              if (!createdOrders || createdOrders.length === 0) return;
+               const phone = String(customerPhone || '').replace(/[^0-9]/g, '').slice(-10);
+               const name = customerName || 'Customer';
 
-              const phone = String(customerPhone || '').replace(/[^0-9]/g, '').slice(-10);
-              const name = customerName || 'Customer';
+              // Order Details Extract Karein
+              let orderData = {};
+              if (Array.isArray(createdOrders) && createdOrders.length > 0) {
+                orderData = createdOrders[0]?.data || createdOrders[0] || {};
+              } else if (typeof userOrders !== 'undefined' && userOrders.length > 0) {
+                orderData = userOrders[0]?.rawItem || userOrders[0] || {};
+              }
 
-              const firstOrder = createdOrders[0]?.data || createdOrders[0] || {};
-              const rawId = String(firstOrder._id || firstOrder.id || Date.now());
+              const rawId = String(orderData._id || orderData.id || Date.now());
               const shortId = rawId.length > 6 ? rawId.slice(-6).toUpperCase() : rawId.toUpperCase();
 
-              const grandTotal = createdOrders.reduce((sum, ord) => {
-                const o = ord.data || ord;
-                return sum + Number(o.totalAmount || o.amount || 0);
-              }, 0);
+              let grandTotal = 0;
+              if (Array.isArray(createdOrders) && createdOrders.length > 0) {
+                grandTotal = createdOrders.reduce((sum, ord) => {
+                  const o = ord?.data || ord || {};
+                  return sum + Number(o.totalAmount || o.amount || 0);
+                }, 0);
+              } else {
+                grandTotal = Number(orderData.totalAmount || orderData.amount || 0);
+              }
 
               const formattedTotal = Number(grandTotal || 0).toLocaleString('en-IN');
               const invoiceUrl = `https://mj-digital-backend-3.onrender.com/invoice.html?id=${rawId}`;
 
-              const messageText = `Namaste ${name}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ₹${formattedTotal}) successfully place ho gaya hai.\n\n📄 View/Download Tax Invoice: ${invoiceUrl}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
+              const messageText = `Namaste ${name}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ₹${formattedTotal}) successfully place ho gaya hai.\n\n📄 Tax Invoice Download: ${invoiceUrl}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
 
               const targetPhone = phone.length === 10 ? `91${phone}` : '918306669999';
-              const waUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(messageText)}`;
+              const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(messageText)}`;
 
-              const confirmWA = confirm("🎉 Order successfully placed!\n\nKya aap WhatsApp par order confirmation aur Tax Invoice copy lena chahte hain?");
-              if (confirmWA) {
-                window.open(waUrl, '_blank');
+              // Direct trigger taaki browser pop-up block na kare
+              const userWantsWA = confirm("🎉 Order successfully placed!\n\nKya aap WhatsApp par order confirmation aur Tax Invoice copy lena chahte hain?");
+              if (userWantsWA) {
+                const newTab = window.open(waUrl, '_blank');
+                if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+                  window.location.href = waUrl;
+                }
               }
             }
 
@@ -2354,6 +2368,12 @@
                 myCart = [];
                 updateCartBadge();
                 resetButton();
+
+                // Payment method ko wapas pehle radio button (Razorpay) par set karein
+                const defaultRadio = document.querySelector('input[name="fpPaymentGateway"][value="razorpay"]');
+                    if (defaultRadio) {
+                  defaultRadio.checked = true;
+                }
 
                 const detailTab = document.getElementById('orderDetailViewTab');
                 const listTab = document.getElementById('ordersListView');
@@ -2591,13 +2611,23 @@
             document.getElementById('ordersListView').style.display = 'block';
         }
 
-        async function buyAgainCustomerItem() {
-            const detailHeadText = document.getElementById('detailOrderDateHead')?.innerText || '';
-            const match = detailHeadText.match(/Order #([A-F0-9]+)/i);
-            const shortId = match ? match[1].trim() : '';
+        async function buyAgainCustomerItem(targetOrderId = null) {
+            let ord = null;
 
-            const ord = userOrders.find(o => o.shortId === shortId || String(o.id).slice(-4).toUpperCase() === shortId);
+            // 1. Agar list se direct ID aayi hai to use match karein
+            if (targetOrderId) {
+                ord = userOrders.find(o => String(o.id) === String(targetOrderId) || String(o.rawItem?._id) === String(targetOrderId));
+            }
+
+            // 2. Agar detail view ke button se click hua hai to header text se parse karein
             if (!ord) {
+                const detailHeadText = document.getElementById('detailOrderDateHead')?.innerText || '';
+                const match = detailHeadText.match(/Order #([A-F0-9]+)/i);
+                const shortId = match ? match[1].trim() : '';
+                ord = userOrders.find(o => o.shortId === shortId || String(o.id).slice(-4).toUpperCase() === shortId);
+            }
+
+            if (!ord) {                
                 alert('Order record nahi mila!');
                 return;
             }
@@ -2618,13 +2648,13 @@
                 } catch(e) {
                     travels = travelMemory?.all || [];
                 }
-                matchedItem = travels.find(t => (t.title && t.title.toLowerCase().trim() === itemTitle.toLowerCase().trim()) || String(t._id) === String(raw.itemDetails?.productId));
+                matchedItem = travels.find(t => (t.title && t.title.toLowerCase().trim() === itemTitle.toLowerCase().trim()) || String(t._id) === String(raw.itemDetails?.itemId || raw.itemDetails?.productId));
                 if (matchedItem && matchedItem.status !== 'Inactive') {
                     isAvailable = true;
                 }
             } else {
                 const products = await fetchStoreItems(true);
-                matchedItem = products.find(p => (p.title && p.title.toLowerCase().trim() === itemTitle.toLowerCase().trim()) || String(p._id) === String(raw.itemDetails?.productId));
+                matchedItem = products.find(p => (p.title && p.title.toLowerCase().trim() === itemTitle.toLowerCase().trim()) || String(p._id) === String(raw.itemDetails?.itemId || raw.itemDetails?.productId));
                 if (matchedItem && (Number(matchedItem.stock) > 0 && matchedItem.status !== 'Out of Stock' && matchedItem.status !== 'Inactive')) {
                     isAvailable = true;
                 }
