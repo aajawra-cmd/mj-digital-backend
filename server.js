@@ -136,6 +136,51 @@ async function sendOrderConfirmationEmail(order) {
   }
 }
 
+// 100% FREE AUTOMATED TELEGRAM BOT ALERT
+async function sendTelegramOrderNotification(order) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN || '8963399353:AAGHMCxboeojbwSH6E4Hze61N3_gcNVHaY0';
+  const chatId = process.env.TELEGRAM_CHAT_ID || '8612147860';
+
+  if (!botToken || !chatId) {
+    console.log("ℹ️ Telegram credentials missing, skipping alert.");
+    return;
+  }
+
+  const rawId = String(order._id || order.id || Date.now());
+  const shortId = rawId.length > 6 ? rawId.slice(-6).toUpperCase() : rawId.toUpperCase();
+  const name = order.customerName || 'Customer';
+  const phone = order.customerPhone || 'N/A';
+  const amount = Number(order.totalAmount || 0).toLocaleString('en-IN');
+  const title = order.itemDetails?.title || (order.items && order.items[0]?.title) || 'Multiple Items';
+  const paymentMode = (order.paymentGateway === 'cod' || String(order.paymentStatus).toLowerCase() === 'pending') 
+    ? 'Cash on Delivery (Pending)' 
+    : 'Online / UPI Paid';
+
+  const message = `🛍️ *NEW ORDER RECEIVED - M J DIGITAL*
+━━━━━━━━━━━━━━━━━━
+📦 *Order ID:* #ORD-${shortId}
+👤 *Customer:* ${name}
+📞 *Phone:* ${phone}
+🛒 *Item:* ${title}
+💰 *Total Amount:* ₹${amount}
+💳 *Mode:* ${paymentMode}
+📍 *Shipping:* ${order.shippingAddress || 'Store Pickup'}
+━━━━━━━━━━━━━━━━━━
+📄 [Open Live Invoice](https://mj-digital-backend-3.onrender.com/invoice.html?id=${rawId})`;
+
+  try {
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    await axios.post(url, {
+      chat_id: chatId,
+      text: message,
+      parse_mode: 'Markdown'
+    });
+    console.log(`✅ Instant Telegram alert delivered to chat ${chatId} for #ORD-${shortId}`);
+  } catch (err) {
+    console.error("Telegram alert error:", err.response?.data?.description || err.message);
+  }
+}
+
 async function sendWhatsAppAndSMS(order) {
   const phone = String(order.customerPhone || '').replace(/[^0-9]/g, '').slice(-10);
   const shortId = String(order._id || order.id || Date.now()).slice(-6).toUpperCase();
@@ -699,6 +744,8 @@ app.post('/api/orders', async (req, res) => {
     });
 
     const saved = await newOrder.save();
+    // Instant Free Telegram Alert
+    sendTelegramOrderNotification(saved).catch(err => console.error("Telegram background error:", err));
 
     // Inventory Stock Auto-Deduction
     if (finalOrderType.toLowerCase() === 'product' && itemDetails?.itemId) {

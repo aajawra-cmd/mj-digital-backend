@@ -21,6 +21,9 @@
             flex-direction: column;
             min-height: 100vh;
         }
+        .cursor-pointer {
+            cursor: pointer !important;
+        }
         .main-wrapper { flex: 1; }
         .navbar-custom { 
             background: rgba(15, 23, 42, 0.95); 
@@ -196,15 +199,22 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-3">
-                    <a class="text-light position-relative cursor-pointer" onclick="navigateTo('page-wishlist')" title="Wishlist">
+                    <!-- Wishlist Icon with Hand Cursor -->
+                    <a href="javascript:void(0)" class="text-light position-relative cursor-pointer text-decoration-none" onclick="navigateTo('page-wishlist')" style="cursor: pointer;" title="Wishlist">
                         <i class="fa-regular fa-heart fs-5"></i>
                         <span id="wishCount" class="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">0</span>
                     </a>
-                    <a class="text-light position-relative cursor-pointer" onclick="navigateTo('page-cart')" title="Shopping Bag">
+
+                    <!-- Shopping Bag Icon with Hand Cursor -->
+                    <a href="javascript:void(0)" class="text-light position-relative cursor-pointer text-decoration-none" onclick="navigateTo('page-cart')" style="cursor: pointer;" title="Shopping Bag">
                         <i class="fa-solid fa-bag-shopping fs-5"></i>
                         <span id="cartCount" class="badge bg-primary rounded-circle position-absolute top-0 start-100 translate-middle">0</span>
                     </a>
-                    <button class="btn btn-outline-info btn-sm rounded-pill px-3" id="profileNavBtn" onclick="checkAuthAndNavigate()"><i class="fa-solid fa-user me-1"></i> Account</button>
+
+                    <!-- Account Button -->
+                    <button class="btn btn-outline-info btn-sm rounded-pill px-3" style="cursor: pointer;" id="profileNavBtn" onclick="checkAuthAndNavigate()">
+                        <i class="fa-solid fa-user me-1"></i> Account
+                    </button>
                 </div>
             </div>
         </div>

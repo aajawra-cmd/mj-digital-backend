@@ -36,7 +36,9 @@
             </div>
             <div class="text-end">
                 <h4 class="fw-bold text-dark mb-2">TAX INVOICE</h4>
-                <div class="stamp-badge mb-2"><i class="fa-solid fa-circle-check me-1"></i> PAYMENT CONFIRMED</div>
+                <div class="stamp-badge mb-2" id="paymentStampBadge">
+                  <i class="fa-solid fa-circle-check me-1"></i> PAYMENT CONFIRMED
+                </div>
                 <p class="small text-muted mb-1"><strong>Invoice No:</strong> <span id="invNo" class="text-dark fw-bold">#INV-9842</span></p>
                 <!-- ORDER NO PRINT ROW -->
                 <p class="small text-muted mb-1"><strong>Order No:</strong> <span id="orderNo" class="text-primary fw-bold font-monospace">#ORD-9842</span></p>
@@ -58,7 +60,7 @@
                 <div class="highlight-box h-100">
                     <span class="text-muted small fw-bold text-uppercase d-block mb-2"><i class="fa-solid fa-receipt me-1 text-primary"></i> Billing Information</span>
                     <p class="small mb-1"><strong>Place of Supply:</strong> State Code 24 (Gujarat)</p>
-                    <p class="small mb-1"><strong>Mode of Payment:</strong> Pre-Approved Online / UPI Verified</p>
+                    <p class="small mb-1"><strong>Mode of Payment:</strong> <span id="paymentModeText" class="fw-semibold text-dark">Pre-Approved Online / UPI Verified</span></p>
                     <p class="small mb-0"><strong>Fulfillment Status:</strong> <span class="text-success fw-bold">Dispatched via Speed Freight</span></p>
                 </div>
             </div>
@@ -201,6 +203,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const emailEl = document.getElementById('custEmail');
     if (emailEl) emailEl.innerText = order.customerEmail || order.customer?.email || 'mjdigitalworlds@gmail.com';
+
+    // DYNAMIC PAYMENT MODE & STAMP BADGE MAPPING
+    const gateway = String(order.paymentGateway || '').toLowerCase();
+    const payStatus = String(order.paymentStatus || '').toLowerCase();
+    const paymentModeEl = document.getElementById('paymentModeText');
+    const stampEl = document.getElementById('paymentStampBadge');
+
+    if (gateway.includes('cod') || payStatus.includes('cod') || payStatus.includes('pending')) {
+      if (paymentModeEl) paymentModeEl.innerText = 'Cash on Delivery (COD)';
+      if (stampEl) {
+        stampEl.innerHTML = '<i class="fa-solid fa-clock me-1"></i> CASH ON DELIVERY (PENDING)';
+        stampEl.style.borderColor = '#d97706';
+        stampEl.style.color = '#d97706';
+      }
+    } else {
+      if (paymentModeEl) paymentModeEl.innerText = 'Pre-Approved Online / UPI Verified';
+      if (stampEl) {
+        stampEl.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> PAYMENT CONFIRMED';
+        stampEl.style.borderColor = '#16a34a';
+        stampEl.style.color = '#16a34a';
+      }
+    }
 
     // 3. Multi-Item Extraction
     let itemsToProcess = [];
