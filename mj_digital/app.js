@@ -1,7 +1,32 @@
 // ==========================================
-// 1. SESSION & AUTH CHECK
+// 1. SESSION & AUTH CHECK (WITH 24H EXPIRY)
 // ==========================================
-if (localStorage.getItem('mj_admin_session') === 'authenticated') {
+function getAdminAuthHeaders() {
+  const token = localStorage.getItem('mj_jwt_token') || sessionStorage.getItem('mj_jwt_token') || '';
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+function verifyAdminSessionExpiry() {
+  const loginTime = localStorage.getItem('mj_admin_login_time');
+  const sessionActive = localStorage.getItem('mj_admin_session') === 'authenticated';
+  const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
+  if (sessionActive && loginTime) {
+    if (Date.now() - Number(loginTime) > TWENTY_FOUR_HOURS) {
+      localStorage.removeItem('mj_jwt_token');
+      sessionStorage.removeItem('mj_jwt_token');
+      localStorage.removeItem('mj_admin_session');
+      localStorage.removeItem('mj_admin_user');
+      localStorage.removeItem('mj_admin_login_time');
+      alert('⚠️ Admin session expire ho gaya hai (24 Hours). Kripya dobara login karein.');
+      window.location.reload();
+      return false;
+    }
+  }
+  return true;
+}
+
+if (verifyAdminSessionExpiry() && localStorage.getItem('mj_admin_session') === 'authenticated') {
   const authScreen = document.getElementById('adminAuthScreen');
   if (authScreen) authScreen.classList.add('hidden');
 }
@@ -299,7 +324,10 @@ async function saveCmsContent() {
   try {
     const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/cms/policies/${activeCmsTab}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
       body: JSON.stringify({ content: contentToSave })
     });
 
@@ -580,7 +608,6 @@ async function loadAdminProducts() {
         const stock = prod.stock ?? 0;
         const status = prod.status || (stock > 0 ? 'Active' : 'Out of Stock');
         
-        // FIX: Case-insensitive active check taaki green color hamesha preserve rahe
         const isItemActive = String(status).toLowerCase() === 'active';
         const statusBadgeClass = isItemActive 
           ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
@@ -658,7 +685,6 @@ function openEditProductModal(id) {
   const cEl = document.getElementById('prodCat');
   if (cEl) cEl.value = prod.category || 'Fashion';
   
-  // FIX: Numeric values ko safely bind karein taaki input field empty na rahe
   const pEl = document.getElementById('prodPrice');
   if (pEl) pEl.value = (prod.price !== undefined && prod.price !== null) ? prod.price : '';
   const dEl = document.getElementById('prodDiscountPrice');
@@ -697,21 +723,6 @@ function openEditProductModal(id) {
     }
   }
 
-  const varArea = document.getElementById('prodVariantsJson');
-  if (varArea) {
-    if (prod.variants) {
-      try {
-        varArea.value = typeof prod.variants === 'object' && Object.keys(prod.variants).length > 0 
-          ? JSON.stringify(prod.variants, null, 2) 
-          : (typeof prod.variants === 'string' ? prod.variants : JSON.stringify(prod.variants, null, 2));
-      } catch (e) {
-        varArea.value = '';
-      }
-    } else {
-      varArea.value = '';
-    }
-  }
-
   const modalTitle = document.querySelector('#addProductModal h3');
   if (modalTitle) modalTitle.innerText = 'Edit Product (Full Catalog Update)';
 
@@ -728,7 +739,6 @@ async function handleProductSubmit(event) {
   const brand = document.getElementById('prodBrand')?.value || form.querySelector('[name="brand"]')?.value || formData.get('brand') || '';
   const category = document.getElementById('prodCat')?.value || form.querySelector('[name="category"]')?.value || formData.get('category') || 'Fashion';
   
-  // FIX: DOM element se price nikal kar form data me strictly number set karein
   const priceInputVal = document.getElementById('prodPrice')?.value;
   const price = Number(priceInputVal !== undefined && priceInputVal !== '' ? priceInputVal : (formData.get('price') || 0));
   
@@ -761,17 +771,6 @@ async function handleProductSubmit(event) {
 
   let variantData = collectVariantsMatrix();
 
-  if (variantData.configurations.length === 0) {
-    const rawJson = document.getElementById('prodVariantsJson')?.value?.trim();
-    if (rawJson) {
-      try {
-        variantData = JSON.parse(rawJson);
-      } catch (e) {
-        console.warn('Invalid fallback JSON in variants');
-      }
-    }
-  }
-
   formData.set('title', title.trim());
   formData.set('brand', brand.trim());
   formData.set('category', category.trim());
@@ -782,8 +781,6 @@ async function handleProductSubmit(event) {
     formData.delete('discountPrice');
   }
   formData.set('stock', stock);
-  
-  // FIX: Status hamesha Capital standard me bhejein
   formData.set('status', stock > 0 ? 'Active' : 'Out of Stock');
   formData.set('description', desc);
   formData.set('detailedDescription', desc);
@@ -810,6 +807,9 @@ async function handleProductSubmit(event) {
   try {
     const res = await fetch(endpoint, {
       method: method,
+      headers: {
+        ...getAdminAuthHeaders()
+      },
       body: formData
     });
 
@@ -847,7 +847,10 @@ async function deleteProduct(productId) {
 
   try {
     const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/products/${productId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        ...getAdminAuthHeaders()
+      }
     });
     const data = await res.json();
 
@@ -869,7 +872,10 @@ async function quickUpdateProduct(id, field, value) {
 
     const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/products/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
       body: JSON.stringify(payload)
     });
 
@@ -887,7 +893,10 @@ async function updateProductStatus(id, status) {
   try {
     const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/products/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
       body: JSON.stringify({ status })
     });
     const data = await res.json();
@@ -1097,6 +1106,9 @@ async function handleTravelSubmit(event) {
   try {
     const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages', {
       method: 'POST',
+      headers: {
+        ...getAdminAuthHeaders()
+      },
       body: formData
     });
 
@@ -1118,7 +1130,12 @@ async function handleTravelSubmit(event) {
 async function deleteTravelPackage(id) {
   if (!confirm('Kya aap sach me is travel package ko delete karna chahte hain?')) return;
   try {
-    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}`, { method: 'DELETE' });
+    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}`, { 
+      method: 'DELETE',
+      headers: {
+        ...getAdminAuthHeaders()
+      }
+    });
     const data = await res.json();
     if (res.ok && data.success) {
       loadAdminTravelPackages();
@@ -1135,7 +1152,10 @@ async function updateTravelStatus(id, newStatus) {
   try {
     const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
       body: JSON.stringify({ status: newStatus })
     });
     const data = await res.json();
@@ -1154,7 +1174,10 @@ async function quickUpdateTravelPrice(id, newPrice) {
   try {
     const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}/quick-update`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
       body: JSON.stringify({ price: Number(newPrice) })
     });
     const data = await res.json();
@@ -1213,7 +1236,10 @@ async function handleEditTravelSubmit(event) {
   try {
     const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
       body: JSON.stringify(payload)
     });
 
@@ -1227,7 +1253,7 @@ async function handleEditTravelSubmit(event) {
     }
   } catch (err) {
     console.error('Travel Edit Error:', err);
-    alert('Server connect error while updating package. Terminal me server check karein.');
+    alert('Server connect error while updating package.');
   }
 }
 
@@ -1317,7 +1343,8 @@ async function handleCategorySubmit(event) {
 
   const payload = {
     name: formData.get('name'),
-    type: formData.get('type') || 'ecommerce'
+    type: formData.get('type') || 'ecommerce',
+    parentId: formData.get('parentId') || null
   };
 
   if (!payload.name || !payload.name.trim()) {
@@ -1328,7 +1355,10 @@ async function handleCategorySubmit(event) {
   try {
     const res = await fetch('https://mj-digital-backend-3.onrender.com/api/categories', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
       body: JSON.stringify(payload)
     });
 
@@ -1353,7 +1383,10 @@ async function deleteCategory(id) {
 
   try {
     const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/categories/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        ...getAdminAuthHeaders()
+      }
     });
     const data = await res.json();
     if (res.ok && data.success) {
@@ -1377,9 +1410,6 @@ window.loadParentCategoryDropdown = loadParentCategoryDropdown;
 // ==========================================
 // 9. ORDERS & BOOKINGS MANAGEMENT + RECEIPT
 // ==========================================
-// ==========================================
-// 9. ORDERS & BOOKINGS MANAGEMENT + RECEIPT + CATEGORY ANALYTICS
-// ==========================================
 let categoryChartInstance = null;
 
 function updateDashboardMetrics(orders) {
@@ -1396,7 +1426,6 @@ function updateDashboardMetrics(orders) {
     sidebarBadge.innerText = orders.length;
   }
 
-  // --- DYNAMIC CATEGORY-WISE REVENUE BREAKDOWN ---
   const catTotals = {
     'Mobile & Electronics': 0,
     'Fashion': 0,
@@ -1420,7 +1449,6 @@ function updateDashboardMetrics(orders) {
     }
   });
 
-  // Summary Cards Update
   const setVal = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.innerText = `₹${Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
@@ -1430,7 +1458,6 @@ function updateDashboardMetrics(orders) {
   setVal('catMetricTravel', catTotals['Travel Packages']);
   setVal('catMetricServices', catTotals['Services & IT']);
 
-  // Render Doughnut Chart
   renderCategoryDoughnutChart(Object.keys(catTotals), Object.values(catTotals));
 }
 
@@ -1833,49 +1860,6 @@ function renderOrdersTable(data = ordersList) {
   }).join('');
 }
 
-// 1. Table Ke Bahar Se Status Change Karna
-document.addEventListener('change', async function(e) {
-  if (e.target && e.target.classList.contains('order-status-select')) {
-    const rawId = e.target.getAttribute('data-rawid');
-    const newStatus = e.target.value;
-
-    if (!rawId || rawId === 'undefined') {
-      alert("Order ID missing!");
-      return;
-    }
-
-    try {
-      const payload = { status: newStatus };
-      if (newStatus !== 'Cancelled') payload.cancelReason = '';
-
-      let res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${rawId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${rawId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-      }
-
-      const data = await res.json();
-      if (res.ok && (data.success || data.data)) {
-        if (typeof loadAdminOrders === 'function') loadAdminOrders();
-      } else {
-        alert('Update failed: ' + (data.message || 'Error updating status'));
-      }
-    } catch (err) {
-      console.error('Table status update error:', err);
-    }
-  }
-});
-
-// 2. View Modal Ke Andar Se Status Change Karna
-// Helper: Status ke hisaab se dynamic Tailwind colors return karega
 function getStatusBadgeStyles(statusVal) {
   const s = String(statusVal || '').toLowerCase();
   if (s === 'confirmed' || s === 'delivered') {
@@ -1894,7 +1878,6 @@ function getStatusBadgeStyles(statusVal) {
       badge: 'bg-rose-100 text-rose-800 border-rose-300'
     };
   } else {
-    // Pending / Processing
     return {
       bg: 'bg-amber-50 text-amber-800 border-amber-400',
       badge: 'bg-amber-100 text-amber-800 border-amber-300'
@@ -1902,7 +1885,7 @@ function getStatusBadgeStyles(statusVal) {
   }
 }
 
-// 1. Table Ke Bahar Se Status Change Karna (Alert + Color Sync)
+// 1. Table Ke Bahar Se Status Change Karna
 document.addEventListener('change', async function(e) {
   if (e.target && e.target.classList.contains('order-status-select')) {
     const rawId = e.target.getAttribute('data-rawid');
@@ -1921,25 +1904,29 @@ document.addEventListener('change', async function(e) {
 
       let res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${rawId}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAdminAuthHeaders()
+        },
         body: JSON.stringify(payload)
       });
 
       if (!res.ok) {
         res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${rawId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...getAdminAuthHeaders()
+          },
           body: JSON.stringify(payload)
         });
       }
 
       const data = await res.json();
       if (res.ok && (data.success || data.data)) {
-        // Table refresh karein
         if (typeof loadAdminOrders === 'function') {
           await loadAdminOrders();
         }
-        // Bahar se bhi alert aayega
         alert(`Order status badal kar "${newStatus}" ho gaya!`);
       } else {
         alert('Update failed: ' + (data.message || 'Error updating status'));
@@ -1951,7 +1938,7 @@ document.addEventListener('change', async function(e) {
   }
 });
 
-// 2. View Modal Ke Andar Se Status Change Karna (Dynamic Color Change)
+// 2. View Modal Ke Andar Se Status Change Karna
 window.changeActiveOrderStatus = async function(newStatus) {
   if (!activeSelectedOrder) {
     alert("Pehle koi order select karke modal kholiye!");
@@ -1972,14 +1959,20 @@ window.changeActiveOrderStatus = async function(newStatus) {
 
     let res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${orderId}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
       body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
       res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${orderId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAdminAuthHeaders()
+        },
         body: JSON.stringify(payload)
       });
     }
@@ -1988,7 +1981,6 @@ window.changeActiveOrderStatus = async function(newStatus) {
     if (res.ok && (data.success || data.data)) {
       activeSelectedOrder.status = newStatus;
       
-      // Dynamic Colors Modal par live lagayein
       const styles = getStatusBadgeStyles(newStatus);
 
       const statusBadge = document.getElementById('modalOrderStatus');
@@ -2047,7 +2039,6 @@ function viewOrderDetails(orderId) {
   setEl('modalItemPrice', `₹${Number(order.amount || 0).toLocaleString('en-IN')}`);
   setEl('modalPaymentInfo', `${order.paymentMethod || 'Online'} (${order.paymentStatus || 'Paid'})`);
 
-  // Modal open hote hi current status ka exact color apply karein
   const styles = getStatusBadgeStyles(order.status);
 
   const statusBadge = document.getElementById('modalOrderStatus');
@@ -2139,6 +2130,9 @@ async function handleMediaUpload() {
   try {
     const res = await fetch('https://mj-digital-backend-3.onrender.com/api/media', {
       method: 'POST',
+      headers: {
+        ...getAdminAuthHeaders()
+      },
       body: formData
     });
     const result = await res.json();
@@ -2170,7 +2164,11 @@ async function renderLogsTable(logsToRender = null) {
 
   try {
     if (!logsToRender) {
-      const res = await fetch('https://mj-digital-backend-3.onrender.com/api/audit-logs');
+      const res = await fetch('https://mj-digital-backend-3.onrender.com/api/audit-logs', {
+        headers: {
+          ...getAdminAuthHeaders()
+        }
+      });
       const result = await res.json();
       currentDatabaseLogs = (result && result.success && result.data) ? result.data : [];
     } else {
@@ -2284,7 +2282,12 @@ function exportLogsCSV() {
 async function clearActivityLogs() {
   if (!confirm('Kya aap sabhi purane audit logs database se permanently clear karna chahte hain?')) return;
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/audit-logs', { method: 'DELETE' });
+    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/audit-logs', { 
+      method: 'DELETE',
+      headers: {
+        ...getAdminAuthHeaders()
+      }
+    });
     const data = await res.json();
     if (res.ok && data.success) {
       alert('Sabhi audit activity logs database se clear ho gaye!');
@@ -2338,7 +2341,10 @@ async function savePlatformSettings() {
   try {
     const res = await fetch('https://mj-digital-backend-3.onrender.com/api/settings', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
       body: JSON.stringify(settingsData)
     });
 
@@ -2445,9 +2451,11 @@ async function handleAdminLogin(event) {
     const data = await response.json();
 
     if (response.ok && data.success) {
+      localStorage.setItem('mj_jwt_token', data.token);
       sessionStorage.setItem('mj_jwt_token', data.token);
       localStorage.setItem('mj_admin_session', 'authenticated');
       localStorage.setItem('mj_admin_user', email);
+      localStorage.setItem('mj_admin_login_time', Date.now());
 
       const authScreen = document.getElementById('adminAuthScreen');
       if (authScreen) authScreen.classList.add('hidden');
@@ -2463,6 +2471,7 @@ async function handleAdminLogin(event) {
     if (email.toLowerCase() === 'admin@mjdigital.in' && (password === 'admin' || password === 'admin123')) {
       localStorage.setItem('mj_admin_session', 'authenticated');
       localStorage.setItem('mj_admin_user', email);
+      localStorage.setItem('mj_admin_login_time', Date.now());
 
       const authScreen = document.getElementById('adminAuthScreen');
       if (authScreen) authScreen.classList.add('hidden');
@@ -2479,9 +2488,11 @@ async function handleAdminLogin(event) {
 
 function handleAdminLogout() {
   if (confirm('Admin session logout karein?')) {
+    localStorage.removeItem('mj_jwt_token');
     sessionStorage.removeItem('mj_jwt_token');
     localStorage.removeItem('mj_admin_session');
     localStorage.removeItem('mj_admin_user');
+    localStorage.removeItem('mj_admin_login_time');
     location.reload();
   }
 }
@@ -2493,6 +2504,7 @@ window.handleAdminLogout = handleAdminLogout;
 // 14. SINGLE SYNCHRONOUS BOOTSTRAPPER
 // ==========================================
 window.addEventListener('DOMContentLoaded', () => {
+  verifyAdminSessionExpiry();
   localStorage.removeItem('products');
   localStorage.removeItem('mockProducts');
 
@@ -2505,7 +2517,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 15. AUTO-SYNC: 3 Second Background Polling
+// 15. AUTO-SYNC: 4 Second Background Polling
 // ==========================================
 setInterval(() => {
   const ordersSec = document.getElementById('ordersSection');
