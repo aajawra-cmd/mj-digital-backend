@@ -64,8 +64,8 @@ mongoose.connect(dbUri)
 // 4. RAZORPAY CONFIGURATION
 // ==========================================
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Tg1YAs4of4y3NB',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'w9u03i0k8H8K14xX22O44WzZ'
 });
 
 // ==========================================
@@ -838,6 +838,50 @@ app.put('/api/orders/:id/status', handleOrderStatusUpdate);
 app.patch('/api/orders/:id/status', handleOrderStatusUpdate);
 app.put('/api/order/:id', handleOrderStatusUpdate);
 app.patch('/api/order/:id', handleOrderStatusUpdate);
+
+// GET CATEGORY-WISE REVENUE ANALYTICS
+app.get('/api/analytics/category-revenue', async (req, res) => {
+  try {
+    const orders = await Order.find();
+    
+    const categoryTotals = {
+      'Mobile & Electronics': 0,
+      'Fashion & Apparel': 0,
+      'Tours & Travels': 0,
+      'Digital & IT Services': 0
+    };
+
+    orders.forEach(order => {
+      const items = Array.isArray(order.items) && order.items.length > 0 
+        ? order.items 
+        : (order.itemDetails ? [order.itemDetails] : []);
+
+      items.forEach(item => {
+        const text = ((item.title || '') + ' ' + (item.category || '')).toLowerCase();
+        const itemAmount = Number(item.price || 0) * Number(item.quantity || item.qty || 1);
+
+        if (text.includes('travel') || text.includes('tour') || text.includes('package')) {
+          categoryTotals['Tours & Travels'] += itemAmount;
+        } else if (text.includes('fashion') || text.includes('shirt') || text.includes('cloth') || text.includes('dress')) {
+          categoryTotals['Fashion & Apparel'] += itemAmount;
+        } else if (text.includes('service') || text.includes('digital') || text.includes('it')) {
+          categoryTotals['Digital & IT Services'] += itemAmount;
+        } else {
+          categoryTotals['Mobile & Electronics'] += itemAmount;
+        }
+      });
+    });
+
+    res.json({
+      success: true,
+      categories: Object.keys(categoryTotals),
+      totals: Object.values(categoryTotals)
+    });
+  } catch (err) {
+    console.error("Analytics fetch error:", err);
+    res.status(500).json({ error: "Failed to aggregate category revenue" });
+  }
+});
 
 // ------------------------------------------
 // RAZORPAY PAYMENT GATEWAY ROUTES

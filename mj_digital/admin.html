@@ -315,6 +315,52 @@
                 </p>
               </div>
             </div>
+
+            <!-- Category Breakdown + Vertical Highlights -->
+            <div class="grid grid-cols-3 gap-5">
+              <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100">Category Revenue Split</h3>
+                    <p class="text-[11px] text-gray-400">Live share across business verticals</p>
+                  </div>
+                  <span class="text-[10px] bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-full">Real-time</span>
+                </div>
+                <div class="relative h-64 w-full flex items-center justify-center">
+                  <canvas id="categoryRevenueChart"></canvas>
+                </div>
+              </div>
+
+              <div class="col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm space-y-4 flex flex-col justify-between">
+                <div>
+                  <h3 class="font-bold text-sm text-gray-800 dark:text-gray-100">Commercial Summary & Statutory Audit</h3>
+                  <p class="text-[11px] text-gray-400 mb-3">Breakdown of gross transaction volumes by registered catalogue segments</p>
+                  
+                  <div class="grid grid-cols-2 gap-3 text-xs" id="categoryMetricsSummary">
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-100 dark:border-gray-700">
+                      <span class="text-[11px] text-gray-400 font-semibold uppercase block">Electronics & Mobiles</span>
+                      <strong class="text-sm text-gray-800 dark:text-gray-100" id="catMetricElectronics">₹0.00</strong>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-100 dark:border-gray-700">
+                      <span class="text-[11px] text-gray-400 font-semibold uppercase block">Fashion & Apparel</span>
+                      <strong class="text-sm text-gray-800 dark:text-gray-100" id="catMetricFashion">₹0.00</strong>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-100 dark:border-gray-700">
+                      <span class="text-[11px] text-gray-400 font-semibold uppercase block">Travel & Tourism</span>
+                      <strong class="text-sm text-gray-800 dark:text-gray-100" id="catMetricTravel">₹0.00</strong>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-100 dark:border-gray-700">
+                      <span class="text-[11px] text-gray-400 font-semibold uppercase block">Digital IT & Services</span>
+                      <strong class="text-sm text-gray-800 dark:text-gray-100" id="catMetricServices">₹0.00</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <p class="text-[11px] text-gray-400 border-t pt-2">
+                  <i class="fa-solid fa-circle-check text-emerald-500 me-1"></i> Synchronized automatically with MongoDB live orders collection.
+                </p>
+              </div>
+            </div>
           </section>
 
           <!-- PRODUCTS SECTION -->

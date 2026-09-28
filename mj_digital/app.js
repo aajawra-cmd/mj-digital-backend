@@ -1377,6 +1377,11 @@ window.loadParentCategoryDropdown = loadParentCategoryDropdown;
 // ==========================================
 // 9. ORDERS & BOOKINGS MANAGEMENT + RECEIPT
 // ==========================================
+// ==========================================
+// 9. ORDERS & BOOKINGS MANAGEMENT + RECEIPT + CATEGORY ANALYTICS
+// ==========================================
+let categoryChartInstance = null;
+
 function updateDashboardMetrics(orders) {
   if (!Array.isArray(orders)) return;
   const totalRev = orders.reduce((sum, ord) => sum + Number(ord.amount || 0), 0);
@@ -1390,6 +1395,87 @@ function updateDashboardMetrics(orders) {
   if (sidebarBadge) {
     sidebarBadge.innerText = orders.length;
   }
+
+  // --- DYNAMIC CATEGORY-WISE REVENUE BREAKDOWN ---
+  const catTotals = {
+    'Mobile & Electronics': 0,
+    'Fashion': 0,
+    'Travel Packages': 0,
+    'Services & IT': 0
+  };
+
+  orders.forEach(ord => {
+    const amt = Number(ord.amount || ord.totalAmount || 0);
+    const cat = String(ord.category || ord.type || '').toLowerCase();
+    const title = String(ord.itemTitle || '').toLowerCase();
+
+    if (cat.includes('travel') || title.includes('tour') || title.includes('package') || title.includes('zeeland') || title.includes('bali')) {
+      catTotals['Travel Packages'] += amt;
+    } else if (cat.includes('fashion') || title.includes('shirt') || title.includes('cotton') || title.includes('dress')) {
+      catTotals['Fashion'] += amt;
+    } else if (cat.includes('service') || title.includes('digital') || title.includes('it')) {
+      catTotals['Services & IT'] += amt;
+    } else {
+      catTotals['Mobile & Electronics'] += amt;
+    }
+  });
+
+  // Summary Cards Update
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = `₹${Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+  };
+  setVal('catMetricElectronics', catTotals['Mobile & Electronics']);
+  setVal('catMetricFashion', catTotals['Fashion']);
+  setVal('catMetricTravel', catTotals['Travel Packages']);
+  setVal('catMetricServices', catTotals['Services & IT']);
+
+  // Render Doughnut Chart
+  renderCategoryDoughnutChart(Object.keys(catTotals), Object.values(catTotals));
+}
+
+function renderCategoryDoughnutChart(labels, values) {
+  const canvas = document.getElementById('categoryRevenueChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  if (categoryChartInstance) {
+    categoryChartInstance.destroy();
+  }
+
+  categoryChartInstance = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: ['#2563eb', '#ec4899', '#0d9488', '#8b5cf6'],
+        borderWidth: 2,
+        borderColor: '#ffffff',
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            boxWidth: 10,
+            padding: 12,
+            font: { size: 11 }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ` ${ctx.label}: ₹${Number(ctx.raw || 0).toLocaleString('en-IN')}`;
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 function updateDashboardChart(orders) {

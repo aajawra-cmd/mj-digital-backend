@@ -2240,8 +2240,8 @@
 
             try {
                 if (isCod) {
-                    await saveSplitOrdersToDatabase('Pending', 'Processing');
-                    alert('Order placed successfully via COD! Status: Processing');
+                    const createdOrders = await saveSplitOrdersToDatabase('Pending', 'Processing');
+                    triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
                     finishCheckout();
                 } else {
                     // Razorpay Order Creation
@@ -2282,8 +2282,8 @@
                                 const verifyData = await verifyRes.json();
 
                                 if (verifyData.success) {
-                                    await saveSplitOrdersToDatabase('Paid', 'Processing', response.razorpay_payment_id);
-                                    alert('Payment Verified! Orders placed successfully.');
+                                    const createdOrders = await saveSplitOrdersToDatabase('Paid', 'Processing', response.razorpay_payment_id);
+                                    triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
                                     finishCheckout();
                                 } else {
                                     alert('Payment verification failed.');
@@ -2315,7 +2315,42 @@
                 resetButton();
             }
 
+            // CUSTOMER DIRECT 1-TAP WHATSAPP NOTIFICATION TRIGGER
+            function triggerCustomerWhatsAppReceipt(createdOrders, customerPhone, customerName) {
+              if (!createdOrders || createdOrders.length === 0) return;
+
+              const phone = String(customerPhone || '').replace(/[^0-9]/g, '').slice(-10);
+              const name = customerName || 'Customer';
+
+              const firstOrder = createdOrders[0]?.data || createdOrders[0] || {};
+              const rawId = String(firstOrder._id || firstOrder.id || Date.now());
+              const shortId = rawId.length > 6 ? rawId.slice(-6).toUpperCase() : rawId.toUpperCase();
+
+              const grandTotal = createdOrders.reduce((sum, ord) => {
+                const o = ord.data || ord;
+                return sum + Number(o.totalAmount || o.amount || 0);
+              }, 0);
+
+              const formattedTotal = Number(grandTotal || 0).toLocaleString('en-IN');
+              const invoiceUrl = `https://mj-digital-backend-3.onrender.com/invoice.html?id=${rawId}`;
+
+              const messageText = `Namaste ${name}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ₹${formattedTotal}) successfully place ho gaya hai.\n\n📄 View/Download Tax Invoice: ${invoiceUrl}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
+
+              const targetPhone = phone.length === 10 ? `91${phone}` : '918306669999';
+              const waUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(messageText)}`;
+
+              const confirmWA = confirm("🎉 Order successfully placed!\n\nKya aap WhatsApp par order confirmation aur Tax Invoice copy lena chahte hain?");
+              if (confirmWA) {
+                window.open(waUrl, '_blank');
+              }
+            }
+
             async function finishCheckout() {
+                // 1. Customer details form se read karein
+                const custPhone = (document.getElementById('fpCheckoutPhone')?.value || '').replace(/[^0-9]/g, '').slice(-10);
+                const custName = document.getElementById('fpCheckoutName')?.value || 'Valued Customer';
+                const totalAmount = document.getElementById('fpCheckoutTotalPayable')?.innerText || '₹0';
+
                 myCart = [];
                 updateCartBadge();
                 resetButton();
@@ -2328,6 +2363,24 @@
                 await loadOrdersTable();
                 switchProfileTab('p-orders', document.querySelector('.profile-nav-btn'));
                 navigateTo('page-profile');
+
+                // 2. Instant 1-Tap WhatsApp Invoice Confirmation Pop-up
+                setTimeout(() => {
+                    const latestOrder = userOrders && userOrders[0];
+                    const rawId = latestOrder ? latestOrder.id : '';
+                    const shortId = latestOrder ? latestOrder.shortId : 'LATEST';
+                    const invoiceLink = `https://mj-digital-backend-3.onrender.com/invoice.html?id=${rawId}`;
+
+                    const msgText = `Namaste ${custName}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ${totalAmount}) successfully receive ho gaya hai.\n\n📄 Tax Invoice Download: ${invoiceLink}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
+        
+                    const targetNumber = custPhone.length === 10 ? `91${custPhone}` : '918306669999';
+                    const waLink = `https://api.whatsapp.com/send?phone=${targetNumber}&text=${encodeURIComponent(msgText)}`;
+
+                    const confirmWA = confirm("🎉 Order successfully placed!\n\nKya aap WhatsApp par order confirmation aur Tax Invoice copy lena chahte hain?");
+                    if (confirmWA) {
+                        window.open(waLink, '_blank');
+                    }
+                }, 400);
             }
         }
 
