@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- FILE-01 | VERSION: 10.5 | FULL UNIFIED FIXED MJ DIGITAL PORTAL -->
+<!-- FILE-01 | VERSION: 11.0 | 100% UNIFIED ERROR-FREE MJ DIGITAL PORTAL -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -305,7 +305,7 @@
                         <div class="bg-light p-3 rounded-3 border mb-3">
                             <div class="d-flex align-items-center gap-3 flex-wrap">
                                 <h2 class="fw-bold text-primary display-5 mb-0" id="pageDetailPrice">₹0</h2>
-        
+                                
                                 <div id="pageDetailOriginalPriceBox" style="display: none;" class="d-flex align-items-center gap-2">
                                     <span class="text-muted text-decoration-line-through fs-5" id="pageDetailOriginalPrice">₹0</span>
                                     <span class="badge bg-danger text-white rounded-pill px-2.5 py-1.5 fw-bold" id="pageDetailDiscountPercent" style="font-size: 12px;">0% OFF</span>
@@ -578,27 +578,72 @@
                         <div class="card-custom p-4">
                             <h5 class="fw-bold mb-3"><i class="fa-solid fa-credit-card text-success me-2"></i>Select Payment Method</h5>
                             <div class="d-flex flex-column gap-3">
+                                <!-- 1. Razorpay -->
                                 <label class="payment-radio-card d-flex align-items-center gap-3">
                                     <input type="radio" name="fpPaymentGateway" value="razorpay" checked class="form-check-input mt-0">
                                     <div>
-                                        <strong class="d-block text-dark">UPI / Credit / Debit Card / Netbanking</strong>
-                                        <span class="small text-muted">Razorpay Gateway (Encrypted & Instant)</span>
+                                        <strong class="d-block text-dark">Razorpay Gateway</strong>
+                                        <span class="small text-muted">UPI, Cards, Netbanking & Wallets</span>
                                     </div>
-                                    <i class="fa-brands fa-cc-visa fs-3 text-secondary ms-auto"></i>
+                                    <i class="fa-brands fa-cc-visa fs-3 text-primary ms-auto"></i>
                                 </label>
+
+                                <!-- 2. PhonePe -->
                                 <label class="payment-radio-card d-flex align-items-center gap-3">
-                                    <input type="radio" name="fpPaymentGateway" value="gpay_upi" class="form-check-input mt-0">
+                                    <input type="radio" name="fpPaymentGateway" value="phonepe" class="form-check-input mt-0">
                                     <div>
-                                        <strong class="d-block text-dark">Direct Google Pay / PhonePe UPI ID</strong>
-                                        <span class="small text-muted">Scan QR or enter VPA ID</span>
+                                        <strong class="d-block text-dark">PhonePe Payment Gateway</strong>
+                                        <span class="small text-muted">Direct Mobile UPI App Intent</span>
                                     </div>
-                                    <i class="fa-brands fa-google-pay fs-3 text-primary ms-auto"></i>
+                                    <i class="fa-solid fa-mobile-screen fs-3 ms-auto" style="color: #5f259f;"></i>
                                 </label>
+
+                                <!-- 3. Cashfree -->
+                                <label class="payment-radio-card d-flex align-items-center gap-3">
+                                    <input type="radio" name="fpPaymentGateway" value="cashfree" class="form-check-input mt-0">
+                                    <div>
+                                        <strong class="d-block text-dark">Cashfree Payments</strong>
+                                        <span class="small text-muted">Dynamic Instant QR & Cards</span>
+                                    </div>
+                                    <i class="fa-solid fa-qrcode fs-3 text-info ms-auto"></i>
+                                </label>
+
+                                <!-- 4. Paytm -->
+                                <label class="payment-radio-card d-flex align-items-center gap-3">
+                                    <input type="radio" name="fpPaymentGateway" value="paytm" class="form-check-input mt-0">
+                                    <div>
+                                        <strong class="d-block text-dark">Paytm PG & Wallet</strong>
+                                        <span class="small text-muted">Paytm App, Postpaid & UPI</span>
+                                    </div>
+                                    <i class="fa-solid fa-wallet fs-3 ms-auto" style="color: #00b9f5;"></i>
+                                </label>
+
+                                <!-- 5. PayU -->
+                                <label class="payment-radio-card d-flex align-items-center gap-3">
+                                    <input type="radio" name="fpPaymentGateway" value="payu" class="form-check-input mt-0">
+                                    <div>
+                                        <strong class="d-block text-dark">PayU India</strong>
+                                        <span class="small text-muted">Credit/Debit Cards & Netbanking</span>
+                                    </div>
+                                    <i class="fa-solid fa-shield-halved fs-3 text-success ms-auto"></i>
+                                </label>
+
+                                <!-- 6. CCAvenue -->
+                                <label class="payment-radio-card d-flex align-items-center gap-3">
+                                    <input type="radio" name="fpPaymentGateway" value="ccavenue" class="form-check-input mt-0">
+                                    <div>
+                                        <strong class="d-block text-dark">CCAvenue</strong>
+                                        <span class="small text-muted">200+ Indian Banks & Travel EMI</span>
+                                    </div>
+                                    <i class="fa-solid fa-building-columns fs-3 text-secondary ms-auto"></i>
+                                </label>
+
+                                <!-- 7. COD / Desk Pay -->
                                 <label class="payment-radio-card d-flex align-items-center gap-3">
                                     <input type="radio" name="fpPaymentGateway" value="cod" class="form-check-input mt-0">
                                     <div>
                                         <strong class="d-block text-dark">Cash on Delivery (COD) / Direct Desk Pay</strong>
-                                        <span class="small text-muted">Pay at delivery / Danilimda office desk</span>
+                                        <span class="small text-muted">Danilimda office desk / Cash pay</span>
                                     </div>
                                     <i class="fa-solid fa-money-bill-wave fs-4 text-success ms-auto"></i>
                                 </label>
@@ -1032,6 +1077,24 @@
             query: ''
         };
 
+        // 1. SAFE MEDIA RESOLVER (Fixes broken /uploads, localhost, and placeholder image issues)
+        function resolveMediaUrl(url) {
+            if (!url || typeof url !== 'string' || url.trim() === '') {
+                return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500';
+            }
+            const clean = url.trim();
+            if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('data:')) {
+                return clean;
+            }
+            if (clean.startsWith('/uploads/')) {
+                return `https://mj-digital-backend-3.onrender.com${clean}`;
+            }
+            if (clean.startsWith('uploads/')) {
+                return `https://mj-digital-backend-3.onrender.com/${clean}`;
+            }
+            return `https://mj-digital-backend-3.onrender.com/uploads/${clean}`;
+        }
+
         document.addEventListener("DOMContentLoaded", function() {
             const trackEl = document.getElementById('liveTrackingModal');
             if (trackEl) trackingModal = new bootstrap.Modal(trackEl);
@@ -1101,12 +1164,15 @@
             }
         }
 
+        // 2. PRODUCT CARD BUILDER (Safe Media Tag & Strikethrough Pricing)
         function createProductCardHTML(item) {
-            const img = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300');
-            const isVid = img.endsWith('.mp4') || img.endsWith('.webm');
+            const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
+            const safeImg = resolveMediaUrl(rawImg);
+            const isVid = safeImg.endsWith('.mp4') || safeImg.endsWith('.webm');
+
             const mediaTag = isVid 
-                ? `<video src="${img}" class="img-fluid" muted style="max-height: 150px; object-fit: contain;"></video>`
-                : `<img src="${img}" alt="${item.title || item.name}" class="img-fluid" style="max-height: 150px; object-fit: contain;" onerror="this.src='https://placehold.co/150'">`;
+                ? `<video src="${safeImg}" class="img-fluid" muted style="max-height: 150px; object-fit: contain;"></video>`
+                : `<img src="${safeImg}" alt="${item.title || item.name}" class="img-fluid" style="max-height: 150px; object-fit: contain;" onerror="this.src='https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300'">`;
 
             const currentPrice = Number(item.discountPrice ? item.discountPrice : (item.price || 0)).toLocaleString('en-IN');
             const originalMrp = (item.discountPrice && item.discountPrice < item.price) ? Number(item.price).toLocaleString('en-IN') : null;
@@ -1504,27 +1570,42 @@
             renderTravelGrid(list);
         }
 
+        // 3. TRAVEL CARD BUILDER (Clean Safe Image Tag)
         function createTravelCardHTML(t) {
-            const img = (t.images && t.images.length > 0) ? t.images[0] : 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500';
+            const rawImg = (t.images && t.images.length > 0) ? t.images[0] : (t.imageUrl || '');
+            const safeImg = resolveMediaUrl(rawImg);
             const price = t.pricingTiers?.standard?.price || t.price || 45000;
+            const days = t.duration?.days || 1;
+            const nights = t.duration?.nights || 0;
             const isWish = myWishlist.some(w => String(w.id) === String(t._id));
+
             return `
                 <div class="col-md-6 col-lg-4">
                     <div class="card-custom h-100 d-flex flex-column justify-content-between">
-                        <img src="${img}" class="card-img-top-custom" alt="${t.title}" onclick="openItemDetailsPage('${t._id}', true)" title="Click to view tour details">
+                        <img src="${safeImg}" class="card-img-top-custom" alt="${t.title}" onclick="openItemDetailsPage('${t._id}', true)" title="Click to view tour details" onerror="this.src='https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=500'">
                         <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
                             <div onclick="openItemDetailsPage('${t._id}', true)" style="cursor: pointer;">
-                                <span class="badge bg-warning text-dark mb-2">${t.destination || 'Travel Tour'}</span>
-                                <h5 class="fw-bold text-dark">${t.title}</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-warning text-dark">${t.destination || 'Travel Tour'}</span>
+                                    <span class="text-muted small fw-semibold">${days}D / ${nights}N</span>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-2">${t.title}</h5>
                             </div>
-                            <div class="pt-3 border-top">
+                            <div class="pt-3 border-top mt-auto">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="fw-bold fs-5 text-primary">₹${Number(price).toLocaleString('en-IN')}</span>
+                                    <span class="text-muted small">Per Person</span>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-brand btn-sm flex-grow-1 py-2" onclick="handleAddToCartClick(event, '${t._id}', true)"><i class="fa-solid fa-bag-shopping me-1"></i> Add to Bag</button>
-                                    <button type="button" onclick="openItemDetailsPage('${t._id}', true)" class="btn-action-icon" style="width: 38px; height: 38px;"><i class="fa-solid fa-eye"></i></button>
-                                    <button type="button" onclick="handleWishlistClick(event, '${t._id}', true)" class="btn-action-icon ${isWish ? 'wishlist-active' : ''}" style="width: 38px; height: 38px;"><i class="${isWish ? 'fa-solid' : 'fa-regular'} fa-heart"></i></button>
+                                    <button type="button" class="btn btn-brand btn-sm flex-grow-1 py-2" onclick="handleAddToCartClick(event, '${t._id}', true)">
+                                        <i class="fa-solid fa-bag-shopping me-1"></i> Add to Bag
+                                    </button>
+                                    <button type="button" onclick="openItemDetailsPage('${t._id}', true)" class="btn-action-icon" style="width: 38px; height: 38px;" title="View Details">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    <button type="button" onclick="handleWishlistClick(event, '${t._id}', true)" class="btn-action-icon ${isWish ? 'wishlist-active' : ''}" style="width: 38px; height: 38px;" title="Add to Wishlist">
+                                        <i class="${isWish ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1533,9 +1614,20 @@
             `;
         }
 
-        // ========================================================
-        // LIVE DYNAMIC DISCOUNT PRICING HELPER
-        // ========================================================
+        function renderTravelGrid(list) {
+            const grid = document.getElementById('travelGrid');
+            if (!grid) return;
+            if (!list || list.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-plane-slash fs-2 mb-2 d-block text-secondary opacity-50"></i><p class="small fw-semibold mb-0">No travel packages found matching criteria.</p></div>';
+                return;
+            }
+            grid.innerHTML = list.map(t => createTravelCardHTML(t)).join('');
+        }
+
+        window.createTravelCardHTML = createTravelCardHTML;
+        window.renderTravelGrid = renderTravelGrid;
+
+        // 4. LIVE DYNAMIC DISCOUNT PRICING HELPER
         function applyDiscountPriceDisplay(finalPrice, originalMrp) {
             const priceEl = document.getElementById('pageDetailPrice');
             const origBox = document.getElementById('pageDetailOriginalPriceBox');
@@ -1567,9 +1659,7 @@
             }
         }
 
-        // ========================================================
-        // TWO-WAY LINKED DYNAMIC VARIANT MATRIX ENGINE (RAM <-> COLOR <-> PRICE)
-        // ========================================================
+        // 5. TWO-WAY LINKED DYNAMIC VARIANT MATRIX ENGINE (RAM <-> COLOR <-> PRICE)
         function renderCategoryVariantsDynamic(item, isTravel = false) {
             currentSelectedProductForPricing = item;
             currentVariantSelectionMap = {};
@@ -1787,95 +1877,67 @@
         }
 
         // PRICE CALCULATOR WITH DYNAMIC DISCOUNT SHOWING
-        function applyDiscountPriceDisplay(finalPrice, originalMrp) {
-    const priceEl = document.getElementById('pageDetailPrice');
-    const origBox = document.getElementById('pageDetailOriginalPriceBox');
-    const origPriceEl = document.getElementById('pageDetailOriginalPrice');
-    const discountBadge = document.getElementById('pageDetailDiscountPercent');
-    const savingsText = document.getElementById('pageDetailSavingsText');
+        function updateDynamicPriceFromVariants(item) {
+            if (!item) return;
+            let parsed = item.variants;
+            if (typeof parsed === 'string' && parsed.trim() !== '') {
+                try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+            }
+            const configs = Array.isArray(parsed) ? parsed : (parsed?.configurations || []);
 
-    if (!priceEl) return;
+            const productBasePrice = Number(item.price || item.basePrice || 0);
+            const productBaseDiscount = (item.discountPrice !== null && item.discountPrice !== undefined && item.discountPrice !== '') 
+                ? Number(item.discountPrice) 
+                : null;
 
-    finalPrice = Number(finalPrice) || 0;
-    originalMrp = Number(originalMrp) || 0;
+            if (!configs || configs.length === 0) {
+                const finalSelling = (productBaseDiscount && productBaseDiscount < productBasePrice) ? productBaseDiscount : productBasePrice;
+                const originalMrp = (productBaseDiscount && productBaseDiscount < productBasePrice) ? productBasePrice : 0;
+                applyDiscountPriceDisplay(finalSelling, originalMrp);
+                return;
+            }
 
-    priceEl.innerText = `₹${finalPrice.toLocaleString('en-IN')}`;
+            const selColor = String(currentVariantSelectionMap['color'] || '').trim().toLowerCase();
+            const selConfig = String(currentVariantSelectionMap['config'] || '').trim().toLowerCase();
+            const selStorage = String(currentVariantSelectionMap['storage'] || '').trim().toLowerCase();
+            const selSize = String(currentVariantSelectionMap['size'] || '').trim().toLowerCase();
 
-    if (originalMrp > finalPrice) {
-        const diff = originalMrp - finalPrice;
-        const percent = Math.round((diff / originalMrp) * 100);
+            const matched = configs.find(c => {
+                let ok = true;
+                const cColor = String(c.color || c.colour || '').trim().toLowerCase();
+                const cSize = String(c.size || '').trim().toLowerCase();
+                const cComb = `${c.ram || ''} / ${c.storage || ''}`.trim().toLowerCase();
+                const cRom = String(c.storage || '').trim().toLowerCase();
 
-        if (origBox) origBox.style.display = 'inline-flex';
-        if (origPriceEl) origPriceEl.innerText = `₹${originalMrp.toLocaleString('en-IN')}`;
-        if (discountBadge) discountBadge.innerText = `${percent}% OFF`;
-        if (savingsText) {
-            savingsText.innerText = `You Save ₹${diff.toLocaleString('en-IN')} (${percent}%)`;
-            savingsText.style.display = 'inline-block';
+                if (selColor && cColor && cColor !== selColor) ok = false;
+                if (selSize && cSize && cSize !== selSize) ok = false;
+                if (selConfig && cComb && cComb !== selConfig) ok = false;
+                if (selStorage && !selConfig && cRom && cRom !== selStorage) ok = false;
+                return ok;
+            });
+
+            const resolvedConfig = matched || configs[0];
+
+            let finalSelling = productBasePrice;
+            let originalMrp = 0;
+
+            if (resolvedConfig) {
+                const varRegularPrice = Number(resolvedConfig.price) || productBasePrice;
+                const varDiscountPrice = (resolvedConfig.discountPrice !== undefined && resolvedConfig.discountPrice !== null && resolvedConfig.discountPrice !== '')
+                    ? Number(resolvedConfig.discountPrice)
+                    : null;
+
+                if (varDiscountPrice && varDiscountPrice < varRegularPrice) {
+                    finalSelling = varDiscountPrice;
+                    originalMrp = varRegularPrice;
+                } else if (varRegularPrice > 0) {
+                    finalSelling = varRegularPrice;
+                    originalMrp = 0;
+                }
+            }
+
+            applyDiscountPriceDisplay(finalSelling, originalMrp);
         }
-    } else {
-        if (origBox) origBox.style.display = 'none';
-        if (savingsText) savingsText.style.display = 'none';
-    }
-}
-
-function updateDynamicPriceFromVariants(item) {
-    if (!item) return;
-    let parsed = item.variants;
-    if (typeof parsed === 'string' && parsed.trim() !== '') {
-        try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
-    }
-    const configs = Array.isArray(parsed) ? parsed : (parsed?.configurations || []);
-
-    const productBasePrice = Number(item.price || item.basePrice || 0);
-    const productBaseDiscount = (item.discountPrice !== null && item.discountPrice !== undefined && item.discountPrice !== '') 
-        ? Number(item.discountPrice) 
-        : null;
-
-    if (!configs || configs.length === 0) {
-        const finalSelling = (productBaseDiscount && productBaseDiscount < productBasePrice) ? productBaseDiscount : productBasePrice;
-        const originalMrp = (productBaseDiscount && productBaseDiscount < productBasePrice) ? productBasePrice : 0;
-        applyDiscountPriceDisplay(finalSelling, originalMrp);
-        return;
-    }
-
-    const selColor = String(currentVariantSelectionMap['color'] || '').trim().toLowerCase();
-    const selConfig = String(currentVariantSelectionMap['config'] || '').trim().toLowerCase();
-    const selStorage = String(currentVariantSelectionMap['storage'] || '').trim().toLowerCase();
-
-    const matched = configs.find(c => {
-        let ok = true;
-        const cColor = String(c.color || c.colour || '').trim().toLowerCase();
-        const cComb = `${c.ram || ''} / ${c.storage || ''}`.trim().toLowerCase();
-        const cRom = String(c.storage || '').trim().toLowerCase();
-
-        if (selColor && cColor && cColor !== selColor) ok = false;
-        if (selConfig && cComb && cComb !== selConfig) ok = false;
-        if (selStorage && !selConfig && cRom && cRom !== selStorage) ok = false;
-        return ok;
-    });
-
-    const resolvedConfig = matched || configs[0];
-
-    let finalSelling = productBasePrice;
-    let originalMrp = 0;
-
-    if (resolvedConfig) {
-        const varRegularPrice = Number(resolvedConfig.price) || productBasePrice;
-        const varDiscountPrice = (resolvedConfig.discountPrice !== undefined && resolvedConfig.discountPrice !== null && resolvedConfig.discountPrice !== '')
-            ? Number(resolvedConfig.discountPrice)
-            : null;
-
-        if (varDiscountPrice && varDiscountPrice < varRegularPrice) {
-            finalSelling = varDiscountPrice;
-            originalMrp = varRegularPrice;
-        } else if (varRegularPrice > 0) {
-            finalSelling = varRegularPrice;
-            originalMrp = 0;
-        }
-    }
-
-    applyDiscountPriceDisplay(finalSelling, originalMrp);
-}
 
         function onTravelTierSelect(tierName, tierPrice) {
             currentVariantSelectionMap['tier'] = tierName;
@@ -2018,20 +2080,6 @@ function updateDynamicPriceFromVariants(item) {
             renderMediaView(index);
         }
 
-        function resolveMediaUrl(url) {
-            if (!url || typeof url !== 'string' || url.trim() === '') {
-                return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500';
-            }
-            const clean = url.trim();
-            if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('data:')) {
-                return clean;
-            }
-            if (clean.startsWith('/uploads/')) {
-                return `https://mj-digital-backend-3.onrender.com${clean}`;
-            }
-            return `https://mj-digital-backend-3.onrender.com/uploads/${clean}`;
-        }
-
         function renderMediaView(index) {
             const media = currentGalleryMedia[index] || currentGalleryMedia[0];
             const box = document.getElementById('pageDetailMediaBox');
@@ -2097,7 +2145,8 @@ function updateDynamicPriceFromVariants(item) {
 
             const title = item.title || item.name || 'Item';
             const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.discountPrice ? item.discountPrice : (item.price || item.basePrice || 95899));
-            const img = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300');
+            const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
+            const img = resolveMediaUrl(rawImg);
             const type = isTravel ? 'Travel' : 'Product';
 
             const existing = myCart.find(c => String(c.id) === String(id));
@@ -2138,7 +2187,8 @@ function updateDynamicPriceFromVariants(item) {
 
             const title = item.title || item.name || 'Item';
             const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.price || 0);
-            const img = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300');
+            const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
+            const img = resolveMediaUrl(rawImg);
             const type = isTravel ? 'Travel' : 'Product';
 
             const index = myWishlist.findIndex(w => String(w.id) === String(id));
@@ -2181,7 +2231,7 @@ function updateDynamicPriceFromVariants(item) {
                 <div class="col-md-4 col-sm-6">
                     <div class="card-custom p-3 text-center h-100 d-flex flex-column justify-content-between">
                         <div onclick="openItemDetailsPage('${item.id}', ${item.type === 'Travel'})" style="cursor: pointer;">
-                            <img src="${item.img}" class="img-fluid rounded-3 mb-3" style="height: 140px; object-fit: cover;" onerror="this.src='https://placehold.co/140'">
+                            <img src="${resolveMediaUrl(item.img)}" class="img-fluid rounded-3 mb-3" style="height: 140px; object-fit: cover;" onerror="this.src='https://placehold.co/140'">
                             <h6 class="fw-bold">${item.title}</h6>
                             <p class="text-primary fw-bold">₹${Number(item.price).toLocaleString('en-IN')}</p>
                         </div>
@@ -2343,7 +2393,7 @@ function updateDynamicPriceFromVariants(item) {
                 return `
                     <div class="d-flex align-items-center justify-content-between py-3 border-bottom flex-wrap gap-3">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="${item.img}" class="rounded-3 border" style="width: 65px; height: 65px; object-fit: cover;" onerror="this.src='https://placehold.co/65'">
+                            <img src="${resolveMediaUrl(item.img)}" class="rounded-3 border" style="width: 65px; height: 65px; object-fit: cover;" onerror="this.src='https://placehold.co/65'">
                             <div>
                                 <span class="badge ${isTravel ? 'bg-warning text-dark' : 'bg-primary-subtle text-primary'} text-uppercase mb-1" style="font-size: 10px;">
                                     ${isTravel ? 'Travel Tour' : 'Product'}
@@ -2535,65 +2585,72 @@ function updateDynamicPriceFromVariants(item) {
                     const orderRes = await fetch('https://mj-digital-backend-3.onrender.com/api/payment/create-order', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ amount: totalPayable })
+                        body: JSON.stringify({ amount: totalPayable, gateway: gateway })
                     });
 
                     const orderData = await orderRes.json();
 
                     if (!orderRes.ok || !orderData.success) {
-                        alert('Razorpay order initialize nahi ho saka.');
+                        alert('Payment order initialize nahi ho saka.');
                         resetButton();
                         return;
                     }
 
-                    const options = {
-                        key: "rzp_test_Tg1YAs4of4y3NB",
-                        amount: orderData.order.amount,
-                        currency: "INR",
-                        name: "M J DIGITAL",
-                        description: "Purchase Order",
-                        order_id: orderData.order.id,
-                        prefill: {
-                            name: name,
-                            email: "mjdigitalworlds@gmail.com",
-                            contact: phone
-                        },
-                        theme: { color: "#2563eb" },
-                        handler: async function (response) {
-                            try {
-                                const verifyRes = await fetch('https://mj-digital-backend-3.onrender.com/api/payment/verify', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(response)
-                                });
-                                const verifyData = await verifyRes.json();
+                    if (gateway === 'razorpay') {
+                        const options = {
+                            key: "rzp_test_Tg1YAs4of4y3NB",
+                            amount: orderData.order.amount,
+                            currency: "INR",
+                            name: "M J DIGITAL",
+                            description: "Purchase Order",
+                            order_id: orderData.order.id,
+                            prefill: {
+                                name: name,
+                                email: "mjdigitalworlds@gmail.com",
+                                contact: phone
+                            },
+                            theme: { color: "#2563eb" },
+                            handler: async function (response) {
+                                try {
+                                    const verifyRes = await fetch('https://mj-digital-backend-3.onrender.com/api/payment/verify', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(response)
+                                    });
+                                    const verifyData = await verifyRes.json();
 
-                                if (verifyData.success) {
-                                    const createdOrders = await saveSplitOrdersToDatabase('Paid', 'Processing', response.razorpay_payment_id);
-                                    triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
-                                    finishCheckout();
-                                } else {
-                                    alert('Payment verification failed.');
+                                    if (verifyData.success) {
+                                        const createdOrders = await saveSplitOrdersToDatabase('Paid', 'Processing', response.razorpay_payment_id);
+                                        triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
+                                        finishCheckout();
+                                    } else {
+                                        alert('Payment verification failed.');
+                                        resetButton();
+                                    }
+                                } catch (e) {
+                                    alert('Verification error: ' + e.message);
                                     resetButton();
                                 }
-                            } catch (e) {
-                                alert('Verification error: ' + e.message);
-                                resetButton();
+                            },
+                            modal: {
+                                ondismiss: function () {
+                                    resetButton();
+                                }
                             }
-                        },
-                        modal: {
-                            ondismiss: function () {
-                                resetButton();
-                            }
-                        }
-                    };
+                        };
 
-                    const rzp = new Razorpay(options);
-                    rzp.on('payment.failed', function (resp) {
-                        alert('Payment Fail: ' + resp.error.description);
-                        resetButton();
-                    });
-                    rzp.open();
+                        const rzp = new Razorpay(options);
+                        rzp.on('payment.failed', function (resp) {
+                            alert('Payment Fail: ' + resp.error.description);
+                            resetButton();
+                        });
+                        rzp.open();
+                    } else {
+                        // Standard flow for other integrated gateways
+                        const createdOrders = await saveSplitOrdersToDatabase('Paid', 'Processing', `${gateway.toUpperCase()}-${Date.now()}`);
+                        triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
+                        finishCheckout();
+                    }
                 }
             } catch (err) {
                 alert('Checkout error: ' + (err.message || 'Server connection fail'));
@@ -2642,10 +2699,6 @@ function updateDynamicPriceFromVariants(item) {
             }
 
             async function finishCheckout() {
-                const custPhone = (document.getElementById('fpCheckoutPhone')?.value || '').replace(/[^0-9]/g, '').slice(-10);
-                const custName = document.getElementById('fpCheckoutName')?.value || 'Valued Customer';
-                const totalAmount = document.getElementById('fpCheckoutTotalPayable')?.innerText || '₹0';
-
                 myCart = [];
                 updateCartBadge();
                 resetButton();
@@ -2778,7 +2831,7 @@ function updateDynamicPriceFromVariants(item) {
                         <div class="p-3 bg-white d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-3 border bg-white p-1 d-flex align-items-center justify-content-center" style="width: 72px; height: 72px; min-width: 72px;">
-                                    <img src="${o.rawItem?.imageUrl || (o.rawItem?.images && o.rawItem?.images[0]) || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300'}" 
+                                    <img src="${resolveMediaUrl(o.rawItem?.imageUrl || (o.rawItem?.images && o.rawItem?.images[0]) || '')}" 
                                          class="img-fluid rounded object-fit-contain" 
                                          style="max-height: 100%; max-width: 100%;" 
                                          onerror="this.src='https://placehold.co/70?text=Item'">
@@ -2823,7 +2876,7 @@ function updateDynamicPriceFromVariants(item) {
 
             document.getElementById('tabProdTitle').innerText = ord.title;
             document.getElementById('tabProdPrice').innerText = ord.price;
-            document.getElementById('tabProdImg').src = raw.imageUrl || (raw.images && raw.images[0]) || 'https://placehold.co/80';
+            document.getElementById('tabProdImg').src = resolveMediaUrl(raw.imageUrl || (raw.images && raw.images[0]) || '');
 
             document.getElementById('tabTrackBtn').onclick = () => {
                 openLiveTracking(ord.id);
@@ -2919,7 +2972,8 @@ function updateDynamicPriceFromVariants(item) {
                 ? (matchedItem.pricingTiers?.standard?.price || matchedItem.price || ord.rawAmount) 
                 : (matchedItem.discountPrice ? matchedItem.discountPrice : (matchedItem.price || ord.rawAmount));
 
-            const img = (matchedItem.images && matchedItem.images[0]) || matchedItem.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300';
+            const rawImg = (matchedItem.images && matchedItem.images[0]) || matchedItem.imageUrl || '';
+            const img = resolveMediaUrl(rawImg);
 
             const existingInCart = myCart.find(c => String(c.id) === String(matchedItem._id));
             if (existingInCart) {
