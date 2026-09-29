@@ -596,17 +596,6 @@ function collectVariantsMatrix() {
   };
 }
 
-  return {
-    variantOptions: {
-      colors: Array.from(options.colors),
-      ram: Array.from(options.ram),
-      storage: Array.from(options.storage),
-      sizes: Array.from(options.sizes)
-    },
-    configurations: configs
-  };
-}
-
 async function loadAdminProducts() {
   const tbody = document.getElementById('productsTableBody');
 
@@ -748,6 +737,7 @@ function openEditProductModal(id) {
     }
   }
 
+  // Variant Rows Population with Discount Price
   // Variant Rows Population with Discount Price
   const vCont = document.getElementById('variantRowsContainer');
   if (vCont) {
