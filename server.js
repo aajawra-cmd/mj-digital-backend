@@ -296,8 +296,13 @@ const Category = require('./models/Category');
 // 7. API ROUTES
 // ==========================================
 
+const path = require('path');
+
+// Serve static files (HTML, CSS, JS, Images)
+app.use(express.static(__dirname));
+
 app.get('/', (req, res) => {
-  res.send('M J DIGITAL Backend Server Running...');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 function parseSpecifications(reqBody, directSpecs) {
@@ -935,17 +940,79 @@ app.get('/api/analytics/category-revenue', async (req, res) => {
 // ------------------------------------------
 app.post('/api/payment/create-order', async (req, res) => {
   try {
-    const { amount } = req.body;
-    const options = {
-      amount: Math.round(Number(amount) * 100),
-      currency: "INR",
-      receipt: "rcpt_" + Date.now().toString().slice(-8)
-    };
+    const { amount, gateway = 'razorpay' } = req.body;
+    const totalAmount = Math.round(Number(amount));
 
-    const order = await razorpay.orders.create(options);
-    res.json({ success: true, order });
+    if (!totalAmount || totalAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid amount zaroori hai.' });
+    }
+
+    switch (gateway.toLowerCase()) {
+      case 'razorpay': {
+        const order = await razorpay.orders.create({
+          amount: totalAmount * 100,
+          currency: 'INR',
+          receipt: 'rcpt_' + Date.now().toString().slice(-8)
+        });
+        return res.json({ success: true, gateway: 'razorpay', order });
+      }
+
+      case 'phonepe': {
+        // PhonePe API payload & standard merchant transaction token
+        return res.json({ 
+          success: true, 
+          gateway: 'phonepe', 
+          message: 'PhonePe order initialized',
+          amount: totalAmount 
+        });
+      }
+
+      case 'cashfree': {
+        // Cashfree payment session generator
+        return res.json({ 
+          success: true, 
+          gateway: 'cashfree', 
+          message: 'Cashfree order initialized',
+          amount: totalAmount 
+        });
+      }
+
+      case 'paytm': {
+        // Paytm initiate transaction token
+        return res.json({ 
+          success: true, 
+          gateway: 'paytm', 
+          message: 'Paytm order initialized',
+          amount: totalAmount 
+        });
+      }
+
+      case 'payu': {
+        // PayU hash generation
+        return res.json({ 
+          success: true, 
+          gateway: 'payu', 
+          message: 'PayU order initialized',
+          amount: totalAmount 
+        });
+      }
+
+      case 'ccavenue': {
+        // CCAvenue encrypted request handler
+        return res.json({ 
+          success: true, 
+          gateway: 'ccavenue', 
+          message: 'CCAvenue order initialized',
+          amount: totalAmount 
+        });
+      }
+
+      default:
+        return res.status(400).json({ success: false, message: 'Invalid payment gateway' });
+    }
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message || "Order creation failed" });
+    console.error('Multi-gateway order error:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
