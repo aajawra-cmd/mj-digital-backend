@@ -1112,7 +1112,43 @@
     </div>
 
     <!-- JAVASCRIPT CONTROLLER -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">        async function initiateRazorpay() {
+            try {
+                if (typeof Razorpay === 'undefined') {
+                    alert('Razorpay SDK load nahi hua hai. Kripya page refresh karein.');
+                    return;
+                }
+                const options = {
+                    key: 'rzp_test_Tiiv1mnNiTvzwf',
+                    amount: 3499900,
+                    currency: 'INR',
+                    name: 'M J DIGITAL',
+                    description: 'Order Payment Test',
+                    image: 'https://mjdigital.co.in/favicon.ico',
+                    handler: function (response) {
+                        alert('Payment Successful! Payment ID: ' + response.razorpay_payment_id);
+                        window.location.reload();
+                    },
+                    prefill: {
+                        name: 'Mohsin J',
+                        email: 'support@mjdigital.co.in',
+                        contact: '8306669999'
+                    },
+                    theme: {
+                        color: '#0d6efd'
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (response) {
+                    alert('Payment Failed: ' + response.error.description);
+                });
+                rzp.open();
+            } catch (err) {
+                console.error(err);
+                alert('Razorpay open error: ' + err.message);
+            }
+        }
+</script>
     <script>
         let isLoggedIn = true;
         let pendingAction = '';
@@ -3285,10 +3321,83 @@
             toggleInlineAddressForm();
             if(e.target) e.target.reset();
         }
-    </script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+            async function initiateRazorpay() {
+            try {
+                if (typeof Razorpay === 'undefined') {
+                    alert('Razorpay SDK load nahi hua hai. Kripya page refresh karein.');
+                    return;
+                }
+                const options = {
+                    key: 'rzp_test_Tiiv1mnNiTvzwf',
+                    amount: 3499900,
+                    currency: 'INR',
+                    name: 'M J DIGITAL',
+                    description: 'Order Payment Test',
+                    image: 'https://mjdigital.co.in/favicon.ico',
+                    handler: function (response) {
+                        alert('Payment Successful! Payment ID: ' + response.razorpay_payment_id);
+                        window.location.reload();
+                    },
+                    prefill: {
+                        name: 'Mohsin J',
+                        email: 'support@mjdigital.co.in',
+                        contact: '8306669999'
+                    },
+                    theme: {
+                        color: '#0d6efd'
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (response) {
+                    alert('Payment Failed: ' + response.error.description);
+                });
+                rzp.open();
+            } catch (err) {
+                console.error(err);
+                alert('Razorpay open error: ' + err.message);
+            }
+        }
+</script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js">        async function initiateRazorpay() {
+            try {
+                if (typeof Razorpay === 'undefined') {
+                    alert('Razorpay SDK load nahi hua hai. Kripya page refresh karein.');
+                    return;
+                }
+                const options = {
+                    key: 'rzp_test_Tiiv1mnNiTvzwf',
+                    amount: 3499900,
+                    currency: 'INR',
+                    name: 'M J DIGITAL',
+                    description: 'Order Payment Test',
+                    image: 'https://mjdigital.co.in/favicon.ico',
+                    handler: function (response) {
+                        alert('Payment Successful! Payment ID: ' + response.razorpay_payment_id);
+                        window.location.reload();
+                    },
+                    prefill: {
+                        name: 'Mohsin J',
+                        email: 'support@mjdigital.co.in',
+                        contact: '8306669999'
+                    },
+                    theme: {
+                        color: '#0d6efd'
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (response) {
+                    alert('Payment Failed: ' + response.error.description);
+                });
+                rzp.open();
+            } catch (err) {
+                console.error(err);
+                alert('Razorpay open error: ' + err.message);
+            }
+        }
+</script>
 </body>
 </html>
+
 
 
 
