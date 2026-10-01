@@ -3439,8 +3439,65 @@ window.openRazorpayModal = function() {
 window.initiateRazorpay = window.openRazorpayModal;
 window.initiatePayment = window.openRazorpayModal;
 </script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    function launchRazorpayDirect(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+        }
+        
+        var selectedPg = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'razorpay';
+        if (selectedPg !== 'razorpay' && !selectedPg.toLowerCase().includes('razor')) {
+            return; // Agar COD ya PhonePe select ho toh default form chalne do
+        }
+
+        if (typeof Razorpay === 'undefined') {
+            alert("Razorpay script connect ho rahi hai. 2 second me dubara dabayein.");
+            return false;
+        }
+
+        var options = {
+            "key": "rzp_test_Tiiv1mnNiTvzwf",
+            "amount": 3499900,
+            "currency": "INR",
+            "name": "M J DIGITAL",
+            "description": "Order Payment Test",
+            "image": "https://mjdigital.co.in/favicon.ico",
+            "handler": function (response) {
+                alert("Payment Success! Payment ID: " + response.razorpay_payment_id);
+                window.location.reload();
+            },
+            "prefill": {
+                "name": document.getElementById('custName')?.value || "Mohsin J",
+                "email": "support@mjdigital.co.in",
+                "contact": document.getElementById('custPhone')?.value || "8306669999"
+            },
+            "theme": {
+                "color": "#0d6efd"
+            }
+        };
+
+        var rzp = new Razorpay(options);
+        rzp.on('payment.failed', function (resp){
+            alert("Payment Failed: " + resp.error.description);
+        });
+        rzp.open();
+        return false;
+    }
+
+    var btn = document.getElementById('fpCheckoutSubmitBtn');
+    if (btn) {
+        btn.addEventListener('click', launchRazorpayDirect, true);
+    }
+    window.launchRazorpayDirect = launchRazorpayDirect;
+});
+</script>
 </body>
 </html>
+
 
 
 
