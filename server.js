@@ -88,8 +88,8 @@ mongoose.connect(dbUri)
 // 4. RAZORPAY CONFIGURATION
 // ==========================================
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Tg1YAs4of4y3NB',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'w9u03i0k8H8K14xX22O44WzZ'
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Tiiv1mnNiTvzwf',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'Xa3O6Mg52yNV3tV1p0oIooLy'
 });
 
 // ==========================================
