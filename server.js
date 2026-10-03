@@ -1,25 +1,49 @@
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const mongoose = require('mongoose');
 const cors = require('cors');
-app.use(express.static(__dirname));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-const fs = require('fs');
 const axios = require('axios');
 const multer = require('multer');
-require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+require('dotenv').config();
+
 const Order = require('./models/Order');
+const TravelPackage = require('./models/TravelPackage');
+const Category = require('./models/Category');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'MJ_DIGITAL_SECRET_KEY_2026';
 
 const app = express();
+
+// ==========================================
+// 1. MIDDLEWARES & STATIC FOLDERS
+// ==========================================
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Serve frontend static files
+app.use(express.static(__dirname));
+
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadDir));
+
+// Root route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // ==========================================
 // JWT AUTH GUARD FOR SENSITIVE ADMIN ACTIONS
@@ -42,24 +66,6 @@ function verifyAdminToken(req, res, next) {
 }
 
 // ==========================================
-// 1. MIDDLEWARES & STATIC FOLDERS
-// ==========================================
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-app.use('/uploads', express.static(uploadDir));
-
-// ==========================================
 // 2. MULTER FILE UPLOAD (IMAGES & VIDEOS)
 // ==========================================
 const storage = multer.diskStorage({
@@ -72,7 +78,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 } // Support video files up to 50MB
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 // ==========================================
@@ -88,8 +94,8 @@ mongoose.connect(dbUri)
 // 4. RAZORPAY CONFIGURATION
 // ==========================================
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Tiiv1mnNiTvzwf',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'Xa3O6Mg52yNV3tV1p0oIooLy'
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_Til0j1tJ311hhr',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || '9Z7le5LAHrspqEcvD3m4AL0U'
 });
 
 // ==========================================
@@ -291,24 +297,10 @@ const productSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const Product = mongoose.models.Product || mongoose.model('Product', productSchema);
-const Item = Product;
-
-const TravelPackage = require('./models/TravelPackage');
-const Category = require('./models/Category');
 
 // ==========================================
 // 7. API ROUTES
 // ==========================================
-
-const path = require('path');
-
-// Serve static files (HTML, CSS, JS, Images)
-app.use(express.static(__dirname));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
 function parseSpecifications(reqBody, directSpecs) {
   if (directSpecs) {
     if (Array.isArray(directSpecs)) {
@@ -330,7 +322,7 @@ function parseSpecifications(reqBody, directSpecs) {
   const keys = Object.keys(reqBody || {});
   const indexedMap = {};
   keys.forEach(k => {
-    const match = k.match(/\[(\d+)\]\[(key|value|name|val)\]/i);
+    const match = k.match(/\[(\d+)\]\[(key\vert{}value\vert{}name\vert{}val)\]/i);
     if (match) {
       const idx = match[1];
       const field = match[2].toLowerCase();
@@ -453,7 +445,6 @@ app.put(['/api/products/:id', '/api/items/:id'], verifyAdminToken, upload.any(),
     if (body.category) updateFields.category = String(body.category).trim();
     if (body.price !== undefined && body.price !== '') updateFields.price = Number(body.price);
 
-    // FIXED: Strict Discount Price parsing
     if (body.discountPrice !== undefined) {
       updateFields.discountPrice = (body.discountPrice !== '' && body.discountPrice !== null) 
         ? Number(body.discountPrice) 
@@ -473,7 +464,6 @@ app.put(['/api/products/:id', '/api/items/:id'], verifyAdminToken, upload.any(),
     }
     if (body.type) updateFields.type = body.type;
 
-    // FIXED: Specifications & Variants JSON parsing
     const parsedSpecs = parseSpecifications(body, body.specifications || body.specs);
     if (parsedSpecs.length > 0 || body.specifications !== undefined) {
       updateFields.specifications = parsedSpecs;
@@ -498,7 +488,7 @@ app.put(['/api/products/:id', '/api/items/:id'], verifyAdminToken, upload.any(),
     let finalUpdateQuery = { $set: cleanUpdateSet };
 
     if (newlyUploadedFiles.length > 0) {
-      finalUpdateQuery.$push = { images: { $each: newlyUploadedFiles } };
+      finalUpdateQuery.$push = { images: {$each: newlyUploadedFiles } };
     }
 
     const updated = await Product.findByIdAndUpdate(
@@ -530,9 +520,7 @@ app.patch(['/api/products/:id', '/api/items/:id', '/api/products/:id/quick-updat
         updateFields.status = Number(stock) > 0 ? 'Active' : 'Out of Stock';
       }
     }
-    if (status !== undefined) {
-      updateFields.status = status;
-    }
+    if (status !== undefined) updateFields.status = status;
 
     const updated = await Product.findByIdAndUpdate(
       req.params.id,
@@ -737,43 +725,7 @@ app.put('/api/travel-packages/:id', verifyAdminToken, async (req, res) => {
 });
 
 // ------------------------------------------
-// TRAVEL CUSTOM QUOTE / CALLBACK INQUIRY API
-// ------------------------------------------
-app.post('/api/travel-inquiry', async (req, res) => {
-  try {
-    const { name, phone, email, packageTitle, travelDate, travelers, notes } = req.body;
-
-    const botToken = process.env.TELEGRAM_BOT_TOKEN || '8963399353:AAGHMCxboeojbwSH6E4Hze61N3_gcNVHaY0';
-    const chatId = process.env.TELEGRAM_CHAT_ID || '8612147860';
-
-    const leadMessage = `✈️ *NEW TRAVEL INQUIRY / CUSTOM QUOTE*
-━━━━━━━━━━━━━━━━━━
-👤 *Lead Name:* ${name || 'Prospective Traveler'}
-📞 *Phone:* ${phone || 'N/A'}
-📧 *Email:* ${email || 'N/A'}
-🏝️ *Package:* ${packageTitle || 'Custom Destination'}
-📅 *Travel Date:* ${travelDate || 'Not specified'}
-👥 *Travelers:* ${travelers || 1}
-📝 *Notes:* ${notes || 'None'}
-━━━━━━━━━━━━━━━━━━
-📍 *Location:* Danilimda Desk / Online Portal`;
-
-    if (botToken && chatId) {
-      await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        chat_id: chatId,
-        text: leadMessage,
-        parse_mode: 'Markdown'
-      });
-    }
-
-    res.status(200).json({ success: true, message: 'Inquiry received! Travel desk will contact you soon.' });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ------------------------------------------
-// ORDERS & BOOKINGS ROUTES (WITH AUTO-EMAIL & STOCK DEDUCTION)
+// ORDERS & BOOKINGS ROUTES
 // ------------------------------------------
 app.post('/api/orders', async (req, res) => {
   try {
@@ -801,7 +753,6 @@ app.post('/api/orders', async (req, res) => {
 
     const saved = await newOrder.save();
     
-    // Instant Telegram Alert
     sendTelegramOrderNotification(saved).catch(() => {});
 
     // Inventory Stock Auto-Deduction
@@ -839,15 +790,10 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// GET ALL ORDERS
 app.get('/api/orders', async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
-    res.json({
-      success: true,
-      data: orders,
-      orders: orders
-    });
+    res.json({ success: true, data: orders, orders });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -893,56 +839,11 @@ app.put('/api/orders/:id', verifyAdminToken, handleOrderStatusUpdate);
 app.patch('/api/orders/:id', verifyAdminToken, handleOrderStatusUpdate);
 app.put('/api/orders/:id/status', verifyAdminToken, handleOrderStatusUpdate);
 app.patch('/api/orders/:id/status', verifyAdminToken, handleOrderStatusUpdate);
-app.put('/api/order/:id', verifyAdminToken, handleOrderStatusUpdate);
-app.patch('/api/order/:id', verifyAdminToken, handleOrderStatusUpdate);
-
-// GET CATEGORY-WISE REVENUE ANALYTICS
-app.get('/api/analytics/category-revenue', async (req, res) => {
-  try {
-    const orders = await Order.find();
-    
-    const categoryTotals = {
-      'Mobile & Electronics': 0,
-      'Fashion & Apparel': 0,
-      'Tours & Travels': 0,
-      'Digital & IT Services': 0
-    };
-
-    orders.forEach(order => {
-      const items = Array.isArray(order.items) && order.items.length > 0 
-        ? order.items 
-        : (order.itemDetails ? [order.itemDetails] : []);
-
-      items.forEach(item => {
-        const text = ((item.title || '') + ' ' + (item.category || '')).toLowerCase();
-        const itemAmount = Number(item.price || 0) * Number(item.quantity || item.qty || 1);
-
-        if (text.includes('travel') || text.includes('tour') || text.includes('package')) {
-          categoryTotals['Tours & Travels'] += itemAmount;
-        } else if (text.includes('fashion') || text.includes('shirt') || text.includes('cloth') || text.includes('dress')) {
-          categoryTotals['Fashion & Apparel'] += itemAmount;
-        } else if (text.includes('service') || text.includes('digital') || text.includes('it')) {
-          categoryTotals['Digital & IT Services'] += itemAmount;
-        } else {
-          categoryTotals['Mobile & Electronics'] += itemAmount;
-        }
-      });
-    });
-
-    res.json({
-      success: true,
-      categories: Object.keys(categoryTotals),
-      totals: Object.values(categoryTotals)
-    });
-  } catch (err) {
-    res.status(500).json({ error: "Failed to aggregate category revenue" });
-  }
-});
 
 // ------------------------------------------
 // RAZORPAY PAYMENT GATEWAY ROUTES
 // ------------------------------------------
-app.post('/api/payment/create-order', async (req, res) => {
+app.post(['/api/create-order', '/api/payment/create-order'], async (req, res) => {
   try {
     const { amount, gateway = 'razorpay' } = req.body;
     const totalAmount = Math.round(Number(amount));
@@ -951,82 +852,38 @@ app.post('/api/payment/create-order', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Valid amount zaroori hai.' });
     }
 
-    switch (gateway.toLowerCase()) {
-      case 'razorpay': {
-        const order = await razorpay.orders.create({
-          amount: totalAmount * 100,
-          currency: 'INR',
-          receipt: 'rcpt_' + Date.now().toString().slice(-8)
-        });
-        return res.json({ success: true, gateway: 'razorpay', order });
-      }
-
-      case 'phonepe': {
-        // PhonePe API payload & standard merchant transaction token
-        return res.json({ 
-          success: true, 
-          gateway: 'phonepe', 
-          message: 'PhonePe order initialized',
-          amount: totalAmount 
-        });
-      }
-
-      case 'cashfree': {
-        // Cashfree payment session generator
-        return res.json({ 
-          success: true, 
-          gateway: 'cashfree', 
-          message: 'Cashfree order initialized',
-          amount: totalAmount 
-        });
-      }
-
-      case 'paytm': {
-        // Paytm initiate transaction token
-        return res.json({ 
-          success: true, 
-          gateway: 'paytm', 
-          message: 'Paytm order initialized',
-          amount: totalAmount 
-        });
-      }
-
-      case 'payu': {
-        // PayU hash generation
-        return res.json({ 
-          success: true, 
-          gateway: 'payu', 
-          message: 'PayU order initialized',
-          amount: totalAmount 
-        });
-      }
-
-      case 'ccavenue': {
-        // CCAvenue encrypted request handler
-        return res.json({ 
-          success: true, 
-          gateway: 'ccavenue', 
-          message: 'CCAvenue order initialized',
-          amount: totalAmount 
-        });
-      }
-
-      default:
-        return res.status(400).json({ success: false, message: 'Invalid payment gateway' });
+    if (gateway.toLowerCase() === 'razorpay') {
+      const order = await razorpay.orders.create({
+        amount: totalAmount * 100,
+        currency: 'INR',
+        receipt: 'rcpt_' + Date.now().toString().slice(-8)
+      });
+      return res.json({ success: true, gateway: 'razorpay', order_id: order.id, order });
     }
+
+    return res.json({
+      success: true,
+      gateway,
+      message: `${gateway} order initialized`,
+      amount: totalAmount
+    });
   } catch (err) {
-    console.error('Multi-gateway order error:', err);
+    console.error('Order creation error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-app.post('/api/payment/verify', async (req, res) => {
+app.post(['/api/verify-payment', '/api/payment/verify'], async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ success: false, message: "Missing required signature fields" });
+    }
+
     const signPayload = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || '9Z7le5LAHrspqEcvD3m4AL0U')
       .update(signPayload.toString())
       .digest('hex');
 
@@ -1040,188 +897,17 @@ app.post('/api/payment/verify', async (req, res) => {
   }
 });
 
-// ==========================================
-// CMS LEGAL POLICIES & FAQ API
-// ==========================================
-const cmsPolicySchema = new mongoose.Schema({
-  policyKey: { type: String, required: true, unique: true },
-  content: { type: String, required: true },
-  lastUpdated: { type: Date, default: Date.now }
-});
-
-const Policy = mongoose.models.Policy || mongoose.model('Policy', cmsPolicySchema);
-
-app.get('/api/cms/policies', async (req, res) => {
-  try {
-    const policies = await Policy.find();
-    res.json({ success: true, data: policies });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to fetch policies' });
-  }
-});
-
-app.put('/api/cms/policies/:key', verifyAdminToken, async (req, res) => {
-  try {
-    const { key } = req.params;
-    const { content } = req.body;
-
-    const updated = await Policy.findOneAndUpdate(
-      { policyKey: key },
-      { content, lastUpdated: new Date() },
-      { new: true, upsert: true }
-    );
-
-    res.json({ success: true, message: 'Policy saved successfully!', data: updated });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to save policy' });
-  }
-});
-
 // ------------------------------------------
-// CATEGORY ROUTES
+// SETTINGS & PLATFORM CONFIGURATION
 // ------------------------------------------
-app.get('/api/categories', async (req, res) => {
-  try {
-    const categories = await Category.find().populate('parent', 'name');
-    res.json({ success: true, data: categories });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-app.post('/api/categories', verifyAdminToken, async (req, res) => {
-  try {
-    const { name, type, parentId } = req.body;
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-
-    const category = new Category({
-      name,
-      slug,
-      type,
-      parent: parentId ? parentId : null
-    });
-
-    await category.save();
-    res.status(201).json({ success: true, message: 'Category added successfully!', data: category });
-  } catch (err) {
-    res.status(400).json({ success: false, message: err.message });
-  }
-});
-
-app.delete('/api/categories/:id', verifyAdminToken, async (req, res) => {
-  try {
-    const deleted = await Category.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ success: false, message: 'Category not found' });
-    res.json({ success: true, message: 'Category deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// ==========================================
-// SYSTEM & CONTENT: MEDIA, AUDIT & SETTINGS
-// ==========================================
-const mediaSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  url: { type: String, required: true },
-  size: { type: String, default: '1.0 MB' },
-  uploadedAt: { type: Date, default: Date.now }
-});
-const Media = mongoose.models.Media || mongoose.model('Media', mediaSchema);
-
-app.get('/api/media', async (req, res) => {
-  try {
-    const media = await Media.find().sort({ uploadedAt: -1 });
-    res.json({ success: true, data: media });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-app.post('/api/media', verifyAdminToken, upload.single('mediaFile'), async (req, res) => {
-  try {
-    let fileUrl = req.body.url;
-    let fileName = req.body.name || 'Uploaded Asset';
-    let fileSize = req.body.size || '1.0 MB';
-
-    if (req.file) {
-      fileUrl = `https://mj-digital-backend-3.onrender.com/uploads/${req.file.filename}`;
-      fileName = req.body.name || req.file.originalname;
-      fileSize = (req.file.size / (1024 * 1024)).toFixed(1) + ' MB';
-    }
-
-    if (!fileUrl) {
-      return res.status(400).json({ success: false, message: 'File or Image URL is required' });
-    }
-
-    const newMedia = new Media({ name: fileName, url: fileUrl, size: fileSize });
-    await newMedia.save();
-    res.status(201).json({ success: true, message: 'Media saved successfully!', data: newMedia });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-const auditLogSchema = new mongoose.Schema({
-  time: { type: String, default: () => new Date().toISOString().replace('T', ' ').substring(0, 19) },
-  admin: { type: String, default: 'M. J. Admin' },
-  role: { type: String, default: 'Super Admin' },
-  action: { type: String, default: 'UPDATE' },
-  description: { type: String, required: true },
-  ip: { type: String, default: '127.0.0.1' },
-  status: { type: String, default: 'Success' }
-});
-const AuditLog = mongoose.models.AuditLog || mongoose.model('AuditLog', auditLogSchema);
-
-app.get('/api/audit-logs', verifyAdminToken, async (req, res) => {
-  try {
-    const logs = await AuditLog.find().sort({ _id: -1 }).limit(100);
-    res.json({ success: true, data: logs });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-app.post('/api/audit-logs', verifyAdminToken, async (req, res) => {
-  try {
-    const log = new AuditLog(req.body);
-    await log.save();
-    res.status(201).json({ success: true, data: log });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-app.delete('/api/audit-logs', verifyAdminToken, async (req, res) => {
-  try {
-    await AuditLog.deleteMany({});
-    res.json({ success: true, message: 'All logs cleared' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
 const platformSettingsSchema = new mongoose.Schema({
   singletonKey: { type: String, default: 'MJ_MAIN_SETTINGS', unique: true },
   storeName: { type: String, default: 'M J DIGITAL' },
   email: { type: String, default: 'mjdigitalworlds@gmail.com' },
   phone: { type: String, default: '+91 830 666 9999' },
-  address: { type: String, default: '' },
-  currency: { type: String, default: 'INR' },
-  gateway: { type: String, default: 'razorpay' },
-  environment: { type: String, default: 'sandbox' },
-  paymentMethods: {
-    upi: { type: Boolean, default: true },
-    cards: { type: Boolean, default: true },
-    netbanking: { type: Boolean, default: true },
-    wallets: { type: Boolean, default: false },
-    rewards: { type: Boolean, default: false },
-    cod: { type: Boolean, default: true }
-  },
-  orderEmailNotification: { type: Boolean, default: true },
-  bookingSmsNotification: { type: Boolean, default: true },
-  maintenanceMode: { type: Boolean, default: false }
+  address: { type: String, default: '' }
 }, { timestamps: true, strict: false });
+
 const PlatformSetting = mongoose.models.PlatformSetting || mongoose.model('PlatformSetting', platformSettingsSchema);
 
 app.get('/api/settings', async (req, res) => {
@@ -1249,91 +935,10 @@ app.put('/api/settings', verifyAdminToken, async (req, res) => {
   }
 });
 
-// ------------------------------------------
-// ADMIN AUTHENTICATION
-// ------------------------------------------
-const SECURE_ADMIN_EMAIL = 'mjdigitalworlds@gmail.com';
-const SECURE_ADMIN_HASH = '$2a$10$wN8G84n6.tB4.P5mBv5z3eN1U3.Oa8lQYv5eT9jV4wWzQzKq9Jd6O'; 
-
-app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and password required' });
-    }
-
-    if (email.toLowerCase().trim() !== SECURE_ADMIN_EMAIL.toLowerCase()) {
-      return res.status(401).json({ success: false, message: 'Invalid Admin Email' });
-    }
-
-    const isMatch = (password === 'admin') || await bcrypt.compare(password, SECURE_ADMIN_HASH);
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid Password' });
-    }
-
-    const token = jwt.sign(
-      { role: 'superadmin', email: SECURE_ADMIN_EMAIL },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    res.json({ success: true, token, message: 'Login successful' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Server error during auth' });
-  }
-});
-
 // ==========================================
-// 8. SERVER LISTENER & KEEP-ALIVE PINGER
+// 8. SERVER LISTENER
 // ==========================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on port ${PORT}`);
-});
-
-// Render Server Sleep Prevention (Every 10 minutes)
-const KEEP_ALIVE_URL = 'https://mj-digital-backend-3.onrender.com/api/products';
-setInterval(async () => {
-  try {
-    const pingRes = await axios.get(KEEP_ALIVE_URL);
-    console.log(`[Keep-Alive] Self ping success - Status: ${pingRes.status} at ${new Date().toLocaleTimeString('en-IN')}`);
-  } catch (err) {
-    console.warn('[Keep-Alive] Ping notice:', err.message);
-  }
-}, 10 * 60 * 1000);
-
-app.get('/api/analytics/monthly-revenue', async (req, res) => {
-  try {
-    const orders = await Order.find({ status: { $ne: 'Cancelled' } });
-    const currentYear = new Date().getFullYear();
-
-    const monthlyEcom = new Array(12).fill(0);
-    const monthlyTravel = new Array(12).fill(0);
-
-    orders.forEach(o => {
-      const d = new Date(o.createdAt || Date.now());
-      if (d.getFullYear() === currentYear) {
-        const m = d.getMonth();
-        const amt = Number(o.totalAmount || 0);
-        const type = String(o.orderType || '').toLowerCase();
-
-        if (type.includes('travel')) {
-          monthlyTravel[m] += amt;
-        } else {
-          monthlyEcom[m] += amt;
-        }
-      }
-    });
-
-    res.json({
-      success: true,
-      data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        ecom: monthlyEcom,
-        travel: monthlyTravel
-      }
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
 });
