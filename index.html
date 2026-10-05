@@ -3426,7 +3426,12 @@ document.addEventListener("DOMContentLoaded", function() {
     } catch(err) {
         console.error("Order save error:", err);
     }
-        alert("Payment Success! Order Placed. ID: " + response.razorpay_payment_id);
+            alert("Payment Success! Order Placed. ID: " + response.razorpay_payment_id);
+    if (typeof triggerCustomerWhatsAppReceipt === "function") {
+        var custPhone = document.getElementById("fpCheckoutPhone")?.value || "8306669999";
+        var custName = document.getElementById("fpCheckoutName")?.value || "Mohsin J";
+        triggerCustomerWhatsAppReceipt(cartData ? [cartData] : [], custPhone, custName);
+    }
     if (typeof triggerCustomerWhatsAppReceipt === "function") {
         var custPhone = document.getElementById("fpCheckoutPhone")?.value || "8306669999";
         var custName = document.getElementById("fpCheckoutName")?.value || "Mohsin J";
@@ -3461,6 +3466,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 </body>
 </html>
+
 
 
 
