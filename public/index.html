@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-        <style>
+                <style>
         :root { 
             --primary: #2563eb;
             --accent: #06b6d4;
@@ -26,12 +26,10 @@
         body.modal-open { overflow: auto !important; padding-right: 0 !important; }
         .cursor-pointer { cursor: pointer !important; }
         .main-wrapper { flex: 1; }
-
-        /* NAVBAR & HEADER */
         .navbar-custom { 
-            background: rgba(15, 23, 42, 0.98); 
+            background: rgba(15, 23, 42, 0.95); 
             backdrop-filter: blur(12px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             padding: 10px 0 !important;
         }
         .navbar-nav { gap: 2px !important; }
@@ -40,6 +38,7 @@
             font-size: 13.5px !important;
             font-weight: 700 !important; 
             letter-spacing: 0.3px;
+            cursor: pointer; 
             white-space: nowrap !important;
             padding: 6px 10px !important;
             transition: all 0.2s ease;
@@ -47,11 +46,17 @@
         .navbar-nav .nav-link:hover, .navbar-nav .nav-link.active { 
             color: #38bdf8 !important; 
         }
-
         .header-search-wrap {
-            max-width: 240px;
-            min-width: 170px;
-            margin: 0 10px;
+            max-width: 220px !important;
+            min-width: 170px !important;
+            margin: 0 8px !important;
+        }
+        .header-search-wrap .form-control {
+            height: 38px;
+            font-size: 13px !important;
+        }
+        .header-search-wrap .input-group-text {
+            height: 38px;
         }
         .nav-action-icon {
             width: 42px;
@@ -59,16 +64,17 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
+            border-radius: 12px;
             background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #f8fafc !important;
+            font-size: 18px !important;
             position: relative;
             text-decoration: none !important;
-            transition: 0.2s;
+            transition: all 0.2s ease;
         }
         .nav-action-icon:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.18);
             color: #38bdf8 !important;
         }
         #profileNavBtn {
@@ -77,11 +83,16 @@
             font-size: 13px !important;
             font-weight: 700 !important;
             border-radius: 30px !important;
+            border: 1.5px solid #38bdf8 !important;
+            color: #38bdf8 !important;
         }
-
+        #profileNavBtn:hover {
+            background: #38bdf8 !important;
+            color: #0f172a !important;
+        }
         @media (max-width: 1200px) {
-            .navbar-nav .nav-link { font-size: 12px !important; padding: 5px 6px !important; }
-            .header-search-wrap { max-width: 180px; }
+            .navbar-nav .nav-link { font-size: 12px !important; padding: 4px 6px !important; }
+            .header-search-wrap { max-width: 170px !important; }
         }
         @media (max-width: 991.98px) {
             .navbar-collapse {
@@ -90,17 +101,18 @@
                 padding: 16px;
                 margin-top: 10px;
             }
-            .header-search-wrap { max-width: 100%; margin: 10px 0 !important; }
+            .header-search-wrap { max-width: 100% !important; margin: 10px 0 !important; }
         }
 
-        /* PAGE VIEWS */
         .page-view { display: none; }
-        .page-view.active { display: block !important; animation: fadeIn 0.3s ease-out; }
+        .page-view.active { 
+            display: block !important; 
+            animation: fadeIn 0.4s ease-out; 
+        }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         .hero-section {
             background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(37, 99, 235, 0.8)), url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
             border-radius: 24px;
@@ -113,7 +125,7 @@
             border-radius: 20px; 
             border: 1px solid #e2e8f0;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
         }
         .card-custom:hover { 
@@ -172,7 +184,6 @@
         .btn-action-icon:hover { background: #eff6ff; color: var(--primary); border-color: #bfdbfe; }
         .btn-action-icon.wishlist-active { background: #fee2e2; color: #ef4444; border-color: #fca5a5; }
 
-        /* UTILITY ICONS */
         .u-icon-box {
             font-size: 24px;
             width: 48px;
@@ -197,6 +208,7 @@
             background: #eff6ff;
             border-color: #3b82f6;
             transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
         }
 
         .profile-nav-btn {
@@ -228,7 +240,6 @@
         footer a { color: #93c5fd !important; text-decoration: none; }
         footer a:hover { color: #38bdf8 !important; }
         
-        /* Media & Gallery */
         .v-thumb-strip { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; flex-shrink: 0; }
         .v-thumb-item { width: 62px; height: 62px; border-radius: 10px; border: 2px solid #cbd5e1; overflow: hidden; cursor: pointer; background: #fff; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
         .v-thumb-item.active { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3); }
@@ -246,33 +257,15 @@
         .payment-radio-card input:checked + div strong { color: var(--primary); }
     </style>
 
-    <style id="unifiedMasterStyle">
-      /* NAVBAR & RESPONSIVE FIX */
-      .navbar-custom { background: rgba(15, 23, 42, 0.98) !important; padding: 10px 0 !important; }
-      .navbar-nav { gap: 2px !important; }
-      .navbar-nav .nav-link { 
-        font-size: 13.5px !important; 
-        font-weight: 700 !important; 
-        letter-spacing: 0.3px; 
-        color: #cbd5e1 !important; 
-        padding: 6px 10px !important; 
-        white-space: nowrap !important; 
-      }
-      .navbar-nav .nav-link:hover, .navbar-nav .nav-link.active { color: #38bdf8 !important; }
-      .header-search-wrap { max-width: 220px !important; min-width: 160px !important; margin: 0 8px !important; }
-      .nav-action-icon { width: 42px !important; height: 42px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.15) !important; color: #fff !important; text-decoration: none !important; position: relative !important; }
-      #profileNavBtn { white-space: nowrap !important; padding: 6px 16px !important; font-size: 13px !important; font-weight: 700 !important; border-radius: 30px !important; }
-      @media (max-width: 1200px) {
-        .navbar-nav .nav-link { font-size: 12px !important; padding: 4px 6px !important; }
-        .header-search-wrap { max-width: 170px !important; }
-      }
-      body.modal-open { overflow: auto !important; padding-right: 0 !important; }
-    </style>
 </head>
 <body>
 
     <!-- NAVBAR WITH FULL FLUID CONTAINER TO PREVENT RIGHT CUT -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    
+
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+
+
         <div class="container-fluid px-3 px-xl-4">
             <a class="navbar-brand fw-bold text-info fs-4 cursor-pointer me-3" onclick="navigateTo('page-home')">
                 <i class="fa-solid fa-cube text-primary me-2"></i>M J DIGITAL
@@ -297,7 +290,11 @@
                         <input type="text" id="globalLiveSearchInput" oninput="handleUniversalSearch(this.value)" placeholder="Search products..." class="form-control bg-dark text-white border-secondary" style="font-size: 12.5px;">
                         <button class="btn btn-outline-secondary btn-sm" type="button" onclick="clearUniversalSearch()" id="clearSearchBtn" style="display: none;">✕</button>
                     </div>
+
+
                 </div>
+
+
 
                 <div class="d-flex align-items-center gap-2">
                     <a href="javascript:void(0)" class="nav-action-icon" onclick="navigateTo('page-wishlist')" title="Wishlist">
@@ -314,14 +311,28 @@
                         <i class="fa-solid fa-user me-1"></i> Account
                     </button>
                 </div>
+
+
             </div>
+
+
         </div>
+
+
     </nav>
+
+
 
     <div class="main-wrapper container my-5">
 
         <!-- 1. HOME VIEW -->
-        <div id="page-home" class="page-view active">
+        
+
+
+
+<div id="page-home" class="page-view active">
+
+
             <div class="hero-section mb-5">
                 <div class="row align-items-center">
                     <div class="col-lg-8">
@@ -332,9 +343,17 @@
                             <button class="btn btn-brand btn-lg px-4" onclick="navigateTo('page-mobile')">Shop Mobiles</button>
                             <button class="btn btn-outline-light btn-lg px-4 rounded-pill" onclick="navigateTo('page-travels')">Explore Travels</button>
                         </div>
+
+
                     </div>
+
+
                 </div>
+
+
             </div>
+
+
 
             <!-- ⚡ UNIFIED 1-ROW UTILITY & WALLET STRIP -->
             <div id="utilityServicesSection" class="mb-5">
@@ -344,85 +363,201 @@
                             <div class="p-2.5 rounded-3 d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #bbf7d0;">
                                 <div class="d-flex align-items-center gap-2 cursor-pointer" onclick="openUtilityFullPage('wallet')">
                                     <div style="font-size: 26px;">👛</div>
+
+
                                     <div>
                                         <span class="text-muted d-block" style="font-size: 11px; font-weight: 600; text-transform: uppercase;">M J Wallet</span>
                                         <h5 class="mb-0 fw-bold text-success" id="homeStripWalletBalance" style="font-size: 1.25rem;">₹0.00</h5>
                                     </div>
+
+
                                 </div>
+
+
                                 <button type="button" onclick="openUtilityFullPage('wallet')" class="btn btn-success btn-sm rounded-pill px-3 fw-bold" style="font-size: 11px;">
                                     + Add Money
                                 </button>
                             </div>
+
+
                         </div>
+
+
 
                         <div class="col-lg-9 col-md-8">
                             <div class="d-flex align-items-center justify-content-between gap-2 overflow-auto py-1" style="scrollbar-width: thin;">
                                 <div onclick="openUtilityFullPage('mobile')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">📱</div><span class="u-text">Mobile</span>
+                                    <div class="u-icon-box">📱</div>
+
+<span class="u-text">Mobile</span>
                                 </div>
+
+
                                 <div onclick="openUtilityFullPage('dth')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">📺</div><span class="u-text">DTH</span>
+                                    <div class="u-icon-box">📺</div>
+
+<span class="u-text">DTH</span>
                                 </div>
+
+
                                 <div onclick="openUtilityFullPage('electricity')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">💡</div><span class="u-text">Electricity</span>
+                                    <div class="u-icon-box">💡</div>
+
+<span class="u-text">Electricity</span>
                                 </div>
+
+
                                 <div onclick="openUtilityFullPage('fastag')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">🚗</div><span class="u-text">FASTag</span>
+                                    <div class="u-icon-box">🚗</div>
+
+<span class="u-text">FASTag</span>
                                 </div>
+
+
                                 <div onclick="openUtilityFullPage('gas')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">⛽</div><span class="u-text">Gas</span>
+                                    <div class="u-icon-box">⛽</div>
+
+<span class="u-text">Gas</span>
                                 </div>
+
+
                                 <div onclick="openUtilityFullPage('broadband')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">🌐</div><span class="u-text">Broadband</span>
+                                    <div class="u-icon-box">🌐</div>
+
+<span class="u-text">Broadband</span>
                                 </div>
+
+
                                 <div onclick="openUtilityFullPage('water')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">💧</div><span class="u-text">Water</span>
+                                    <div class="u-icon-box">💧</div>
+
+<span class="u-text">Water</span>
                                 </div>
+
+
                                 <div onclick="openUtilityFullPage('insurance')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">🏥</div><span class="u-text">Insurance</span>
+                                    <div class="u-icon-box">🏥</div>
+
+<span class="u-text">Insurance</span>
                                 </div>
+
+
                                 <div onclick="openUtilityFullPage('credit_card')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">💳</div><span class="u-text">Credit Card</span>
+                                    <div class="u-icon-box">💳</div>
+
+<span class="u-text">Credit Card</span>
                                 </div>
+
+
                                 <div onclick="openUtilityFullPage('loan')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">🏦</div><span class="u-text">Loan EMI</span>
+                                    <div class="u-icon-box">🏦</div>
+
+<span class="u-text">Loan EMI</span>
                                 </div>
+
+
                             </div>
+
+
                         </div>
+
+
                     </div>
+
+
                 </div>
+
+
             </div>
+
+
 
             <h4 class="fw-bold mb-4"><i class="fa-solid fa-grid-2 text-primary me-2"></i>Popular Categories</h4>
             <div class="row g-3 mb-5">
-                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-mobile')"><div class="category-chip"><i class="fa-solid fa-mobile-screen text-success fs-1 mb-2"></i><div class="fw-bold">Mobiles</div></div></div>
-                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-travels')"><div class="category-chip"><i class="fa-solid fa-plane-departure text-primary fs-1 mb-2"></i><div class="fw-bold">Travels</div></div></div>
-                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-electronics')"><div class="category-chip"><i class="fa-solid fa-laptop text-info fs-1 mb-2"></i><div class="fw-bold">Electronics</div></div></div>
-                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-fashion')"><div class="category-chip"><i class="fa-solid fa-shirt text-warning fs-1 mb-2"></i><div class="fw-bold">Fashion</div></div></div>
-                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-services')"><div class="category-chip"><i class="fa-solid fa-screwdriver-wrench text-danger fs-1 mb-2"></i><div class="fw-bold">Services</div></div></div>
-                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-cart')"><div class="category-chip"><i class="fa-solid fa-bag-shopping text-secondary fs-1 mb-2"></i><div class="fw-bold">My Bag</div></div></div>
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-mobile')"><div class="category-chip"><i class="fa-solid fa-mobile-screen text-success fs-1 mb-2"></i><div class="fw-bold">Mobiles</div>
+
+</div>
+
+</div>
+
+
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-travels')"><div class="category-chip"><i class="fa-solid fa-plane-departure text-primary fs-1 mb-2"></i><div class="fw-bold">Travels</div>
+
+</div>
+
+</div>
+
+
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-electronics')"><div class="category-chip"><i class="fa-solid fa-laptop text-info fs-1 mb-2"></i><div class="fw-bold">Electronics</div>
+
+</div>
+
+</div>
+
+
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-fashion')"><div class="category-chip"><i class="fa-solid fa-shirt text-warning fs-1 mb-2"></i><div class="fw-bold">Fashion</div>
+
+</div>
+
+</div>
+
+
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-services')"><div class="category-chip"><i class="fa-solid fa-screwdriver-wrench text-danger fs-1 mb-2"></i><div class="fw-bold">Services</div>
+
+</div>
+
+</div>
+
+
+                <div class="col-6 col-md-4 col-lg-2" onclick="navigateTo('page-cart')"><div class="category-chip"><i class="fa-solid fa-bag-shopping text-secondary fs-1 mb-2"></i><div class="fw-bold">My Bag</div>
+
+</div>
+
+</div>
+
+
             </div>
+
+
 
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="fw-bold mb-0"><i class="fa-solid fa-fire text-danger me-2"></i>Trending Deals</h4>
                 <a class="text-primary fw-bold text-decoration-none cursor-pointer" onclick="navigateTo('page-all-catalog')">View All &rarr;</a>
             </div>
+
+
             <div class="row g-4 mb-5" id="homeTrendingGrid">
                 <div class="col-12 text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading live catalog...</div>
+
+
             </div>
+
+
         </div>
 
+
+
         <!-- DEDICATED FULL-PAGE UTILITY & BBPS BILL PAYMENT HUB -->
-        <div id="page-utility-hub" class="page-view">
+        
+
+
+
+<div id="page-utility-hub" class="page-view">
+
+
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                 <div>
                     <h3 class="fw-bold mb-1 text-dark"><i class="fa-solid fa-bolt text-warning me-2"></i>MJ PAY — Utility Hub & BBPS</h3>
                     <p class="text-muted small mb-0">Instant mobile recharges, utility bill payments & internal wallet ledger</p>
                 </div>
+
+
                 <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="navigateTo('page-home')">
                     &larr; Back to Home Store
                 </button>
             </div>
+
+
 
             <div class="row g-4">
                 <div class="col-lg-5">
@@ -437,10 +572,14 @@
                             <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('water', this)">💧 Water</button>
                             <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('wallet', this)">👛 Wallet Hub</button>
                         </div>
+
+
                         <hr class="my-3">
 
                         <form id="fullPageUtilityForm" onsubmit="handleFullPageUtilitySubmit(event)">
                             <div id="fullPageDynamicFields"></div>
+
+
                             <div class="card p-3 bg-light rounded-3 border my-3">
                                 <label class="small fw-bold text-dark d-block mb-2">Payment Source:</label>
                                 <div class="form-check mb-2">
@@ -450,37 +589,55 @@
                                         <span class="text-success fw-bold" id="fpFormWalletBalText">Bal: ₹0.00</span>
                                     </label>
                                 </div>
+
+
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="fpPaySource" id="fpPayGatewayRadio" value="gateway">
                                     <label class="form-check-label small fw-semibold" for="fpPayGatewayRadio">
                                         <span>⚡ Pay via UPI / Cards / NetBanking (Razorpay)</span>
                                     </label>
                                 </div>
+
+
                             </div>
+
+
                             <button type="submit" id="fpUtilityProceedBtn" class="btn btn-brand w-100 py-2.5 fw-bold shadow-sm">
                                 Proceed to Payment
                             </button>
                         </form>
                     </div>
 
+
+
                     <div class="card-custom p-4 bg-light-subtle">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-wallet text-success me-2"></i>M J Wallet Top-up</h6>
                             <span class="badge bg-success-subtle text-success fs-6 fw-bold" id="fpWalletWidgetBal">₹0.00</span>
                         </div>
+
+
                         <p class="text-muted small mb-3">Top-up instantly using UPI, Cards or Netbanking.</p>
                         <div class="input-group mb-2">
                             <span class="input-group-text bg-white">₹</span>
                             <input type="number" id="fpWalletTopupInput" class="form-control fw-bold" value="500" min="10">
                             <button class="btn btn-success fw-bold px-3" type="button" onclick="executeFullPageWalletTopup()">+ Add Money</button>
                         </div>
+
+
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary py-0.5 px-2" onclick="document.getElementById('fpWalletTopupInput').value='100'">+₹100</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary py-0.5 px-2" onclick="document.getElementById('fpWalletTopupInput').value='500'">+₹500</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary py-0.5 px-2" onclick="document.getElementById('fpWalletTopupInput').value='1000'">+₹1,000</button>
                         </div>
+
+
                     </div>
+
+
                 </div>
+
+
 
                 <div class="col-lg-7">
                     <div class="card-custom p-4 h-100">
@@ -488,19 +645,39 @@
                             <h5 class="fw-bold mb-0 text-dark" id="fpRightPanelTitle">Browse Operator Plans & Offers</h5>
                             <span class="badge bg-primary-subtle text-primary" id="fpActiveServiceBadge">JIO PREPAID</span>
                         </div>
+
+
                         <div id="fpRightDynamicContent"></div>
+
+
                     </div>
+
+
                 </div>
+
+
             </div>
+
+
         </div>
 
+
+
         <!-- 2. FULL VIEW ALL CATALOG -->
-        <div id="page-all-catalog" class="page-view">
+        
+
+
+
+<div id="page-all-catalog" class="page-view">
+
+
             <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                 <div>
                     <h3 class="fw-bold mb-1" id="catalogViewHeaderTitle"><i class="fa-solid fa-boxes-stacked text-primary me-2"></i>Store Catalog</h3>
                     <p class="text-muted small mb-0">Browse all trending mobile smartphones, electronics, fashion, and digital services</p>
                 </div>
+
+
                 <div class="d-flex align-items-center gap-2">
                     <select onchange="handleCatalogSortChange(this.value)" class="form-select form-select-sm border shadow-xs" style="width: 170px; font-size: 12px;">
                         <option value="default">Sort: Default</option>
@@ -509,13 +686,31 @@
                     </select>
                     <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="navigateTo('page-home')">&larr; Back to Home</button>
                 </div>
+
+
             </div>
+
+
             <div class="row g-4" id="allCatalogGrid"></div>
+
+
         </div>
 
+
+
         <!-- 3. FULL-PAGE ITEM DETAILS VIEW -->
-        <div id="page-item-details" class="page-view">
-            <nav aria-label="breadcrumb" class="mb-4">
+        
+
+
+
+<div id="page-item-details" class="page-view">
+
+
+            
+
+<nav aria-label="breadcrumb" class="mb-4">
+
+
                 <ol class="breadcrumb" id="dynamicBreadcrumbNav">
                     <li class="breadcrumb-item"><a href="javascript:void(0)" onclick="navigateTo('page-home')" class="text-decoration-none">Home</a></li>
                     <li class="breadcrumb-item"><a href="javascript:void(0)" id="detailsBreadcrumbCategoryLink" class="text-decoration-none fw-semibold text-primary">-</a></li>
@@ -523,20 +718,32 @@
                 </ol>
             </nav>
 
+
+
             <div class="card-custom p-4 p-lg-5 mb-5">
                 <div class="row g-4 align-items-start">
                     <div class="col-lg-5">
                         <div class="d-flex gap-3 align-items-start sticky-top" style="top: 90px;">
                             <div id="pageDetailThumbnails" class="v-thumb-strip"></div>
+
+
                             <div id="pageDetailMediaBox" class="media-main-box shadow-sm"></div>
+
+
                         </div>
+
+
                     </div>
+
+
 
                     <div class="col-lg-7">
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <span class="badge bg-primary text-uppercase px-3 py-2" id="pageDetailBadge">Product</span>
                             <span class="badge bg-success-subtle text-success fw-bold px-3 py-2"><i class="fa-solid fa-shield-check me-1"></i>Verified Guarantee</span>
                         </div>
+
+
                         <h1 class="fw-extrabold text-dark mb-2" id="pageDetailTitle">-</h1>
                         
                         <div class="bg-light p-3 rounded-3 border mb-3">
@@ -546,14 +753,24 @@
                                     <span class="text-muted text-decoration-line-through fs-5" id="pageDetailOriginalPrice">₹0</span>
                                     <span class="badge bg-danger text-white rounded-pill px-2.5 py-1.5 fw-bold" id="pageDetailDiscountPercent" style="font-size: 12px;">0% OFF</span>
                                 </div>
+
+
                             </div>
+
+
                             <div class="d-flex justify-content-between align-items-center mt-1">
                                 <span class="text-muted small fw-semibold" id="pageDetailUnit">M.R.P. Inclusive of all taxes</span>
                                 <span class="text-success small fw-bold" id="pageDetailSavingsText" style="display: none;">You Save ₹0</span>
                             </div>
+
+
                         </div>
 
+
+
                         <div id="pageDetailVariantsContainer" class="mb-4"></div>
+
+
 
                         <div class="d-flex flex-wrap gap-3 mb-4">
                             <button type="button" id="pageDetailBuyBtn" class="btn btn-brand px-4 py-3 fw-bold shadow-sm">
@@ -567,20 +784,42 @@
                             </button>
                         </div>
 
+
+
                         <div id="pageDetailSpecsContainer" class="my-4"></div>
+
+
                         <hr class="my-4">
 
                         <div>
                             <h5 class="fw-bold text-dark mb-2">About this item / Highlights</h5>
                             <div class="text-secondary leading-relaxed mb-4 small" id="pageDetailDesc" style="word-break: break-word;">Detailed overview.</div>
+
+
                         </div>
+
+
                     </div>
+
+
                 </div>
+
+
             </div>
+
+
         </div>
 
+
+
         <!-- 4. CONTACT US VIEW -->
-        <div id="page-contact" class="page-view">
+        
+
+
+
+<div id="page-contact" class="page-view">
+
+
             <div class="policy-card">
                 <h2>Contact Us</h2>
                 <p class="text-muted mb-4">Have questions about your order, travel packages, or services? Get in touch with us below.</p>
@@ -593,7 +832,11 @@
                             <h6 class="fw-bold text-muted mb-2"><i class="fa-solid fa-location-dot me-2 text-danger"></i>ADDRESS</h6>
                             <p class="mb-0 fw-semibold" id="live-contact-address">GF5, Imran Residency, Near Silver Duplex,<br>Chhipa Society, Danilimda, Ahmedabad,<br>Gujarat - 380028, India</p>
                         </div>
+
+
                     </div>
+
+
                     <div class="col-md-6">
                         <div class="contact-box">
                             <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-headset me-2"></i>GET IN TOUCH</h5>
@@ -601,24 +844,46 @@
                                 <h6 class="fw-bold text-muted mb-1"><i class="fa-solid fa-envelope me-2 text-primary"></i>EMAIL</h6>
                                 <p class="mb-0 fs-6"><a href="mailto:mjdigitalworlds@gmail.com" class="text-decoration-none fw-bold text-dark" id="live-contact-email">mjdigitalworlds@gmail.com</a></p>
                             </div>
+
+
                             <hr class="my-3">
                             <div>
                                 <h6 class="fw-bold text-muted mb-1"><i class="fa-solid fa-phone me-2 text-success"></i>MOBILE NUMBER</h6>
                                 <p class="mb-0 fs-5 fw-bold text-success" id="live-contact-phone">+91 830 666 9999</p>
                             </div>
+
+
                         </div>
+
+
                     </div>
+
+
                 </div>
+
+
             </div>
+
+
         </div>
 
+
+
         <!-- 5. TRAVELS VIEW -->
-        <div id="page-travels" class="page-view">
+        
+
+
+
+<div id="page-travels" class="page-view">
+
+
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
                     <h2 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-earth-americas text-primary me-2"></i>Explore Travel Destinations</h2>
                     <p class="text-muted small mb-0">Curated domestic & international tour packages</p>
                 </div>
+
+
                 <div class="d-flex align-items-center gap-2">
                     <input type="text" id="travelSearchInput" placeholder="Search destination..." oninput="filterTravelsBySearch(this.value)" class="form-control form-control-sm bg-white border" style="width: 200px; font-size: 12px;">
                     <select id="travelSortSelect" onchange="sortTravelPackages(this.value)" class="form-select form-select-sm border shadow-xs" style="width: 160px; font-size: 12px;">
@@ -627,80 +892,182 @@
                         <option value="high-low">Price: High to Low</option>
                     </select>
                 </div>
+
+
             </div>
+
+
             <div class="d-flex flex-wrap gap-2 mb-4 pb-2 border-bottom align-items-center">
                 <button class="travel-tab-btn active" id="btn-all-travel" onclick="filterTravels('All', this)">All Packages</button>
                 <button class="travel-tab-btn" id="btn-intl" onclick="filterTravels('International', this)">International</button>
                 <button class="travel-tab-btn" id="btn-india" onclick="filterTravels('India', this)">India Destinations</button>
                 <div class="vr mx-2 d-none d-md-block"></div>
+
+
                 <div id="travelDestinationChips" class="d-flex flex-wrap gap-2"></div>
+
+
             </div>
+
+
             <div class="row g-4" id="travelGrid"></div>
+
+
         </div>
 
+
+
         <!-- 6. CATEGORY VIEWS -->
-        <div id="page-mobile" class="page-view">
+        
+
+
+
+<div id="page-mobile" class="page-view">
+
+
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
                     <h3 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-mobile-screen text-success me-2"></i>Mobile Store</h3>
                     <p class="text-muted small mb-0">Flagship smartphones & premium brand devices</p>
                 </div>
+
+
             </div>
+
+
             <div id="mobileBrandChips" class="d-flex flex-wrap gap-2 mb-4 pb-2 border-bottom"></div>
+
+
             <div class="row g-4" id="mobileGrid"></div>
+
+
         </div>
 
-        <div id="page-electronics" class="page-view">
+
+
+        
+
+
+
+<div id="page-electronics" class="page-view">
+
+
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
                     <h3 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-laptop text-info me-2"></i>Electronics & Laptops</h3>
                     <p class="text-muted small mb-0">High-performance laptops, hardware & peripherals</p>
                 </div>
+
+
             </div>
+
+
             <div id="electronicsBrandChips" class="d-flex flex-wrap gap-2 mb-4 pb-2 border-bottom"></div>
+
+
             <div class="row g-4" id="electronicsProductsGrid"></div>
+
+
         </div>
 
-        <div id="page-fashion" class="page-view">
+
+
+        
+
+
+
+<div id="page-fashion" class="page-view">
+
+
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
                     <h3 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-shirt text-warning me-2"></i>Fashion Store</h3>
                     <p class="text-muted small mb-0">Curated trending apparel & luxury designer fashion</p>
                 </div>
+
+
             </div>
+
+
             <div id="fashionBrandChips" class="d-flex flex-wrap gap-2 mb-4 pb-2 border-bottom"></div>
+
+
             <div class="row g-4" id="fashionProductsGrid"></div>
+
+
         </div>
 
-        <div id="page-services" class="page-view">
+
+
+        
+
+
+
+<div id="page-services" class="page-view">
+
+
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
                     <h3 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-screwdriver-wrench text-danger me-2"></i>Digital & IT Services</h3>
                     <p class="text-muted small mb-0">Verified enterprise IT consultations & web development</p>
                 </div>
+
+
             </div>
+
+
             <div id="servicesBrandChips" class="d-flex flex-wrap gap-2 mb-4 pb-2 border-bottom"></div>
+
+
             <div class="row g-4" id="servicesProductsGrid"></div>
+
+
         </div>
+
+
 
         <!-- WISHLIST VIEW -->
-        <div id="page-wishlist" class="page-view">
+        
+
+
+
+<div id="page-wishlist" class="page-view">
+
+
             <h3 class="fw-bold mb-4"><i class="fa-solid fa-heart text-danger me-2"></i>My Wishlist</h3>
             <div id="wishlistProductsGrid" class="row g-4"></div>
+
+
         </div>
 
+
+
         <!-- SHOPPING BAG VIEW -->
-        <div id="page-cart" class="page-view">
+        
+
+
+
+<div id="page-cart" class="page-view">
+
+
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bold mb-0"><i class="fa-solid fa-bag-shopping text-primary me-2"></i>Shopping Bag</h3>
                 <span class="text-muted small" id="cartSummaryText">0 Items in cart</span>
             </div>
+
+
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="card-custom p-4">
                         <div id="cartItemsList"></div>
+
+
                     </div>
+
+
                 </div>
+
+
                 <div class="col-lg-4">
                     <div class="card-custom p-4">
                         <h5 class="fw-bold mb-3">Order Summary</h5>
@@ -708,27 +1075,49 @@
                             <span class="text-muted">Subtotal</span>
                             <span class="fw-bold" id="cartSubtotalText">₹0</span>
                         </div>
+
+
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">GST & Delivery</span>
                             <span class="text-success fw-bold">Included</span>
                         </div>
+
+
                         <hr>
                         <div class="d-flex justify-content-between fs-5 fw-bold text-primary mb-3">
                             <span>Total Payable</span>
                             <span id="cartTotalText">₹0</span>
                         </div>
+
+
                         <button class="btn btn-brand w-100 py-2" id="cartCheckoutBtn" onclick="checkoutFromCart()">Proceed to Checkout</button>
                     </div>
+
+
                 </div>
+
+
             </div>
+
+
         </div>
 
+
+
         <!-- DEDICATED FULL-PAGE CHECKOUT & PAYMENT -->
-        <div id="page-checkout" class="page-view">
+        
+
+
+
+<div id="page-checkout" class="page-view">
+
+
             <div class="d-flex align-items-center mb-4 gap-3">
                 <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="navigateTo('page-cart')">&larr; Back to Shopping Bag</button>
                 <h3 class="fw-bold mb-0"><i class="fa-solid fa-lock text-primary me-2"></i>Checkout & Payment</h3>
             </div>
+
+
 
             <form onsubmit="handleFullPageCheckoutSubmit(event)">
                 <div class="row g-4">
@@ -737,14 +1126,32 @@
                             <h5 class="fw-bold mb-3"><i class="fa-solid fa-user-check text-primary me-2"></i>Customer & Shipping Details</h5>
                             <div class="row g-3">
                                 <div class="col-md-6"><label class="small fw-bold mb-1">Full Name</label><input type="text" id="fpCheckoutName" class="form-control" value="Mohsin J" required></div>
+
+
                                 <div class="col-md-6"><label class="small fw-bold mb-1">Phone Number</label><input type="tel" id="fpCheckoutPhone" class="form-control" value="+91 830 666 9999" required></div>
+
+
                                 <div class="col-12"><label class="small fw-bold mb-1">Street Address</label><input type="text" id="fpCheckoutAddrText" class="form-control" value="GF5, Imran Residency, Danilimda" required></div>
+
+
                                 <div class="col-md-3"><label class="small fw-bold mb-1">City</label><input type="text" id="fpCheckoutCity" class="form-control" value="Ahmedabad" required></div>
+
+
                                 <div class="col-md-3"><label class="small fw-bold mb-1">Pincode</label><input type="text" id="fpCheckoutPincode" class="form-control" value="380028" required></div>
+
+
                                 <div class="col-md-3"><label class="small fw-bold mb-1">State</label><input type="text" id="fpCheckoutState" class="form-control" value="Gujarat" required></div>
+
+
                                 <div class="col-md-3"><label class="small fw-bold mb-1">Country</label><input type="text" id="fpCheckoutCountry" class="form-control" value="India" required></div>
+
+
                             </div>
+
+
                         </div>
+
+
 
                         <div class="card-custom p-4">
                             <h5 class="fw-bold mb-3"><i class="fa-solid fa-credit-card text-success me-2"></i>Select Payment Method</h5>
@@ -755,6 +1162,8 @@
                                         <strong class="d-block text-dark">Razorpay Secure Checkout</strong>
                                         <span class="small text-muted">UPI (GPay/PhonePe), Cards, Netbanking & Wallets</span>
                                     </div>
+
+
                                     <i class="fa-brands fa-cc-visa fs-3 text-primary ms-auto"></i>
                                 </label>
                                 <label class="border p-3 rounded-3 d-flex align-items-center gap-3 cursor-pointer">
@@ -763,29 +1172,59 @@
                                         <strong class="d-block text-dark">Cash on Delivery (COD) / Desk Pay</strong>
                                         <span class="small text-muted">Danilimda office desk / Cash pay</span>
                                     </div>
+
+
                                     <i class="fa-solid fa-money-bill-wave fs-4 text-success ms-auto"></i>
                                 </label>
                             </div>
+
+
                         </div>
+
+
                     </div>
+
+
 
                     <div class="col-lg-5">
                         <div class="card-custom p-4 sticky-top" style="top: 90px;">
                             <h5 class="fw-bold mb-3">Order Summary</h5>
                             <div id="fpCheckoutItemsSummary" class="border-bottom pb-3 mb-3 small max-h-200 overflow-auto"></div>
+
+
                             <div class="d-flex justify-content-between mb-2"><span class="text-muted">Subtotal</span><span class="fw-bold" id="fpCheckoutSubtotal">₹0</span></div>
+
+
                             <div class="d-flex justify-content-between mb-2"><span class="text-muted">GST & Delivery</span><span class="text-success fw-bold">Included</span></div>
+
+
                             <hr>
                             <div class="d-flex justify-content-between fs-4 fw-bold text-primary mb-4"><span>Total Payable</span><span id="fpCheckoutTotalPayable">₹0</span></div>
+
+
                             <button type="submit" id="fpCheckoutSubmitBtn" class="btn btn-brand w-100 py-3 fw-bold fs-6 shadow-sm">Complete Payment & Place Order</button>
                         </div>
+
+
                     </div>
+
+
                 </div>
+
+
             </form>
         </div>
 
+
+
         <!-- AUTHENTICATION -->
-        <div id="page-auth" class="page-view">
+        
+
+
+
+<div id="page-auth" class="page-view">
+
+
             <div class="auth-card card-custom p-4">
                 <ul class="nav nav-pills nav-justified mb-4">
                     <li class="nav-item"><button class="nav-link active fw-bold" id="tab-login" onclick="toggleAuthMode('login')">Sign In</button></li>
@@ -793,14 +1232,28 @@
                 </ul>
                 <form id="loginForm" onsubmit="requestOtp(event, 'login')">
                     <div class="mb-3"><label class="small fw-bold">Mobile / Email</label><input type="text" class="form-control" value="8306669999" required></div>
+
+
                     <div class="mb-3"><label class="small fw-bold">Password</label><input type="password" class="form-control" value="123456" required></div>
+
+
                     <button type="submit" class="btn btn-brand w-100 py-2 mt-2">Get OTP & Login</button>
                 </form>
             </div>
+
+
         </div>
 
+
+
         <!-- ACCOUNT DASHBOARD -->
-        <div id="page-profile" class="page-view">
+        
+
+
+
+<div id="page-profile" class="page-view">
+
+
             <h3 class="fw-bold mb-4"><i class="fa-solid fa-user-gear text-primary me-2"></i>My Account Dashboard</h3>
             <div class="row g-4">
                 <div class="col-md-3">
@@ -809,23 +1262,71 @@
                         <hr class="my-2">
                         <button class="profile-nav-btn text-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</button>
                     </div>
+
+
                 </div>
+
+
                 <div class="col-md-9">
                     <div class="card-custom p-4">
                         <div id="p-orders" class="profile-tab-content">
                             <h4 class="fw-bold text-dark mb-3">Your Orders</h4>
                             <div id="amazonOrdersContainer" class="d-flex flex-column gap-3"></div>
+
+
                         </div>
+
+
                     </div>
+
+
                 </div>
+
+
             </div>
+
+
         </div>
 
+
+
         <!-- CMS POLICIES -->
-        <div id="page-terms" class="page-view"><div class="policy-card"><h2>Terms & Conditions</h2><p class="text-secondary">Official Terms of M J DIGITAL.</p></div></div>
-        <div id="page-cancellation" class="page-view"><div class="policy-card"><h2>Refund & Cancellation Policy</h2><p class="text-secondary">Standard 7-day refund guarantee.</p></div></div>
-        <div id="page-privacy" class="page-view"><div class="policy-card"><h2>Privacy Policy</h2><p class="text-secondary">Secure data protection policy.</p></div></div>
+        
+
+
+
+<div id="page-terms" class="page-view">
+
+<div class="policy-card"><h2>Terms & Conditions</h2><p class="text-secondary">Official Terms of M J DIGITAL.</p></div>
+
+</div>
+
+
+        
+
+
+
+<div id="page-cancellation" class="page-view">
+
+<div class="policy-card"><h2>Refund & Cancellation Policy</h2><p class="text-secondary">Standard 7-day refund guarantee.</p></div>
+
+</div>
+
+
+        
+
+
+
+<div id="page-privacy" class="page-view">
+
+<div class="policy-card"><h2>Privacy Policy</h2><p class="text-secondary">Secure data protection policy.</p></div>
+
+</div>
+
+
     </div>
+
+
 
     <!-- 4-COLUMN FOOTER -->
     <footer>
@@ -835,6 +1336,8 @@
                     <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-cube text-primary me-2"></i>M J DIGITAL</h5>
                     <p class="small text-light mb-3">Your all-in-one destination for premium smartphones, modern electronics, and world-class travel packages.</p>
                 </div>
+
+
                 <div class="col-md-2">
                     <h6 class="fw-bold text-white mb-3">Quick Links</h6>
                     <ul class="list-unstyled small">
@@ -844,6 +1347,8 @@
                         <li class="mb-2"><a href="javascript:void(0)" onclick="navigateTo('page-contact')">Contact Us</a></li>
                     </ul>
                 </div>
+
+
                 <div class="col-md-3">
                     <h6 class="fw-bold text-white mb-3">Business Policies</h6>
                     <ul class="list-unstyled small">
@@ -852,19 +1357,32 @@
                         <li class="mb-2"><a href="javascript:void(0)" onclick="navigateTo('page-privacy')">Privacy Policy</a></li>
                     </ul>
                 </div>
+
+
                 <div class="col-md-3">
                     <h6 class="fw-bold text-white mb-3">Contact Support</h6>
                     <p class="small text-white mb-1"><i class="fa-solid fa-phone me-2 text-success"></i> +91 830 666 9999</p>
                     <p class="small text-white mb-0"><i class="fa-solid fa-envelope me-2 text-info"></i> mjdigitalworlds@gmail.com</p>
                 </div>
+
+
             </div>
+
+
             <hr class="border-secondary my-4">
             <div class="text-center small text-light">&copy; 2026 M J DIGITAL. All rights reserved.</div>
+
+
         </div>
+
+
     </footer>
 
     <!-- EXTERNAL JS LIBRARIES (LOADED ONCE ONLY) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 </body>
 </html>
