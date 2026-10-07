@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <style>
+        <style>
         :root { 
             --primary: #2563eb;
             --accent: #06b6d4;
@@ -23,40 +23,39 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
+        body.modal-open { overflow: auto !important; padding-right: 0 !important; }
         .cursor-pointer { cursor: pointer !important; }
         .main-wrapper { flex: 1; }
 
-        /* NAVBAR CLEAN ARCHITECTURE */
+        /* NAVBAR & HEADER */
         .navbar-custom { 
             background: rgba(15, 23, 42, 0.98); 
             backdrop-filter: blur(12px);
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            padding: 8px 0 !important;
+            padding: 10px 0 !important;
         }
-        .navbar-nav {
-            gap: 2px !important;
-        }
+        .navbar-nav { gap: 2px !important; }
         .navbar-nav .nav-link { 
-            font-size: 13.5px !important; 
+            color: #cbd5e1 !important; 
+            font-size: 13.5px !important;
             font-weight: 700 !important; 
             letter-spacing: 0.3px;
-            color: #cbd5e1 !important; 
-            padding: 6px 9px !important;
             white-space: nowrap !important;
+            padding: 6px 10px !important;
             transition: all 0.2s ease;
         }
         .navbar-nav .nav-link:hover, .navbar-nav .nav-link.active { 
             color: #38bdf8 !important; 
         }
 
-        /* HEADER ACTIONS & ICONS */
         .header-search-wrap {
-            max-width: 230px;
+            max-width: 240px;
             min-width: 170px;
+            margin: 0 10px;
         }
         .nav-action-icon {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -74,9 +73,10 @@
         }
         #profileNavBtn {
             white-space: nowrap !important;
-            padding: 6px 14px !important;
+            padding: 6px 16px !important;
             font-size: 13px !important;
             font-weight: 700 !important;
+            border-radius: 30px !important;
         }
 
         @media (max-width: 1200px) {
@@ -116,6 +116,10 @@
             transition: all 0.3s ease;
             overflow: hidden;
         }
+        .card-custom:hover { 
+            transform: translateY(-4px);
+            box-shadow: 0 16px 30px rgba(37, 99, 235, 0.1);
+        }
         .category-chip {
             background: #fff;
             border: 1px solid #e2e8f0;
@@ -126,10 +130,24 @@
             transition: all 0.3s ease;
         }
         .category-chip:hover {
-            transform: translateY(-4px);
+            transform: translateY(-5px);
             border-color: var(--primary);
-            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+            box-shadow: 0 12px 24px rgba(37, 99, 235, 0.15);
         }
+        .travel-tab-btn { 
+            border-radius: 30px; 
+            padding: 8px 24px; 
+            font-weight: 700; 
+            border: none;
+            background: #e2e8f0; 
+            color: #475569;
+            transition: all 0.2s ease;
+        }
+        .travel-tab-btn.active { 
+            background: linear-gradient(135deg, #0ea5e9, #2563eb); 
+            color: #fff;
+        }
+        .card-img-top-custom { height: 210px; object-fit: cover; width: 100%; cursor: pointer; }
         .btn-brand {
             background: linear-gradient(135deg, #0ea5e9, #2563eb);
             color: white;
@@ -148,11 +166,13 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
             cursor: pointer;
         }
+        .btn-action-icon:hover { background: #eff6ff; color: var(--primary); border-color: #bfdbfe; }
         .btn-action-icon.wishlist-active { background: #fee2e2; color: #ef4444; border-color: #fca5a5; }
 
-        /* UTILITY STRIP ICONS */
+        /* UTILITY ICONS */
         .u-icon-box {
             font-size: 24px;
             width: 48px;
@@ -179,36 +199,51 @@
             transform: translateY(-2px);
         }
 
-        /* GALLERIES & MEDIA */
-        .v-thumb-strip { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; flex-shrink: 0; }
-        .v-thumb-item { width: 62px; height: 62px; border-radius: 10px; border: 2px solid #cbd5e1; overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .v-thumb-item.active { border-color: #2563eb; }
-        .media-main-box { width: 100%; height: 420px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 10px; }
-        .media-main-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .variant-pill { border: 1px solid #cbd5e1; background: #fff; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .variant-pill.active { border-color: #2563eb; background: #eff6ff; color: #2563eb; }
-        .brand-chip-btn { font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: #fff; color: #475569; cursor: pointer; }
-        .brand-chip-btn.active { background: #2563eb !important; color: #fff !important; }
-        .policy-card { background: #ffffff; border-radius: 20px; padding: 40px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .contact-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; height: 100%; }
-        .card-img-top-custom { height: 210px; object-fit: cover; width: 100%; cursor: pointer; }
-        .travel-tab-btn { border-radius: 30px; padding: 8px 24px; font-weight: 700; border: none; background: #e2e8f0; color: #475569; }
-        .travel-tab-btn.active { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; }
-        .profile-nav-btn { border: none; background: none; width: 100%; text-align: left; padding: 12px 20px; border-radius: 12px; font-weight: 600; color: #475569; }
+        .profile-nav-btn {
+            border: none; background: none; width: 100%; text-align: left; padding: 12px 20px;
+            border-radius: 12px; font-weight: 600; color: #475569;
+        }
         .profile-nav-btn.active, .profile-nav-btn:hover { background: #e0f2fe; color: var(--primary); }
         .auth-card { max-width: 450px; margin: 0 auto; }
         .otp-input { width: 50px; height: 50px; text-align: center; font-size: 20px; font-weight: bold; border-radius: 8px; border: 1px solid #cbd5e1; }
+        .inline-address-card { background: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+        .label-btn-check { display: none; }
+        .label-btn-check + .btn-label {
+            border: 1px solid #cbd5e1; background: #fff; padding: 6px 16px; border-radius: 20px;
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+        }
+        .label-btn-check:checked + .btn-label { background: var(--primary); color: white; border-color: var(--primary); }
+        .tracking-timeline { position: relative; padding-left: 20px; margin-top: 20px; }
         .tracking-step { position: relative; padding-bottom: 24px; padding-left: 24px; border-left: 2px solid #e2e8f0; }
         .tracking-step:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
         .tracking-step.completed { border-left-color: #2563eb; }
         .tracking-icon { position: absolute; left: -13px; top: 0; width: 24px; height: 24px; border-radius: 50%; background: #cbd5e1; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; }
         .tracking-step.completed .tracking-icon { background: #2563eb; }
-        .tracking-step.active .tracking-icon { background: #0ea5e9; }
+        .tracking-step.active .tracking-icon { background: #0ea5e9; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.2); }
+        .policy-card { background: #ffffff; border-radius: 20px; padding: 40px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .policy-card h2 { color: #0f172a; font-weight: 700; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .contact-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; height: 100%; }
         footer { background: #0f172a; color: #e2e8f0 !important; padding: 50px 0 20px; margin-top: auto; }
+        footer p, footer span, footer .small { color: #cbd5e1 !important; }
         footer a { color: #93c5fd !important; text-decoration: none; }
+        footer a:hover { color: #38bdf8 !important; }
+        
+        /* Media & Gallery */
+        .v-thumb-strip { display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; padding-right: 4px; flex-shrink: 0; }
+        .v-thumb-item { width: 62px; height: 62px; border-radius: 10px; border: 2px solid #cbd5e1; overflow: hidden; cursor: pointer; background: #fff; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .v-thumb-item.active { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3); }
+        .v-thumb-item img, .v-thumb-item video { width: 100%; height: 100%; object-fit: cover; }
+        .media-main-box { width: 100%; height: 420px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 10px; }
+        .media-main-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .media-main-box video { width: 100%; height: 100%; object-fit: contain; background: #000; border-radius: 12px; }
 
-        /* BACKDROP SAFETY */
-        body.modal-open { overflow: auto !important; padding-right: 0 !important; }
+        .variant-pill { border: 1px solid #cbd5e1; background: #fff; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .variant-pill.active { border-color: #2563eb; background: #eff6ff; color: #2563eb; box-shadow: 0 0 0 1px #2563eb; }
+        .brand-chip-btn { font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; border: 1px solid #cbd5e1; background: #fff; color: #475569; cursor: pointer; transition: all 0.2s ease; }
+        .brand-chip-btn.active { background: #2563eb !important; color: #fff !important; border-color: #2563eb !important; }
+        .payment-radio-card { border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; cursor: pointer; background: #ffffff; transition: all 0.2s ease; }
+        .payment-radio-card:hover { border-color: var(--primary); background: #f8fafc; }
+        .payment-radio-card input:checked + div strong { color: var(--primary); }
     </style>
 </head>
 <body>
@@ -807,310 +842,6 @@
 
     <!-- EXTERNAL JS LIBRARIES (LOADED ONCE ONLY) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
-    <!-- UNIFIED CLIENT CONTROLLER SCRIPT -->
-    <script>
-        let isLoggedIn = true;
-        let myCart = [];
-        let myWishlist = [];
-        let catalogItemsCache = {};
-        let currentFilteredCatalogList = [];
-        let fpCurrentWalletBalance = 0;
-        let fpCurrentService = 'mobile';
-
-        const DUMMY_TELECOM_PLANS = [
-            { amount: 239, validity: '28 Days', data: '1.5 GB/day', desc: 'Unlimited True 5G Data, 100 SMS/day & National Calls' },
-            { amount: 299, validity: '28 Days', data: '2.0 GB/day', desc: 'Binge-all-night, Weekend Data Rollover & True 5G Unlimited' },
-            { amount: 666, validity: '70 Days', data: '1.5 GB/day', desc: 'Best Seller Long-term pack + Free OTT Subscription' },
-            { amount: 899, validity: '90 Days', data: '2.0 GB/day', desc: 'Quarterly Super Saver Plan with 20GB extra bonus data' },
-            { amount: 2999, validity: '365 Days', data: '2.5 GB/day', desc: 'Annual Mega Pack: 912.5 GB high speed total data' }
-        ];
-
-        function cleanStuckBackdrops() {
-            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('overflow');
-            document.body.style.removeProperty('padding-right');
-        }
-
-        function navigateTo(pageId, navEl = null) {
-            cleanStuckBackdrops();
-            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
-            const target = document.getElementById(pageId);
-            if (target) {
-                target.classList.add('active');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-            if (navEl) {
-                document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
-                navEl.classList.add('active');
-            }
-            if (pageId === 'page-home') loadHomeTrending();
-            if (pageId === 'page-mobile') loadMobiles();
-            if (pageId === 'page-travels') filterTravels('All');
-            if (pageId === 'page-cart') renderCartPage();
-            if (pageId === 'page-utility-hub') switchUtilityTab('mobile');
-        }
-
-        function resolveMediaUrl(url) {
-            if (!url) return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500';
-            const clean = url.trim();
-            if (clean.startsWith('http') || clean.startsWith('data:')) return clean;
-            return 'https://mj-digital-backend-3.onrender.com/' + clean.replace(/^\//, '');
-        }
-
-        async function fetchStoreItems() {
-            try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products');
-                const data = await res.json();
-                const items = Array.isArray(data) ? data : (data.data || []);
-                items.forEach(it => { catalogItemsCache[it._id] = it; });
-                return items;
-            } catch (e) {
-                return Object.values(catalogItemsCache);
-            }
-        }
-
-        function createProductCardHTML(item) {
-            const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
-            const safeImg = resolveMediaUrl(rawImg);
-            const currentPrice = Number(item.discountPrice ? item.discountPrice : (item.price || 0)).toLocaleString('en-IN');
-            return `
-                <div class="col-md-4 col-sm-6">
-                    <div class="card-custom p-4 text-center h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <div class="bg-light rounded-4 p-3 mb-3 d-flex align-items-center justify-content-center" style="height: 180px;">
-                                <img src="${safeImg}" class="img-fluid" style="max-height: 150px; object-fit: contain;">
-                            </div>
-                            <span class="badge bg-primary-subtle text-primary mb-2 text-uppercase">${item.category || 'General'}</span>
-                            <h6 class="fw-bold fs-5 text-dark">${item.title || item.name}</h6>
-                        </div>
-                        <div>
-                            <h4 class="text-primary fw-bold my-2">₹${currentPrice}</h4>
-                            <button type="button" onclick="handleAddToCart('${item._id}')" class="btn btn-brand w-100 py-2">Add to Bag</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        async function loadHomeTrending() {
-            const grid = document.getElementById('homeTrendingGrid');
-            if (!grid) return;
-            const products = await fetchStoreItems();
-            grid.innerHTML = products.slice(0, 6).map(createProductCardHTML).join('') || '<div class="col-12 text-center text-muted">No trending items.</div>';
-        }
-
-        async function loadMobiles() {
-            const grid = document.getElementById('mobileGrid');
-            if (!grid) return;
-            const products = await fetchStoreItems();
-            const mobiles = products.filter(p => (p.category || '').toLowerCase().includes('mobile'));
-            grid.innerHTML = mobiles.map(createProductCardHTML).join('') || '<div class="col-12 text-center text-muted">No mobile models found.</div>';
-        }
-
-        function filterTravels(region) {
-            const grid = document.getElementById('travelGrid');
-            if (grid) grid.innerHTML = '<div class="col-12 text-center text-muted py-5">Travel tours loading...</div>';
-        }
-
-        function handleAddToCart(id) {
-            const item = catalogItemsCache[id] || { _id: id, title: 'Item', price: 999 };
-            myCart.push({ id: item._id, title: item.title || item.name, price: item.discountPrice || item.price || 999, qty: 1 });
-            const badge = document.getElementById('cartCount');
-            if (badge) badge.innerText = myCart.length;
-            alert('Item added to Shopping Bag!');
-        }
-
-        function renderCartPage() {
-            const list = document.getElementById('cartItemsList');
-            if (!list) return;
-            let total = 0;
-            list.innerHTML = myCart.map(item => {
-                total += item.price * item.qty;
-                return `<div class="d-flex justify-content-between py-2 border-bottom"><span>${item.title}</span><strong>₹${item.price.toLocaleString('en-IN')}</strong></div>`;
-            }).join('') || '<p class="text-muted text-center py-4">Shopping Bag is empty.</p>';
-            document.getElementById('cartSubtotalText').innerText = '₹' + total.toLocaleString('en-IN');
-            document.getElementById('cartTotalText').innerText = '₹' + total.toLocaleString('en-IN');
-        }
-
-        function checkoutFromCart() {
-            if (myCart.length === 0) return alert('Your cart is empty!');
-            navigateTo('page-checkout');
-        }
-
-        function handleFullPageCheckoutSubmit(e) {
-            e.preventDefault();
-            const total = myCart.reduce((sum, item) => sum + item.price * item.qty, 0) || 500;
-            if (typeof Razorpay !== 'undefined') {
-                const rzp = new Razorpay({
-                    key: 'rzp_test_TkFr9r722bHvjA',
-                    amount: total * 100,
-                    currency: 'INR',
-                    name: 'M J DIGITAL',
-                    description: 'Order Checkout',
-                    handler: function(resp) {
-                        alert('Payment Success! Txn ID: ' + resp.razorpay_payment_id);
-                        myCart = [];
-                        navigateTo('page-home');
-                    },
-                    prefill: { contact: '8306669999' }
-                });
-                rzp.open();
-            }
-        }
-
-        /* --- MJ PAY & UTILITY FULL-PAGE ENGINE --- */
-        function openUtilityFullPage(serviceKey) {
-            navigateTo('page-utility-hub');
-            switchUtilityTab(serviceKey);
-        }
-
-        function syncAllWalletElements() {
-            const bal = '₹' + Number(fpCurrentWalletBalance).toFixed(2);
-            const e1 = document.getElementById('homeStripWalletBalance');
-            if (e1) e1.innerText = bal;
-            const e2 = document.getElementById('fpFormWalletBalText');
-            if (e2) e2.innerText = 'Bal: ' + bal;
-            const e3 = document.getElementById('fpWalletWidgetBal');
-            if (e3) e3.innerText = bal;
-        }
-
-        function switchUtilityTab(serviceKey, btnEl = null) {
-            fpCurrentService = serviceKey;
-            document.querySelectorAll('.utility-tab-selector').forEach(b => b.classList.remove('active'));
-            if (btnEl) btnEl.classList.add('active');
-
-            const fieldsContainer = document.getElementById('fullPageDynamicFields');
-            const rightPanelTitle = document.getElementById('fpRightPanelTitle');
-            const rightBadge = document.getElementById('fpActiveServiceBadge');
-            const rightContent = document.getElementById('fpRightDynamicContent');
-            const submitBtn = document.getElementById('fpUtilityProceedBtn');
-
-            if (!fieldsContainer || !rightContent) return;
-
-            if (serviceKey === 'mobile') {
-                rightPanelTitle.innerText = "Browse Operator Plans & Offers";
-                rightBadge.innerText = "MOBILE PREPAID";
-                submitBtn.innerText = "Proceed to Recharge Mobile";
-
-                fieldsContainer.innerHTML = `
-                    <div class="mb-3"><label class="small fw-bold mb-1">Mobile Number</label><input type="tel" id="fpTargetInput" class="form-control" placeholder="10-digit number" maxlength="10" value="9876543210" required></div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6"><label class="small fw-bold mb-1">Operator</label><select id="fpOperatorSelect" class="form-select"><option>Jio Prepaid</option><option>Airtel</option><option>Vi</option></select></div>
-                        <div class="col-6"><label class="small fw-bold mb-1">Circle</label><select class="form-select"><option>Gujarat</option><option>Mumbai</option></select></div>
-                    </div>
-                    <div class="mb-3"><label class="small fw-bold mb-1">Amount (₹)</label><input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" value="239" required></div>
-                `;
-
-                rightContent.innerHTML = DUMMY_TELECOM_PLANS.map(p => `
-                    <div class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-center mb-2">
-                        <div>
-                            <div class="d-flex align-items-center gap-2 mb-1"><h5 class="fw-bold text-primary mb-0">₹${p.amount}</h5><span class="badge bg-dark">${p.validity}</span><span class="badge bg-info text-dark">${p.data}</span></div>
-                            <p class="small text-muted mb-0">${p.desc}</p>
-                        </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm px-3 fw-bold rounded-pill" onclick="document.getElementById('fpAmountInput').value='${p.amount}'">Select</button>
-                    </div>
-                `).join('');
-            } else if (serviceKey === 'electricity') {
-                rightPanelTitle.innerText = "Live Bill Details (BBPS)";
-                rightBadge.innerText = "ELECTRICITY BOARD";
-                submitBtn.innerText = "Pay Electricity Bill";
-
-                fieldsContainer.innerHTML = `
-                    <div class="mb-3"><label class="small fw-bold mb-1">Board</label><select id="fpOperatorSelect" class="form-select"><option>Torrent Power - Ahmedabad</option><option>UGVCL - Uttar Gujarat</option></select></div>
-                    <div class="mb-3"><label class="small fw-bold mb-1">Consumer Number</label><input type="text" id="fpTargetInput" class="form-control" value="10098234" required></div>
-                    <div class="mb-3"><label class="small fw-bold mb-1">Bill Amount (₹)</label><input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" value="1420" required></div>
-                `;
-
-                rightContent.innerHTML = `
-                    <div class="p-4 border rounded-3 bg-light text-center">
-                        <div style="font-size: 40px; margin-bottom: 8px;">💡</div>
-                        <h5 class="fw-bold text-dark mb-1">Torrent Power (Ahmedabad)</h5>
-                        <span class="badge bg-success mb-3">Consumer Verified: Mohsin J</span>
-                        <h3 class="fw-bold text-primary">₹1,420.00</h3>
-                    </div>
-                `;
-            } else {
-                rightPanelTitle.innerText = "Biller Verification & Payment";
-                rightBadge.innerText = serviceKey.toUpperCase();
-                submitBtn.innerText = "Proceed to Pay";
-
-                fieldsContainer.innerHTML = `
-                    <div class="mb-3"><label class="small fw-bold mb-1">Biller Name</label><input type="text" id="fpOperatorSelect" class="form-control" placeholder="Agency" required></div>
-                    <div class="mb-3"><label class="small fw-bold mb-1">Account Number</label><input type="text" id="fpTargetInput" class="form-control" placeholder="Account No" required></div>
-                    <div class="mb-3"><label class="small fw-bold mb-1">Amount (₹)</label><input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" value="500" required></div>
-                `;
-                rightContent.innerHTML = '<div class="p-5 text-center text-muted border rounded-3 bg-light">Bharat BillPay (BBPS) Verified Channel</div>';
-            }
-            syncAllWalletElements();
-        }
-
-        function executeFullPageWalletTopup() {
-            const amt = Number(document.getElementById('fpWalletTopupInput')?.value || 0);
-            if (amt <= 0) return alert('Kripya valid amount daalein.');
-
-            if (typeof Razorpay !== 'undefined') {
-                const rzp = new Razorpay({
-                    key: 'rzp_test_TkFr9r722bHvjA',
-                    amount: amt * 100,
-                    currency: 'INR',
-                    name: 'M J DIGITAL WALLET',
-                    description: 'Wallet Top-up (All Payment Modes)',
-                    handler: function(resp) {
-                        fpCurrentWalletBalance += amt;
-                        syncAllWalletElements();
-                        alert('🎉 ₹' + amt + ' added to wallet! Txn: ' + resp.razorpay_payment_id);
-                    },
-                    prefill: { contact: '8306669999' }
-                });
-                rzp.open();
-            } else {
-                fpCurrentWalletBalance += amt;
-                syncAllWalletElements();
-                alert('₹' + amt + ' added to wallet demo!');
-            }
-        }
-
-        function handleFullPageUtilitySubmit(e) {
-            e.preventDefault();
-            const amt = Number(document.getElementById('fpAmountInput')?.value || 0);
-            const payMode = document.querySelector('input[name="fpPaySource"]:checked')?.value || 'wallet';
-
-            if (payMode === 'wallet') {
-                if (fpCurrentWalletBalance < amt) {
-                    return alert('❌ Wallet me balance kam hai! Pehle + Add Money karein.');
-                }
-                fpCurrentWalletBalance -= amt;
-                syncAllWalletElements();
-                alert('✅ Payment of ₹' + amt + ' successful via M J Wallet!');
-            } else {
-                if (typeof Razorpay !== 'undefined') {
-                    const rzp = new Razorpay({
-                        key: 'rzp_test_TkFr9r722bHvjA',
-                        amount: amt * 100,
-                        currency: 'INR',
-                        name: 'M J DIGITAL UTILITY',
-                        description: 'Bill Payment',
-                        handler: function(resp) {
-                            alert('✅ Payment Successful! Txn: ' + resp.razorpay_payment_id);
-                        },
-                        prefill: { contact: '8306669999' }
-                    });
-                    rzp.open();
-                }
-            }
-        }
-
-        function handleUniversalSearch(val) {}
-        function clearUniversalSearch() {}
-        function checkAuthAndNavigate() { navigateTo('page-profile'); }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            syncAllWalletElements();
-            navigateTo('page-home');
-        });
-    </script>
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
 </html>
