@@ -218,6 +218,68 @@
       .modal { z-index: 1050 !important; }
     </style>
   
+
+    <style>
+      /* --- UNIVERSAL RESPONSIVE STYLES (MOBILE, TABLET, LAPTOP) --- */
+      :root {
+        --nav-font: 13px;
+      }
+      
+      /* Laptop / Desktop (Screen >= 1200px) */
+      @media (min-width: 1200px) {
+        .navbar-nav .nav-link { font-size: 13px !important; padding: 6px 10px !important; }
+        .search-container-box { min-width: 240px !important; max-width: 280px !important; }
+      }
+
+      /* Tablet & Small Laptops (992px to 1199px) */
+      @media (min-width: 992px) and (max-width: 1199px) {
+        .navbar-nav .nav-link { font-size: 11.5px !important; padding: 4px 6px !important; white-space: nowrap !important; }
+        .search-container-box { min-width: 180px !important; max-width: 200px !important; }
+        .navbar-brand { font-size: 1.15rem !important; }
+        #profileNavBtn { padding: 4px 10px !important; font-size: 12px !important; }
+      }
+
+      /* Mobile & Tablets (< 992px) */
+      @media (max-width: 991.98px) {
+        .navbar-collapse {
+          background: #0f172a;
+          padding: 16px;
+          border-radius: 14px;
+          margin-top: 10px;
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+        .navbar-nav { margin-left: 0 !important; margin-bottom: 12px !important; }
+        .navbar-nav .nav-link { padding: 8px 12px !important; font-size: 13px !important; }
+        .search-container-box { width: 100% !important; margin-bottom: 12px !important; margin-right: 0 !important; }
+        .hero-section { padding: 40px 20px !important; border-radius: 16px !important; }
+        .hero-section h1 { font-size: 1.85rem !important; }
+        .hero-section p { font-size: 0.95rem !important; }
+      }
+
+      /* Mobile Touch Device Grid Scroll */
+      .utility-touch-scroll {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        padding-bottom: 6px;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+      }
+      .utility-touch-scroll::-webkit-scrollbar {
+        height: 4px;
+      }
+      .utility-touch-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+
+      /* Prevent any horizontal screen bleed / layout shaking */
+      html, body {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+      }
+    </style>
+  
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
@@ -236,10 +298,10 @@
                     <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-fashion', this)">FASHION</a></li>
                     <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-electronics', this)">ELECTRONICS</a></li>
                     <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-services', this)">SERVICES</a></li>
-                    <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-utility-hub', this)">RECHARGE & BILLS</a></li>
+                    <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-utility-hub', this)">BILLS & RECHARGE</a></li>
                 </ul>
 
-                <div class="position-relative me-3" style="min-width: 260px;">
+                <div class="position-relative me-2 me-xl-3 search-container-box">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-dark border-secondary text-info"><i class="fa-solid fa-magnifying-glass"></i></span>
                         <input type="text" id="globalLiveSearchInput" oninput="handleUniversalSearch(this.value)" placeholder="Search all products & tours..." class="form-control bg-dark text-white border-secondary" style="font-size: 12px;">
