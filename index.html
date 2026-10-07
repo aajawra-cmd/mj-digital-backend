@@ -177,6 +177,39 @@
         }
     </style>
   
+
+    <style>
+        .u-icon-box {
+            font-size: 24px;
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .u-text {
+            font-size: 11px;
+            font-weight: 600;
+            color: #334155;
+            display: block;
+            white-space: nowrap;
+        }
+        .utility-chip-btn:hover .u-icon-box {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+        }
+        @media (min-width: 768px) {
+            .border-end-md { border-right: 1px solid #e2e8f0 !important; }
+        }
+    </style>
+  
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
@@ -216,7 +249,7 @@
                         <span id="cartCount" class="badge bg-primary rounded-circle position-absolute top-0 start-100 translate-middle">0</span>
                     </a>
 
-                    <button type="button" id="walletHeaderBtn" onclick="openWalletModal()" class="btn btn-outline-success btn-sm rounded-pill px-3 me-2 fw-semibold" style="cursor:pointer;"><i class="fa-solid fa-wallet me-1"></i> Wallet: <span id="headerWalletAmount">₹0.00</span></button><button class="btn btn-outline-info btn-sm rounded-pill px-3" style="cursor: pointer;" id="profileNavBtn" onclick="checkAuthAndNavigate()">
+                    <button class="btn btn-outline-info btn-sm rounded-pill px-3" style="cursor: pointer;" id="profileNavBtn" onclick="checkAuthAndNavigate()">
                         <i class="fa-solid fa-user me-1"></i> Account
                     </button>
                 </div>
@@ -243,24 +276,73 @@
             </div>
 
             <!-- ⚡ RECHARGE & UTILITY SERVICES -->
+            
+
+            <!-- ⚡ UNIFIED 1-ROW UTILITY & WALLET HUB -->
             <div id="utilityServicesSection" class="mb-5">
-                <div class="card-custom p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <div>
-                            <h4 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-bolt text-warning me-2"></i>Recharge & Bill Payments</h4>
-                            <p class="text-muted small mb-0">Instant prepaid recharges, electricity, DTH & FASTag payments</p>
+                <div class="card-custom p-3 p-lg-4" style="border: 1px solid #e2e8f0; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);">
+                    <div class="row align-items-center g-3">
+                        <!-- Left: Wallet Mini Hub -->
+                        <div class="col-lg-3 col-md-4 border-end-md">
+                            <div class="p-2.5 rounded-3 d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #bbf7d0;">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div style="font-size: 26px;">👛</div>
+                                    <div>
+                                        <span class="text-muted d-block" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">M J Wallet</span>
+                                        <h5 class="mb-0 fw-bold text-success" id="mainStripWalletBalance" style="font-size: 1.25rem;">₹0.00</h5>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="openAddMoneyModal()" class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px; white-space: nowrap;">
+                                    + Add Money
+                                </button>
+                            </div>
                         </div>
-                        <button type="button" onclick="openWalletModal()" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
-                            👛 Manage Wallet
-                        </button>
-                    </div>
-                    <div class="row g-3 text-center">
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('mobile')" style="cursor: pointer;"><div class="category-chip"><div style="font-size: 32px; line-height: 1; margin-bottom: 8px;">📱</div><div class="fw-bold">Mobile</div><small class="text-muted" style="font-size: 11px;">Prepaid / Post</small></div></div>
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('dth')" style="cursor: pointer;"><div class="category-chip"><div style="font-size: 32px; line-height: 1; margin-bottom: 8px;">📺</div><div class="fw-bold">DTH</div><small class="text-muted" style="font-size: 11px;">Tata / Airtel</small></div></div>
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('electricity')" style="cursor: pointer;"><div class="category-chip"><div style="font-size: 32px; line-height: 1; margin-bottom: 8px;">💡</div><div class="fw-bold">Electricity</div><small class="text-muted" style="font-size: 11px;">Instant Pay</small></div></div>
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('fastag')" style="cursor: pointer;"><div class="category-chip"><div style="font-size: 32px; line-height: 1; margin-bottom: 8px;">🚗</div><div class="fw-bold">FASTag</div><small class="text-muted" style="font-size: 11px;">All Banks</small></div></div>
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('gas')" style="cursor: pointer;"><div class="category-chip"><div style="font-size: 32px; line-height: 1; margin-bottom: 8px;">⛽</div><div class="fw-bold">Gas Cylinder</div><small class="text-muted" style="font-size: 11px;">LPG Booking</small></div></div>
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('broadband')" style="cursor: pointer;"><div class="category-chip"><div style="font-size: 32px; line-height: 1; margin-bottom: 8px;">🌐</div><div class="fw-bold">Broadband</div><small class="text-muted" style="font-size: 11px;">Fiber / Net</small></div></div>
+
+                        <!-- Right: Single Row Services (Smooth Horizontal Scroll on mobile, clean grid on desktop) -->
+                        <div class="col-lg-9 col-md-8">
+                            <div class="d-flex align-items-center justify-content-between gap-2 overflow-auto py-1" style="scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
+                                <div onclick="openInteractiveUtility('mobile', 'Mobile Prepaid / Postpaid', '📱')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">📱</div>
+                                    <span class="u-text">Mobile</span>
+                                </div>
+                                <div onclick="openInteractiveUtility('dth', 'DTH Recharge', '📺')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">📺</div>
+                                    <span class="u-text">DTH</span>
+                                </div>
+                                <div onclick="openInteractiveUtility('electricity', 'Electricity Bill Payment', '💡')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">💡</div>
+                                    <span class="u-text">Electricity</span>
+                                </div>
+                                <div onclick="openInteractiveUtility('fastag', 'FASTag Recharge', '🚗')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">🚗</div>
+                                    <span class="u-text">FASTag</span>
+                                </div>
+                                <div onclick="openInteractiveUtility('gas', 'LPG Gas Cylinder Booking', '⛽')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">⛽</div>
+                                    <span class="u-text">Gas Cylinder</span>
+                                </div>
+                                <div onclick="openInteractiveUtility('broadband', 'Broadband & Landline', '🌐')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">🌐</div>
+                                    <span class="u-text">Broadband</span>
+                                </div>
+                                <div onclick="openInteractiveUtility('water', 'Water Tax / Bill', '💧')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">💧</div>
+                                    <span class="u-text">Water</span>
+                                </div>
+                                <div onclick="openInteractiveUtility('insurance', 'Insurance Premium', '🏥')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">🏥</div>
+                                    <span class="u-text">Insurance</span>
+                                </div>
+                                <div onclick="openInteractiveUtility('credit_card', 'Credit Card Bill Pay', '💳')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">💳</div>
+                                    <span class="u-text">Credit Card</span>
+                                </div>
+                                <div onclick="openInteractiveUtility('loan', 'Loan EMI Repayment', '🏦')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">🏦</div>
+                                    <span class="u-text">Loan EMI</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3507,6 +3589,221 @@ window.openWalletModal = function() {
 window.openUtilityModal = function(service) {
     alert("⚡ " + service.toUpperCase() + " SERVICE\n\nOperator auto-fetch & BBPS biller channel ready to connect!");
 };
+</script>
+
+
+    <!-- INTERACTIVE UTILITY PAYMENT MODAL -->
+    <div class="modal fade" id="interactiveUtilityModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 p-4 shadow">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark d-flex align-items-center">
+                        <span id="modalServiceEmoji" class="me-2 fs-4">📱</span>
+                        <span id="modalServiceTitle">Mobile Recharge</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form onsubmit="handleUtilityPaymentSubmit(event)">
+                    <div id="dynamicServiceFieldsContainer" class="mb-3"></div>
+
+                    <!-- Payment Source Choice -->
+                    <div class="card p-3 bg-light rounded-3 border mb-3">
+                        <label class="small fw-bold text-dark d-block mb-2">Select Payment Method:</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="utilityPayMode" id="payViaWalletRadio" value="wallet" checked>
+                            <label class="form-check-label d-flex justify-content-between small fw-semibold" for="payViaWalletRadio">
+                                <span>👛 Pay via M J Wallet</span>
+                                <span class="text-muted" id="modalWalletBalText">Bal: ₹0.00</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="utilityPayMode" id="payViaGatewayRadio" value="gateway">
+                            <label class="form-check-label small fw-semibold" for="payViaGatewayRadio">
+                                <span>⚡ Pay via UPI / Payment Gateway (Razorpay/Cards)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="utilitySubmitPayBtn" class="btn btn-brand w-100 py-2.5 fw-bold">
+                        Proceed to Pay
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- WALLET TOP-UP / ADD MONEY MODAL -->
+    <div class="modal fade" id="walletAddMoneyModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 p-4 shadow text-center">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="fw-bold mb-0 text-dark">👛 Add Money</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <p class="text-muted small mb-3">Top up your internal M J Wallet for 1-click bill payments.</p>
+
+                <div class="mb-3 text-start">
+                    <label class="small fw-bold mb-1">Enter Amount (₹)</label>
+                    <input type="number" id="walletTopupAmountInput" class="form-control fw-bold fs-5 text-center" value="500" min="10" required>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center mb-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-2.5 py-1" onclick="setTopupVal(100)">+₹100</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-2.5 py-1" onclick="setTopupVal(500)">+₹500</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-2.5 py-1" onclick="setTopupVal(1000)">+₹1,000</button>
+                </div>
+
+                <button type="button" onclick="executeWalletTopup()" class="btn btn-success w-100 py-2 fw-bold">
+                    Add Money via UPI
+                </button>
+            </div>
+        </div>
+    </div>
+  
+
+<script>
+let currentWalletBalance = 0;
+let activeUtilityKey = 'mobile';
+let utilityModalInstance, walletModalInstance;
+
+document.addEventListener("DOMContentLoaded", function() {
+    const uEl = document.getElementById('interactiveUtilityModal');
+    if (uEl) utilityModalInstance = new bootstrap.Modal(uEl);
+    const wEl = document.getElementById('walletAddMoneyModal');
+    if (wEl) walletModalInstance = new bootstrap.Modal(wEl);
+    syncStripWallet();
+});
+
+function syncStripWallet() {
+    const balText = '₹' + Number(currentWalletBalance).toFixed(2);
+    const el1 = document.getElementById('mainStripWalletBalance');
+    if (el1) el1.innerText = balText;
+    const el2 = document.getElementById('modalWalletBalText');
+    if (el2) el2.innerText = 'Bal: ' + balText;
+}
+
+function openAddMoneyModal() {
+    if (walletModalInstance) walletModalInstance.show();
+}
+
+function setTopupVal(val) {
+    const input = document.getElementById('walletTopupAmountInput');
+    if (input) input.value = val;
+}
+
+function executeWalletTopup() {
+    const amt = Number(document.getElementById('walletTopupAmountInput')?.value || 0);
+    if (amt <= 0) return alert('Kripya valid amount daalein.');
+
+    if (typeof Razorpay !== 'undefined') {
+        const options = {
+            key: 'rzp_test_TkFr9r722bHvjA',
+            amount: amt * 100,
+            currency: 'INR',
+            name: 'M J DIGITAL WALLET',
+            description: 'Wallet Top-up',
+            image: 'https://mjdigital.co.in/favicon.ico',
+            handler: function(response) {
+                currentWalletBalance += amt;
+                syncStripWallet();
+                if (walletModalInstance) walletModalInstance.hide();
+                alert('🎉 ₹' + amt + ' successfully added to your M J Wallet! Txn: ' + response.razorpay_payment_id);
+            },
+            prefill: { name: 'Customer', contact: '8306669999' },
+            theme: { color: '#16a34a' }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+    } else {
+        currentWalletBalance += amt;
+        syncStripWallet();
+        if (walletModalInstance) walletModalInstance.hide();
+        alert('🎉 ₹' + amt + ' added to wallet demo!');
+    }
+}
+
+function openInteractiveUtility(serviceKey, title, emoji) {
+    activeUtilityKey = serviceKey;
+    document.getElementById('modalServiceEmoji').innerText = emoji;
+    document.getElementById('modalServiceTitle').innerText = title;
+    const container = document.getElementById('dynamicServiceFieldsContainer');
+
+    if (serviceKey === 'mobile') {
+        container.innerHTML = `
+            <div class="mb-2"><label class="small fw-bold mb-1">Mobile Number</label><input type="tel" id="utilTargetNumber" class="form-control" placeholder="e.g. 9876543210" maxlength="10" required></div>
+            <div class="row g-2 mb-2">
+                <div class="col-6"><label class="small fw-bold mb-1">Operator</label><select id="utilOperator" class="form-select"><option>Jio Prepaid</option><option>Airtel</option><option>Vi (Vodafone Idea)</option><option>BSNL</option></select></div>
+                <div class="col-6"><label class="small fw-bold mb-1">Circle</label><select id="utilCircle" class="form-select"><option>Gujarat</option><option>Mumbai</option><option>Delhi</option><option>Maharashtra</option></select></div>
+            </div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Recharge Amount (₹)</label><div class="input-group"><input type="number" id="utilAmount" class="form-control" placeholder="239" required><button type="button" class="btn btn-outline-primary btn-sm" onclick="alert('Recommended Plans:\n₹239: 1.5GB/day (28 Days)\n₹299: 2GB/day (28 Days)\n₹666: 1.5GB/day (70 Days)')">Browse Plans</button></div></div>
+        `;
+    } else if (serviceKey === 'electricity') {
+        container.innerHTML = `
+            <div class="mb-2"><label class="small fw-bold mb-1">Electricity Board</label><select id="utilOperator" class="form-select"><option>Torrent Power - Ahmedabad/Surat</option><option>UGVCL - Uttar Gujarat</option><option>DGVCL - Dakshin Gujarat</option><option>MGVCL - Madhya Gujarat</option><option>PGVCL - Paschim Gujarat</option></select></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Consumer Number / Service No.</label><div class="input-group"><input type="text" id="utilTargetNumber" class="form-control" placeholder="e.g. 100234891" required><button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('utilAmount').value='1420'; alert('Bill Fetched! Consumer: Mohsin J | Due Amount: ₹1,420');">Fetch Bill</button></div></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Bill Amount (₹)</label><input type="number" id="utilAmount" class="form-control" placeholder="Amount to pay" required></div>
+        `;
+    } else if (serviceKey === 'dth') {
+        container.innerHTML = `
+            <div class="mb-2"><label class="small fw-bold mb-1">DTH Operator</label><select id="utilOperator" class="form-select"><option>Tata Play</option><option>Airtel Digital TV</option><option>Dish TV</option><option>Sun Direct</option><option>d2h</option></select></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Subscriber ID / Smart Card No.</label><input type="text" id="utilTargetNumber" class="form-control" placeholder="e.g. 1029384756" required></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Recharge Amount (₹)</label><input type="number" id="utilAmount" class="form-control" placeholder="e.g. 350" required></div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="mb-2"><label class="small fw-bold mb-1">Provider / Biller Name</label><input type="text" id="utilOperator" class="form-control" placeholder="e.g. Municipal Corp / Bank / Agency" required></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Account / Reference / Vehicle Number</label><input type="text" id="utilTargetNumber" class="form-control" placeholder="Enter identifier" required></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Payable Amount (₹)</label><input type="number" id="utilAmount" class="form-control" placeholder="Amount" required></div>
+        `;
+    }
+
+    syncStripWallet();
+    if (utilityModalInstance) utilityModalInstance.show();
+}
+
+function handleUtilityPaymentSubmit(e) {
+    e.preventDefault();
+    const amt = Number(document.getElementById('utilAmount')?.value || 0);
+    const target = document.getElementById('utilTargetNumber')?.value || '';
+    const operator = document.getElementById('utilOperator')?.value || '';
+    const mode = document.querySelector('input[name="utilityPayMode"]:checked')?.value || 'wallet';
+
+    if (amt <= 0) return alert('Kripya valid amount bharein.');
+
+    if (mode === 'wallet') {
+        if (currentWalletBalance < amt) {
+            return alert('❌ Wallet me balance kam hai!\nAvailable: ₹' + currentWalletBalance + '\nRequired: ₹' + amt + '\n\nKripya pehle "+ Add Money" karein ya Gateway choose karein.');
+        }
+        currentWalletBalance -= amt;
+        syncStripWallet();
+        if (utilityModalInstance) utilityModalInstance.hide();
+        alert('✅ ' + activeUtilityKey.toUpperCase() + ' payment of ₹' + amt + ' successful via M J Wallet!\nTarget: ' + target + ' (' + operator + ')\nRemaining Balance: ₹' + currentWalletBalance);
+    } else {
+        // Direct Gateway Payment
+        if (typeof Razorpay !== 'undefined') {
+            const options = {
+                key: 'rzp_test_TkFr9r722bHvjA',
+                amount: amt * 100,
+                currency: 'INR',
+                name: 'M J DIGITAL - ' + activeUtilityKey.toUpperCase(),
+                description: 'Bill Payment for ' + target,
+                image: 'https://mjdigital.co.in/favicon.ico',
+                handler: function(response) {
+                    if (utilityModalInstance) utilityModalInstance.hide();
+                    alert('✅ Payment Successful! Bill Processed.\nTxn ID: ' + response.razorpay_payment_id);
+                },
+                prefill: { contact: '8306669999' },
+                theme: { color: '#0d6efd' }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } else {
+            if (utilityModalInstance) utilityModalInstance.hide();
+            alert('✅ Payment of ₹' + amt + ' processed successfully!');
+        }
+    }
+}
 </script>
 
 </body>
