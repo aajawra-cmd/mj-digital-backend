@@ -3725,7 +3725,7 @@ window.openUtilityModal = function(service) {
                     <h5 class="fw-bold mb-0 text-dark">👛 Add Money</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <p class="text-muted small mb-3">Top up your internal M J Wallet for 1-click bill payments.</p>
+                <p class="text-muted small mb-3">Instant Top-up via UPI, Cards, Netbanking & Wallets</p>
 
                 <div class="mb-3 text-start">
                     <label class="small fw-bold mb-1">Enter Amount (₹)</label>
@@ -3739,7 +3739,7 @@ window.openUtilityModal = function(service) {
                 </div>
 
                 <button type="button" onclick="executeWalletTopup()" class="btn btn-success w-100 py-2 fw-bold">
-                    Add Money via UPI
+                    Proceed to Add Money (UPI, Cards, NetBanking)
                 </button>
             </div>
         </div>
@@ -3786,18 +3786,25 @@ function executeWalletTopup() {
             amount: amt * 100,
             currency: 'INR',
             name: 'M J DIGITAL WALLET',
-            description: 'Wallet Top-up',
+            description: 'Wallet Top-up (All Payment Modes Supported)',
             image: 'https://mjdigital.co.in/favicon.ico',
             handler: function(response) {
                 currentWalletBalance += amt;
                 syncStripWallet();
                 if (walletModalInstance) walletModalInstance.hide();
-                alert('🎉 ₹' + amt + ' successfully added to your M J Wallet! Txn: ' + response.razorpay_payment_id);
+                alert('🎉 ₹' + amt + ' successfully added to your M J Wallet!\nPayment ID: ' + response.razorpay_payment_id);
             },
-            prefill: { name: 'Customer', contact: '8306669999' },
+            prefill: { 
+                name: 'Mohsin J', 
+                email: 'mjdigitalworlds@gmail.com',
+                contact: '8306669999' 
+            },
             theme: { color: '#16a34a' }
         };
         const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(response) {
+            alert('Payment Fail: ' + response.error.description);
+        });
         rzp.open();
     } else {
         currentWalletBalance += amt;
