@@ -245,6 +245,29 @@
         .payment-radio-card:hover { border-color: var(--primary); background: #f8fafc; }
         .payment-radio-card input:checked + div strong { color: var(--primary); }
     </style>
+
+    <style id="unifiedMasterStyle">
+      /* NAVBAR & RESPONSIVE FIX */
+      .navbar-custom { background: rgba(15, 23, 42, 0.98) !important; padding: 10px 0 !important; }
+      .navbar-nav { gap: 2px !important; }
+      .navbar-nav .nav-link { 
+        font-size: 13.5px !important; 
+        font-weight: 700 !important; 
+        letter-spacing: 0.3px; 
+        color: #cbd5e1 !important; 
+        padding: 6px 10px !important; 
+        white-space: nowrap !important; 
+      }
+      .navbar-nav .nav-link:hover, .navbar-nav .nav-link.active { color: #38bdf8 !important; }
+      .header-search-wrap { max-width: 220px !important; min-width: 160px !important; margin: 0 8px !important; }
+      .nav-action-icon { width: 42px !important; height: 42px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; background: rgba(255,255,255,0.08) !important; border: 1px solid rgba(255,255,255,0.15) !important; color: #fff !important; text-decoration: none !important; position: relative !important; }
+      #profileNavBtn { white-space: nowrap !important; padding: 6px 16px !important; font-size: 13px !important; font-weight: 700 !important; border-radius: 30px !important; }
+      @media (max-width: 1200px) {
+        .navbar-nav .nav-link { font-size: 12px !important; padding: 4px 6px !important; }
+        .header-search-wrap { max-width: 170px !important; }
+      }
+      body.modal-open { overflow: auto !important; padding-right: 0 !important; }
+    </style>
 </head>
 <body>
 
