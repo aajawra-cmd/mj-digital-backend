@@ -298,6 +298,21 @@
       }
     </style>
   
+
+    <style>
+      .navbar-nav .nav-link {
+        white-space: nowrap !important;
+        font-size: 13px !important;
+        padding: 6px 8px !important;
+      }
+      @media (max-width: 1200px) {
+        .navbar-nav .nav-link {
+          font-size: 11.5px !important;
+          padding: 4px 6px !important;
+        }
+      }
+    </style>
+  
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
@@ -309,7 +324,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto ms-4">
+                <ul class="navbar-nav me-auto ms-3 d-flex align-items-center gap-1">
                     <li class="nav-item"><a class="nav-link nav-btn active" onclick="navigateTo('page-home', this)">HOME</a></li>
                     <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-travels', this)">TRAVELS</a></li>
                     <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-mobile', this)">MOBILE</a></li>
