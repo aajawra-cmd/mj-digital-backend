@@ -163,6 +163,20 @@
         .payment-radio-card:hover { border-color: var(--primary); background: #f8fafc; }
         .payment-radio-card input:checked + div strong { color: var(--primary); }
     </style>
+
+    <style>
+        .utility-card-item:hover {
+            transform: translateY(-3px);
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+            background: #ffffff !important;
+        }
+        .utility-card-item:hover .icon-circle {
+            transform: scale(1.05);
+            transition: 0.2s ease;
+        }
+    </style>
+  
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
@@ -230,25 +244,93 @@
 
             
             <!-- ⚡ RECHARGE & UTILITY SERVICES GRID -->
-            <div id="utilityServicesSection" class="mb-5">
-                <div class="card-custom p-4">
+            <!-- ⚡ RECHARGE & UTILITY SERVICES GRID -->
+            <div id="utilityServicesSection" class="mb-4">
+                <div class="card-custom p-3 p-md-4" style="border: 1px solid #e2e8f0; border-radius: 18px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05); background: #ffffff;">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <div>
-                            <h4 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-bolt text-warning me-2"></i>Recharge & Bill Payments</h4>
-                            <p class="text-muted small mb-0">Instant prepaid recharges, electricity, DTH & FASTag payments</p>
+                            <h5 class="fw-bold mb-0 text-dark d-flex align-items-center" style="font-size: 1.15rem;">
+                                <span style="background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 8px; font-size: 14px; margin-right: 8px;">⚡</span>
+                                Recharge & Bill Payments
+                            </h5>
+                            <p class="text-muted small mb-0" style="font-size: 12px;">Instant prepaid top-up, utility bills & FASTag clearance</p>
                         </div>
-                        <button type="button" onclick="openWalletModal()" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
-                            👛 Manage Wallet
+                        <button type="button" onclick="openWalletModal()" class="btn btn-sm rounded-pill px-3 fw-semibold shadow-xs" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: none; font-size: 12px; padding: 6px 14px;">
+                            👛 Wallet Hub
                         </button>
                     </div>
-                    <div class="row g-3 text-center">
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('mobile')"><div class="category-chip"><i class="fa-solid fa-mobile-screen text-primary fs-2 mb-2"></i><div class="fw-bold small">Mobile</div><span class="text-muted" style="font-size:10px;">Prepaid/Post</span></div></div>
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('dth')"><div class="category-chip"><i class="fa-solid fa-tv text-danger fs-2 mb-2"></i><div class="fw-bold small">DTH</div><span class="text-muted" style="font-size:10px;">Tata/Airtel</span></div></div>
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('electricity')"><div class="category-chip"><i class="fa-solid fa-lightbulb text-warning fs-2 mb-2"></i><div class="fw-bold small">Electricity</div><span class="text-muted" style="font-size:10px;">Instant Pay</span></div></div>
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('fastag')"><div class="category-chip"><i class="fa-solid fa-car text-info fs-2 mb-2"></i><div class="fw-bold small">FASTag</div><span class="text-muted" style="font-size:10px;">All Banks</span></div></div>
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('gas')"><div class="category-chip"><i class="fa-solid fa-fire-flame-simple text-secondary fs-2 mb-2"></i><div class="fw-bold small">Gas Cylinder</div><span class="text-muted" style="font-size:10px;">LPG Cylinder</span></div></div>
-                        <div class="col-4 col-md-2" onclick="openUtilityModal('broadband')"><div class="category-chip"><i class="fa-solid fa-wifi text-success fs-2 mb-2"></i><div class="fw-bold small">Broadband</div><span class="text-muted" style="font-size:10px;">Fiber / Net</span></div></div>
+
+                    <div class="row g-2 g-md-3 text-center">
+                        <!-- Mobile -->
+                        <div class="col-4 col-md-2" onclick="openUtilityModal('mobile')" style="cursor: pointer;">
+                            <div class="utility-card-item p-2.5 p-md-3 rounded-3" style="border: 1px solid #e2e8f0; background: #fafafa; transition: all 0.2s ease;">
+                                <div class="icon-circle mb-2 mx-auto d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 12px; background: #e0e7ff; color: #4338ca;">
+                                    <i class="fa-solid fa-mobile-screen fs-5"></i>
+                                </div>
+                                <div class="fw-bold text-dark" style="font-size: 12.5px;">Mobile</div>
+                                <span class="text-muted d-block" style="font-size: 10px;">Prepaid / Post</span>
+                            </div>
+                        </div>
+
+                        <!-- DTH -->
+                        <div class="col-4 col-md-2" onclick="openUtilityModal('dth')" style="cursor: pointer;">
+                            <div class="utility-card-item p-2.5 p-md-3 rounded-3" style="border: 1px solid #e2e8f0; background: #fafafa; transition: all 0.2s ease;">
+                                <div class="icon-circle mb-2 mx-auto d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 12px; background: #ffe4e6; color: #e11d48;">
+                                    <i class="fa-solid fa-tv fs-5"></i>
+                                </div>
+                                <div class="fw-bold text-dark" style="font-size: 12.5px;">DTH</div>
+                                <span class="text-muted d-block" style="font-size: 10px;">Dish / Cable</span>
+                            </div>
+                        </div>
+
+                        <!-- Electricity -->
+                        <div class="col-4 col-md-2" onclick="openUtilityModal('electricity')" style="cursor: pointer;">
+                            <div class="utility-card-item p-2.5 p-md-3 rounded-3" style="border: 1px solid #e2e8f0; background: #fafafa; transition: all 0.2s ease;">
+                                <div class="icon-circle mb-2 mx-auto d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 12px; background: #fef3c7; color: #d97706;">
+                                    <i class="fa-solid fa-lightbulb fs-5"></i>
+                                </div>
+                                <div class="fw-bold text-dark" style="font-size: 12.5px;">Electricity</div>
+                                <span class="text-muted d-block" style="font-size: 10px;">Bill Pay</span>
+                            </div>
+                        </div>
+
+                        <!-- FASTag -->
+                        <div class="col-4 col-md-2" onclick="openUtilityModal('fastag')" style="cursor: pointer;">
+                            <div class="utility-card-item p-2.5 p-md-3 rounded-3" style="border: 1px solid #e2e8f0; background: #fafafa; transition: all 0.2s ease;">
+                                <div class="icon-circle mb-2 mx-auto d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 12px; background: #ccfbf1; color: #0f766e;">
+                                    <i class="fa-solid fa-car-side fs-5"></i>
+                                </div>
+                                <div class="fw-bold text-dark" style="font-size: 12.5px;">FASTag</div>
+                                <span class="text-muted d-block" style="font-size: 10px;">Toll Top-up</span>
+                            </div>
+                        </div>
+
+                        <!-- Gas Cylinder -->
+                        <div class="col-4 col-md-2" onclick="openUtilityModal('gas')" style="cursor: pointer;">
+                            <div class="utility-card-item p-2.5 p-md-3 rounded-3" style="border: 1px solid #e2e8f0; background: #fafafa; transition: all 0.2s ease;">
+                                <div class="icon-circle mb-2 mx-auto d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 12px; background: #ffedd5; color: #c2410c;">
+                                    <i class="fa-solid fa-fire-burner fs-5"></i>
+                                </div>
+                                <div class="fw-bold text-dark" style="font-size: 12.5px;">Gas Cylinder</div>
+                                <span class="text-muted d-block" style="font-size: 10px;">LPG Booking</span>
+                            </div>
+                        </div>
+
+                        <!-- Broadband -->
+                        <div class="col-4 col-md-2" onclick="openUtilityModal('broadband')" style="cursor: pointer;">
+                            <div class="utility-card-item p-2.5 p-md-3 rounded-3" style="border: 1px solid #e2e8f0; background: #fafafa; transition: all 0.2s ease;">
+                                <div class="icon-circle mb-2 mx-auto d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 12px; background: #e0f2fe; color: #0369a1;">
+                                    <i class="fa-solid fa-wifi fs-5"></i>
+                                </div>
+                                <div class="fw-bold text-dark" style="font-size: 12.5px;">Broadband</div>
+                                <span class="text-muted d-block" style="font-size: 10px;">Fiber Net</span>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+                </div>
+            </div>
                 </div>
             </div>
 
