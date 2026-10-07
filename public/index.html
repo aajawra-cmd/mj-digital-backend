@@ -313,6 +313,109 @@
       }
     </style>
   
+
+    <style>
+      /* --- PROFESSIONAL RESPONSIVE NAVBAR & ICONS --- */
+      .navbar-custom {
+        padding: 12px 0 !important;
+      }
+
+      /* Desktop / Laptop Icon sizing */
+      .nav-action-icon {
+        width: 44px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #f8fafc !important;
+        font-size: 19px !important;
+        transition: all 0.2s ease;
+        position: relative;
+        text-decoration: none !important;
+      }
+      .nav-action-icon:hover {
+        background: rgba(255, 255, 255, 0.18);
+        color: #38bdf8 !important;
+        transform: translateY(-2px);
+      }
+      .nav-action-icon .badge {
+        font-size: 11px !important;
+        padding: 4px 6px !important;
+        min-width: 18px;
+        height: 18px;
+      }
+
+      /* Account Button */
+      #profileNavBtn {
+        height: 44px;
+        padding: 0 18px !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 30px !important;
+        border: 1.5px solid #38bdf8 !important;
+        color: #38bdf8 !important;
+      }
+      #profileNavBtn:hover {
+        background: #38bdf8 !important;
+        color: #0f172a !important;
+      }
+
+      /* Search Box */
+      .header-search-wrap {
+        flex: 1 1 220px;
+        max-width: 380px;
+        margin: 0 12px;
+      }
+      .header-search-wrap .form-control {
+        height: 42px;
+        font-size: 13px !important;
+        border-radius: 0 10px 10px 0 !important;
+      }
+      .header-search-wrap .input-group-text {
+        height: 42px;
+        border-radius: 10px 0 0 10px !important;
+      }
+
+      /* Mobile Drawer Fix (< 992px) */
+      @media (max-width: 991.98px) {
+        .navbar-collapse {
+          background: #0f172a;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 16px;
+          padding: 18px;
+          margin-top: 12px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .header-search-wrap {
+          max-width: 100% !important;
+          margin: 12px 0 16px 0 !important;
+          width: 100% !important;
+        }
+        .header-mobile-actions-row {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr 2fr;
+          gap: 10px;
+          width: 100%;
+          padding-top: 14px;
+          border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .header-mobile-actions-row .nav-action-icon {
+          width: 100% !important;
+          height: 44px !important;
+        }
+        .header-mobile-actions-row #profileNavBtn {
+          width: 100% !important;
+          justify-content: center;
+        }
+      }
+    </style>
+  
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
@@ -342,19 +445,20 @@
                     </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-3">
-                    <a href="javascript:void(0)" class="text-light position-relative cursor-pointer text-decoration-none" onclick="navigateTo('page-wishlist')" style="cursor: pointer;" title="Wishlist">
-                        <i class="fa-regular fa-heart fs-5"></i>
+                
+                <div class="d-flex align-items-center gap-2.5 header-mobile-actions-row">
+                    <a href="javascript:void(0)" class="nav-action-icon" onclick="navigateTo('page-wishlist')" title="Wishlist">
+                        <i class="fa-regular fa-heart"></i>
                         <span id="wishCount" class="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">0</span>
                     </a>
 
-                    <a href="javascript:void(0)" class="text-light position-relative cursor-pointer text-decoration-none" onclick="navigateTo('page-cart')" style="cursor: pointer;" title="Shopping Bag">
-                        <i class="fa-solid fa-bag-shopping fs-5"></i>
+                    <a href="javascript:void(0)" class="nav-action-icon" onclick="navigateTo('page-cart')" title="Shopping Bag">
+                        <i class="fa-solid fa-bag-shopping"></i>
                         <span id="cartCount" class="badge bg-primary rounded-circle position-absolute top-0 start-100 translate-middle">0</span>
                     </a>
 
-                    <button class="btn btn-outline-info btn-sm rounded-pill px-3" style="cursor: pointer;" id="profileNavBtn" onclick="checkAuthAndNavigate()">
-                        <i class="fa-solid fa-user me-1"></i> Account
+                    <button class="btn" id="profileNavBtn" onclick="checkAuthAndNavigate()">
+                        <i class="fa-solid fa-user"></i> <span>Account</span>
                     </button>
                 </div>
             </div>
