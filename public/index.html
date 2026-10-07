@@ -210,6 +210,14 @@
         }
     </style>
   
+
+    <style>
+      /* Prevent Modal Lock & Page Freeze */
+      body.modal-open { overflow: auto !important; padding-right: 0 !important; }
+      .modal-backdrop { z-index: 1040 !important; }
+      .modal { z-index: 1050 !important; }
+    </style>
+  
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
@@ -1393,7 +1401,16 @@
             }
         }, 300);
 
-        function navigateTo(pageId, navEl = null) {
+        
+function cleanStuckBackdrops() {
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+}
+
+function navigateTo(pageId, navEl = null) {
+    cleanStuckBackdrops();
             document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
             const target = document.getElementById(pageId);
             if (target) {
