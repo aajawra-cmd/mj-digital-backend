@@ -369,7 +369,7 @@
       /* Search Box */
       .header-search-wrap {
         flex: 1 1 220px;
-        max-width: 380px;
+        max-width: 220px;
         margin: 0 12px;
       }
       .header-search-wrap .form-control {
@@ -436,6 +436,52 @@
         .navbar-nav .nav-link {
           font-size: 13px !important;
           padding: 5px 8px !important;
+        }
+      }
+    </style>
+  
+
+    <style id="navbarFitPerfectStyle">
+      /* NAVBAR OVERFLOW & SPACING FIX */
+      .navbar-custom .container-fluid {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+      }
+      .navbar-nav {
+        gap: 2px !important;
+      }
+      .navbar-nav .nav-link {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        padding: 5px 7px !important;
+        white-space: nowrap !important;
+      }
+      .header-search-wrap {
+        width: 200px !important;
+        min-width: 170px !important;
+        max-width: 220px !important;
+        margin: 0 8px !important;
+      }
+      #profileNavBtn {
+        white-space: nowrap !important;
+        padding: 6px 14px !important;
+        font-size: 12.5px !important;
+      }
+      @media (min-width: 992px) and (max-width: 1250px) {
+        .navbar-nav .nav-link {
+          font-size: 11.5px !important;
+          padding: 4px 5px !important;
+        }
+        .header-search-wrap {
+          width: 160px !important;
+          min-width: 150px !important;
+        }
+        .navbar-brand {
+          font-size: 1.15rem !important;
+          margin-right: 8px !important;
         }
       }
     </style>
@@ -623,7 +669,7 @@
                     <div class="col-lg-5">
                         <div class="d-flex gap-3 align-items-start sticky-top" style="top: 90px;">
                             <div id="pageDetailThumbnails" class="v-thumb-strip"></div>
-                            <div id="pageDetailMediaBox" class="media-main-box flex-grow-1 shadow-sm"></div>
+                            <div id="pageDetailMediaBox" class="media-main-box  shadow-sm"></div>
                         </div>
                     </div>
 
@@ -660,10 +706,10 @@
                         <div id="pageDetailVariantsContainer" class="mb-4"></div>
 
                         <div class="d-flex flex-wrap gap-3 mb-4">
-                            <button type="button" id="pageDetailBuyBtn" class="btn btn-brand px-4 py-3 fw-bold flex-grow-1 shadow-sm">
+                            <button type="button" id="pageDetailBuyBtn" class="btn btn-brand px-4 py-3 fw-bold  shadow-sm">
                                 <i class="fa-solid fa-bolt me-1"></i> <span id="pageDetailBuyText">Buy Now</span>
                             </button>
-                            <button type="button" id="pageDetailAddBagBtn" class="btn btn-outline-primary px-4 py-3 fw-bold flex-grow-1">
+                            <button type="button" id="pageDetailAddBagBtn" class="btn btn-outline-primary px-4 py-3 fw-bold ">
                                 <i class="fa-solid fa-bag-shopping me-1"></i> Add to Shopping Bag
                             </button>
                             <button type="button" id="pageDetailWishBtn" class="btn-action-icon" style="width: 52px; height: 52px;" title="Wishlist">
@@ -1498,7 +1544,7 @@
                     </div>
                     <p class="small text-muted mb-3"><i class="fa-solid fa-circle-info me-1"></i> Refund will be processed back to original source per business refund policy.</p>
                     <div class="d-flex gap-2">
-                        <button type="submit" id="cancelSubmitBtn" class="btn btn-danger flex-grow-1 py-2 fw-bold">
+                        <button type="submit" id="cancelSubmitBtn" class="btn btn-danger  py-2 fw-bold">
                             <i class="fa-solid fa-ban me-1"></i> Confirm Cancellation
                         </button>
                         <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Keep Order</button>
@@ -1709,7 +1755,7 @@ function navigateTo(pageId, navEl = null) {
                                 ${originalMrp ? `<span class="text-muted text-decoration-line-through small">₹${originalMrp}</span>` : ''}
                             </div>
                             <div class="d-flex gap-2 mt-2">
-                                <button type="button" onclick="handleAddToCartClick(event, '${item._id}', false)" class="btn btn-brand flex-grow-1 py-2">
+                                <button type="button" onclick="handleAddToCartClick(event, '${item._id}', false)" class="btn btn-brand  py-2">
                                     <i class="fa-solid fa-bag-shopping me-1"></i> Add to Bag
                                 </button>
                                 <button type="button" onclick="openItemDetailsPage('${item._id}', false)" class="btn-action-icon" title="View Full Page">
@@ -2097,7 +2143,7 @@ function navigateTo(pageId, navEl = null) {
                 <div class="col-md-6 col-lg-4">
                     <div class="card-custom h-100 d-flex flex-column justify-content-between">
                         <img src="${safeImg}" class="card-img-top-custom" alt="${t.title}" onclick="openItemDetailsPage('${t._id}', true)" title="Click to view tour details" onerror="this.src='https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=500'">
-                        <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
+                        <div class="p-4 d-flex flex-column justify-content-between ">
                             <div onclick="openItemDetailsPage('${t._id}', true)" style="cursor: pointer;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="badge bg-warning text-dark">${t.destination || 'Travel Tour'}</span>
@@ -2111,7 +2157,7 @@ function navigateTo(pageId, navEl = null) {
                                     <span class="text-muted small">Per Person</span>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-brand btn-sm flex-grow-1 py-2" onclick="handleAddToCartClick(event, '${t._id}', true)">
+                                    <button type="button" class="btn btn-brand btn-sm  py-2" onclick="handleAddToCartClick(event, '${t._id}', true)">
                                         <i class="fa-solid fa-bag-shopping me-1"></i> Add to Bag
                                     </button>
                                     <button type="button" onclick="openItemDetailsPage('${t._id}', true)" class="btn-action-icon" style="width: 38px; height: 38px;" title="View Details">
@@ -2750,7 +2796,7 @@ function navigateTo(pageId, navEl = null) {
                             <p class="text-primary fw-bold">₹${Number(item.price).toLocaleString('en-IN')}</p>
                         </div>
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-brand btn-sm flex-grow-1" onclick="moveWishlistToBag('${item.id}')">
+                            <button type="button" class="btn btn-brand btn-sm " onclick="moveWishlistToBag('${item.id}')">
                                 <i class="fa-solid fa-bag-shopping me-1"></i> Add to Bag
                             </button>
                             <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeWishlistItem('${item.id}')">
