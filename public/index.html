@@ -228,6 +228,7 @@
                     <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-fashion', this)">FASHION</a></li>
                     <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-electronics', this)">ELECTRONICS</a></li>
                     <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-services', this)">SERVICES</a></li>
+                    <li class="nav-item"><a class="nav-link nav-btn" onclick="navigateTo('page-utility-hub', this)">RECHARGE & BILLS</a></li>
                 </ul>
 
                 <div class="position-relative me-3" style="min-width: 260px;">
@@ -279,67 +280,58 @@
             
 
             <!-- ⚡ UNIFIED 1-ROW UTILITY & WALLET HUB -->
+            
+
+            <!-- ⚡ UNIFIED 1-ROW UTILITY & WALLET STRIP (SWITCHES TO FULL PAGE) -->
             <div id="utilityServicesSection" class="mb-5">
                 <div class="card-custom p-3 p-lg-4" style="border: 1px solid #e2e8f0; border-radius: 20px; background: #ffffff; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);">
                     <div class="row align-items-center g-3">
-                        <!-- Left: Wallet Mini Hub -->
                         <div class="col-lg-3 col-md-4 border-end-md">
                             <div class="p-2.5 rounded-3 d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #bbf7d0;">
-                                <div class="d-flex align-items-center gap-2.5">
+                                <div class="d-flex align-items-center gap-2 cursor-pointer" onclick="navigateTo('page-utility-hub'); switchUtilityTab('wallet');">
                                     <div style="font-size: 26px;">👛</div>
                                     <div>
-                                        <span class="text-muted d-block" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">M J Wallet</span>
-                                        <h5 class="mb-0 fw-bold text-success" id="mainStripWalletBalance" style="font-size: 1.25rem;">₹0.00</h5>
+                                        <span class="text-muted d-block" style="font-size: 11px; font-weight: 600; text-transform: uppercase;">M J Wallet</span>
+                                        <h5 class="mb-0 fw-bold text-success" id="homeStripWalletBalance" style="font-size: 1.25rem;">₹0.00</h5>
                                     </div>
                                 </div>
-                                <button type="button" onclick="openAddMoneyModal()" class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px; white-space: nowrap;">
+                                <button type="button" onclick="navigateTo('page-utility-hub'); switchUtilityTab('wallet');" class="btn btn-success btn-sm rounded-pill px-3 fw-bold" style="font-size: 11px;">
                                     + Add Money
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Right: Single Row Services (Smooth Horizontal Scroll on mobile, clean grid on desktop) -->
                         <div class="col-lg-9 col-md-8">
-                            <div class="d-flex align-items-center justify-content-between gap-2 overflow-auto py-1" style="scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
-                                <div onclick="openInteractiveUtility('mobile', 'Mobile Prepaid / Postpaid', '📱')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">📱</div>
-                                    <span class="u-text">Mobile</span>
+                            <div class="d-flex align-items-center justify-content-between gap-2 overflow-auto py-1" style="scrollbar-width: thin;">
+                                <div onclick="openUtilityFullPage('mobile')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">📱</div><span class="u-text">Mobile</span>
                                 </div>
-                                <div onclick="openInteractiveUtility('dth', 'DTH Recharge', '📺')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">📺</div>
-                                    <span class="u-text">DTH</span>
+                                <div onclick="openUtilityFullPage('dth')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">📺</div><span class="u-text">DTH</span>
                                 </div>
-                                <div onclick="openInteractiveUtility('electricity', 'Electricity Bill Payment', '💡')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">💡</div>
-                                    <span class="u-text">Electricity</span>
+                                <div onclick="openUtilityFullPage('electricity')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">💡</div><span class="u-text">Electricity</span>
                                 </div>
-                                <div onclick="openInteractiveUtility('fastag', 'FASTag Recharge', '🚗')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">🚗</div>
-                                    <span class="u-text">FASTag</span>
+                                <div onclick="openUtilityFullPage('fastag')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">🚗</div><span class="u-text">FASTag</span>
                                 </div>
-                                <div onclick="openInteractiveUtility('gas', 'LPG Gas Cylinder Booking', '⛽')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">⛽</div>
-                                    <span class="u-text">Gas Cylinder</span>
+                                <div onclick="openUtilityFullPage('gas')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">⛽</div><span class="u-text">Gas</span>
                                 </div>
-                                <div onclick="openInteractiveUtility('broadband', 'Broadband & Landline', '🌐')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">🌐</div>
-                                    <span class="u-text">Broadband</span>
+                                <div onclick="openUtilityFullPage('broadband')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">🌐</div><span class="u-text">Broadband</span>
                                 </div>
-                                <div onclick="openInteractiveUtility('water', 'Water Tax / Bill', '💧')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">💧</div>
-                                    <span class="u-text">Water</span>
+                                <div onclick="openUtilityFullPage('water')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">💧</div><span class="u-text">Water</span>
                                 </div>
-                                <div onclick="openInteractiveUtility('insurance', 'Insurance Premium', '🏥')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">🏥</div>
-                                    <span class="u-text">Insurance</span>
+                                <div onclick="openUtilityFullPage('insurance')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">🏥</div><span class="u-text">Insurance</span>
                                 </div>
-                                <div onclick="openInteractiveUtility('credit_card', 'Credit Card Bill Pay', '💳')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">💳</div>
-                                    <span class="u-text">Credit Card</span>
+                                <div onclick="openUtilityFullPage('credit_card')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">💳</div><span class="u-text">Credit Card</span>
                                 </div>
-                                <div onclick="openInteractiveUtility('loan', 'Loan EMI Repayment', '🏦')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
-                                    <div class="u-icon-box">🏦</div>
-                                    <span class="u-text">Loan EMI</span>
+                                <div onclick="openUtilityFullPage('loan')" class="utility-chip-btn text-center" style="min-width: 78px; cursor: pointer;">
+                                    <div class="u-icon-box">🏦</div><span class="u-text">Loan EMI</span>
                                 </div>
                             </div>
                         </div>
@@ -469,6 +461,98 @@
                 </div>
             </div>
         </div>
+
+        
+        <!-- DEDICATED FULL-PAGE UTILITY & BBPS BILL PAYMENT HUB -->
+        <div id="page-utility-hub" class="page-view">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1 text-dark"><i class="fa-solid fa-bolt text-warning me-2"></i>Recharge & Bill Payments Hub (BBPS)</h3>
+                    <p class="text-muted small mb-0">Instant mobile recharges, utility bill clearance & 1-click M J Wallet checkout</p>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="navigateTo('page-home')">
+                    &larr; Back to Home Store
+                </button>
+            </div>
+
+            <div class="row g-4">
+                <!-- Left Column: Service Menu & Action Form -->
+                <div class="col-lg-5">
+                    <div class="card-custom p-4 mb-4">
+                        <h6 class="fw-bold text-dark mb-3">1. Select Service Category</h6>
+                        <div class="d-flex flex-wrap gap-2 mb-4">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 active utility-tab-selector" onclick="switchUtilityTab('mobile', this)">📱 Mobile</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('dth', this)">📺 DTH</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('electricity', this)">💡 Electricity</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('fastag', this)">🚗 FASTag</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('gas', this)">⛽ Gas</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('water', this)">💧 Water</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('wallet', this)">👛 Wallet Hub</button>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <form id="fullPageUtilityForm" onsubmit="handleFullPageUtilitySubmit(event)">
+                            <div id="fullPageDynamicFields"></div>
+
+                            <div class="card p-3 bg-light rounded-3 border my-3">
+                                <label class="small fw-bold text-dark d-block mb-2">Payment Source:</label>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="fpPaySource" id="fpPayWalletRadio" value="wallet" checked>
+                                    <label class="form-check-label d-flex justify-content-between small fw-semibold" for="fpPayWalletRadio">
+                                        <span>👛 Pay via M J Wallet</span>
+                                        <span class="text-success fw-bold" id="fpFormWalletBalText">Bal: ₹0.00</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="fpPaySource" id="fpPayGatewayRadio" value="gateway">
+                                    <label class="form-check-label small fw-semibold" for="fpPayGatewayRadio">
+                                        <span>⚡ Pay via UPI / Payment Gateway (Razorpay/Cards)</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="fpUtilityProceedBtn" class="btn btn-brand w-100 py-2.5 fw-bold shadow-sm">
+                                Proceed to Payment
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Wallet Quick Top-Up Widget -->
+                    <div class="card-custom p-4 bg-light-subtle">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-wallet text-success me-2"></i>M J Wallet Passbook</h6>
+                            <span class="badge bg-success-subtle text-success fs-6 fw-bold" id="fpWalletWidgetBal">₹0.00</span>
+                        </div>
+                        <p class="text-muted small mb-3">Add balance instantly for 1-click OTP-less recharges.</p>
+                        
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-white">₹</span>
+                            <input type="number" id="fpWalletTopupInput" class="form-control fw-bold" value="500" min="10">
+                            <button class="btn btn-success fw-bold px-3" type="button" onclick="executeFullPageWalletTopup()">+ Add Money</button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-0.5 px-2" onclick="document.getElementById('fpWalletTopupInput').value='100'">+₹100</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-0.5 px-2" onclick="document.getElementById('fpWalletTopupInput').value='500'">+₹500</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-0.5 px-2" onclick="document.getElementById('fpWalletTopupInput').value='1000'">+₹1,000</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Browse Plans / Live Bill Overview / Passbook -->
+                <div class="col-lg-7">
+                    <div class="card-custom p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0 text-dark" id="fpRightPanelTitle">Browse Operator Plans & Offers</h5>
+                            <span class="badge bg-primary-subtle text-primary" id="fpActiveServiceBadge">JIO PREPAID</span>
+                        </div>
+
+                        <div id="fpRightDynamicContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+  
 
         <!-- 4. CONTACT US VIEW -->
         <div id="page-contact" class="page-view">
@@ -3804,6 +3888,308 @@ function handleUtilityPaymentSubmit(e) {
         }
     }
 }
+</script>
+
+
+<script>
+let fpCurrentWalletBalance = 0;
+let fpCurrentService = 'mobile';
+
+const DUMMY_TELECOM_PLANS = [
+    { amount: 239, validity: '28 Days', data: '1.5 GB/day', desc: 'Unlimited True 5G Data, 100 SMS/day & National Calls' },
+    { amount: 299, validity: '28 Days', data: '2.0 GB/day', desc: 'Binge-all-night, Weekend Data Rollover & True 5G Unlimited' },
+    { amount: 666, validity: '70 Days', data: '1.5 GB/day', desc: 'Best Seller Long-term pack + Free OTT Subscription' },
+    { amount: 899, validity: '90 Days', data: '2.0 GB/day', desc: 'Quarterly Super Saver Plan with 20GB extra bonus data' },
+    { amount: 2999, validity: '365 Days', data: '2.5 GB/day', desc: 'Annual Mega Pack: 912.5 GB high speed total data' }
+];
+
+function openUtilityFullPage(serviceKey) {
+    navigateTo('page-utility-hub');
+    switchUtilityTab(serviceKey);
+}
+
+function syncAllWalletElements() {
+    const balFormatted = '₹' + Number(fpCurrentWalletBalance).toFixed(2);
+    const e1 = document.getElementById('homeStripWalletBalance');
+    if (e1) e1.innerText = balFormatted;
+    const e2 = document.getElementById('fpFormWalletBalText');
+    if (e2) e2.innerText = 'Bal: ' + balFormatted;
+    const e3 = document.getElementById('fpWalletWidgetBal');
+    if (e3) e3.innerText = balFormatted;
+}
+
+function switchUtilityTab(serviceKey, btnEl = null) {
+    fpCurrentService = serviceKey;
+    document.querySelectorAll('.utility-tab-selector').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+
+    const fieldsContainer = document.getElementById('fullPageDynamicFields');
+    const rightPanelTitle = document.getElementById('fpRightPanelTitle');
+    const rightBadge = document.getElementById('fpActiveServiceBadge');
+    const rightContent = document.getElementById('fpRightDynamicContent');
+    const submitBtn = document.getElementById('fpUtilityProceedBtn');
+
+    if (!fieldsContainer || !rightContent) return;
+
+    if (serviceKey === 'mobile') {
+        rightPanelTitle.innerText = "Browse Operator Plans & Offers";
+        rightBadge.innerText = "MOBILE PREPAID";
+        submitBtn.innerText = "Proceed to Recharge Mobile";
+
+        fieldsContainer.innerHTML = `
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Mobile Number</label>
+                <input type="tel" id="fpTargetInput" class="form-control" placeholder="10-digit mobile number" maxlength="10" value="9876543210" required>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="small fw-bold mb-1">Operator</label>
+                    <select id="fpOperatorSelect" class="form-select">
+                        <option>Jio Prepaid</option>
+                        <option>Airtel</option>
+                        <option>Vi (Vodafone Idea)</option>
+                        <option>BSNL Prepaid</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label class="small fw-bold mb-1">Circle</label>
+                    <select class="form-select">
+                        <option>Gujarat</option>
+                        <option>Mumbai</option>
+                        <option>Delhi NCR</option>
+                        <option>Maharashtra</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Amount (₹)</label>
+                <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" placeholder="239" value="239" required>
+            </div>
+        `;
+
+        rightContent.innerHTML = `
+            <div class="d-flex flex-column gap-3">
+                ${DUMMY_TELECOM_PLANS.map(p => `
+                    <div class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h5 class="fw-bold text-primary mb-0">₹${p.amount}</h5>
+                                <span class="badge bg-dark">${p.validity}</span>
+                                <span class="badge bg-info text-dark">${p.data}</span>
+                            </div>
+                            <p class="small text-muted mb-0">${p.desc}</p>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm px-3 fw-bold rounded-pill" onclick="document.getElementById('fpAmountInput').value='${p.amount}'">
+                            Select Plan
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else if (serviceKey === 'electricity') {
+        rightPanelTitle.innerText = "Live Bill Details (BBPS)";
+        rightBadge.innerText = "ELECTRICITY BOARD";
+        submitBtn.innerText = "Pay Electricity Bill";
+
+        fieldsContainer.innerHTML = `
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Electricity Board</label>
+                <select id="fpOperatorSelect" class="form-select">
+                    <option>Torrent Power - Ahmedabad</option>
+                    <option>UGVCL - Uttar Gujarat</option>
+                    <option>DGVCL - Dakshin Gujarat</option>
+                    <option>MGVCL - Madhya Gujarat</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Consumer / Service Number</label>
+                <div class="input-group">
+                    <input type="text" id="fpTargetInput" class="form-control" placeholder="e.g. 10098234" value="10098234" required>
+                    <button class="btn btn-primary" type="button" onclick="fetchLiveBillDemo()">Fetch Bill</button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Bill Amount (₹)</label>
+                <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" placeholder="Amount" value="1420" required>
+            </div>
+        `;
+
+        rightContent.innerHTML = `
+            <div class="p-4 border rounded-3 bg-light text-center" id="fpBillDetailsCard">
+                <div style="font-size: 40px; margin-bottom: 8px;">💡</div>
+                <h5 class="fw-bold text-dark mb-1">Torrent Power (Ahmedabad)</h5>
+                <span class="badge bg-success mb-3">Consumer Verified: Mohsin J</span>
+                <div class="card p-3 bg-white border mb-3 text-start">
+                    <div class="d-flex justify-content-between small text-muted mb-1"><span>Consumer No:</span><strong class="text-dark">10098234</strong></div>
+                    <div class="d-flex justify-content-between small text-muted mb-1"><span>Bill Due Date:</span><strong class="text-danger">18-Oct-2026</strong></div>
+                    <div class="d-flex justify-content-between small text-muted"><span>Status:</span><span class="badge bg-warning text-dark">Unpaid</span></div>
+                </div>
+                <h3 class="fw-bold text-primary">₹1,420.00</h3>
+                <small class="text-muted">BBPS Assured Instant NOC Receipt</small>
+            </div>
+        `;
+    } else if (serviceKey === 'wallet') {
+        rightPanelTitle.innerText = "Wallet Passbook & Transaction Ledger";
+        rightBadge.innerText = "M J DIGITAL WALLET";
+        submitBtn.innerText = "Add Money to Wallet";
+
+        fieldsContainer.innerHTML = `
+            <div class="p-3 bg-success bg-opacity-10 border border-success rounded-3 mb-3 text-center">
+                <span class="text-muted small d-block mb-1">Current Active Balance</span>
+                <h2 class="fw-bold text-success mb-0" id="fpWalletMainDisplay">₹${Number(fpCurrentWalletBalance).toFixed(2)}</h2>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Top-Up Amount (₹)</label>
+                <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-center" value="1000" min="10" required>
+            </div>
+        `;
+
+        rightContent.innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-success-subtle text-success">+ CREDIT</span></td>
+                            <td><strong>UPI Top-up (Razorpay)</strong><br><span class="text-muted">Ref: RZP_TOP_9182</span></td>
+                            <td>Today</td>
+                            <td><span class="badge bg-success">Success</span></td>
+                            <td class="text-end fw-bold text-success">+ ₹500.00</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-danger-subtle text-danger">- DEBIT</span></td>
+                            <td><strong>Jio Prepaid 28-Days Recharge</strong><br><span class="text-muted">Number: 9876543210</span></td>
+                            <td>Yesterday</td>
+                            <td><span class="badge bg-success">Completed</span></td>
+                            <td class="text-end fw-bold text-danger">- ₹239.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } else {
+        rightPanelTitle.innerText = "Biller Verification & Payment";
+        rightBadge.innerText = serviceKey.toUpperCase();
+        submitBtn.innerText = "Proceed to Pay";
+
+        fieldsContainer.innerHTML = `
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Biller / Service Name</label>
+                <input type="text" id="fpOperatorSelect" class="form-control" placeholder="e.g. FASTag Bank / Gas Agency" required>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Account / Vehicle / Consumer Number</label>
+                <input type="text" id="fpTargetInput" class="form-control" placeholder="Enter identifier" required>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Bill Amount (₹)</label>
+                <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" placeholder="Amount" value="500" required>
+            </div>
+        `;
+
+        rightContent.innerHTML = `
+            <div class="p-5 text-center text-muted border rounded-3 bg-light">
+                <i class="fa-solid fa-shield-halved fs-1 text-primary opacity-50 mb-3"></i>
+                <h6 class="fw-bold text-dark">Bharat BillPay (BBPS) Secured Channel</h6>
+                <p class="small mb-0">Fill out your account details on the left to verify bills and execute instant clearance.</p>
+            </div>
+        `;
+    }
+
+    syncAllWalletElements();
+}
+
+function fetchLiveBillDemo() {
+    alert("✅ Bill Fetched Successfully via BBPS!\nConsumer: Mohsin J\nDue Amount: ₹1,420.00\nDue Date: 18-Oct-2026");
+}
+
+function executeFullPageWalletTopup() {
+    const amt = Number(document.getElementById('fpWalletTopupInput')?.value || 0);
+    if (amt <= 0) return alert('Kripya valid amount daalein.');
+
+    if (typeof Razorpay !== 'undefined') {
+        const options = {
+            key: 'rzp_test_TkFr9r722bHvjA',
+            amount: amt * 100,
+            currency: 'INR',
+            name: 'M J DIGITAL WALLET',
+            description: 'Wallet Top-up',
+            image: 'https://mjdigital.co.in/favicon.ico',
+            handler: function(response) {
+                fpCurrentWalletBalance += amt;
+                syncAllWalletElements();
+                if (fpCurrentService === 'wallet') switchUtilityTab('wallet');
+                alert('🎉 ₹' + amt + ' successfully added to your M J Wallet! Txn: ' + response.razorpay_payment_id);
+            },
+            prefill: { name: 'Customer', contact: '8306669999' },
+            theme: { color: '#16a34a' }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+    } else {
+        fpCurrentWalletBalance += amt;
+        syncAllWalletElements();
+        if (fpCurrentService === 'wallet') switchUtilityTab('wallet');
+        alert('🎉 Demo: ₹' + amt + ' added to wallet!');
+    }
+}
+
+function handleFullPageUtilitySubmit(e) {
+    e.preventDefault();
+    const amt = Number(document.getElementById('fpAmountInput')?.value || 0);
+    const target = document.getElementById('fpTargetInput')?.value || '';
+    const operator = document.getElementById('fpOperatorSelect')?.value || '';
+    const payMode = document.querySelector('input[name="fpPaySource"]:checked')?.value || 'wallet';
+
+    if (amt <= 0) return alert('Kripya valid amount enter karein.');
+
+    if (fpCurrentService === 'wallet') {
+        executeFullPageWalletTopup();
+        return;
+    }
+
+    if (payMode === 'wallet') {
+        if (fpCurrentWalletBalance < amt) {
+            return alert('❌ Wallet me balance kam hai!\nAvailable: ₹' + fpCurrentWalletBalance + '\nRequired: ₹' + amt + '\n\nKripya neeche se "+ Add Money" karein ya Payment Gateway choose karein.');
+        }
+        fpCurrentWalletBalance -= amt;
+        syncAllWalletElements();
+        alert('✅ ' + fpCurrentService.toUpperCase() + ' payment of ₹' + amt + ' successful via M J Wallet!\nTarget: ' + target + ' (' + operator + ')\nRemaining Balance: ₹' + fpCurrentWalletBalance);
+    } else {
+        if (typeof Razorpay !== 'undefined') {
+            const options = {
+                key: 'rzp_test_TkFr9r722bHvjA',
+                amount: amt * 100,
+                currency: 'INR',
+                name: 'M J DIGITAL - ' + fpCurrentService.toUpperCase(),
+                description: 'Bill Payment for ' + target,
+                image: 'https://mjdigital.co.in/favicon.ico',
+                handler: function(response) {
+                    alert('✅ Payment Successful! Bill Cleared.\nTxn ID: ' + response.razorpay_payment_id);
+                },
+                prefill: { contact: '8306669999' },
+                theme: { color: '#0d6efd' }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } else {
+            alert('✅ Payment of ₹' + amt + ' processed successfully!');
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    syncAllWalletElements();
+    switchUtilityTab('mobile');
+});
 </script>
 
 </body>
