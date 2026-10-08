@@ -4435,48 +4435,137 @@ function executeFullPageWalletTopup() {
     }
 }
 
-function handleFullPageUtilitySubmit(e) {
+async function handleFullPageUtilitySubmit(e) {
     e.preventDefault();
+    const btn = document.getElementById('fpUtilityProceedBtn');
+    const origBtnHtml = btn ? btn.innerHTML : 'Proceed to Payment';
+
     const amt = Number(document.getElementById('fpAmountInput')?.value || 0);
     const target = document.getElementById('fpTargetInput')?.value || '';
-    const operator = document.getElementById('fpOperatorSelect')?.value || '';
+    const operator = document.getElementById('fpOperatorSelect')?.value || 'Standard';
     const payMode = document.querySelector('input[name="fpPaySource"]:checked')?.value || 'wallet';
 
     if (amt <= 0) return alert('Kripya valid amount enter karein.');
 
-    if (fpCurrentService === 'wallet') {
-        executeFullPageWalletTopup();
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Processing Request...';
+    }
+
+    async function recordUtilityOrder(payStatus, ordStatus, txnId, failureReason = '') {
+        const payload = {
+            customerName: document.getElementById('profileNameInput')?.value || 'Mohsin J',
+            customerPhone: document.getElementById('profilePhoneInput')?.value || '8306669999',
+            customerEmail: document.getElementById('profileEmailInput')?.value || 'mjdigitalworlds@gmail.com',
+            shippingAddress: 'Digital Service Clearance (Instant BBPS Dispatch)',
+            orderType: 'Utility',
+            totalAmount: amt,
+            paymentGateway: payMode === 'wallet' ? 'MJ_WALLET' : 'razorpay',
+            paymentStatus: payStatus,
+            status: ordStatus,
+            transactionId: txnId || ('UTIL-' + Date.now().toString().slice(-8)),
+            itemDetails: {
+                itemId: 'UTIL-' + (typeof fpCurrentService !== 'undefined' ? fpCurrentService.toUpperCase() : 'UTILITY'),
+                title: (typeof fpCurrentService !== 'undefined' ? fpCurrentService.toUpperCase() : 'SERVICE') + ' - ' + target + ' (' + operator + ')',
+                category: 'Utility & Recharge',
+                quantity: 1,
+                notes: failureReason || ''
+            },
+            items: [{
+                id: 'UTIL-' + (typeof fpCurrentService !== 'undefined' ? fpCurrentService : 'service'),
+                title: (typeof fpCurrentService !== 'undefined' ? fpCurrentService.toUpperCase() : 'SERVICE') + ' - ' + target + ' (' + operator + ')',
+                type: 'Utility',
+                category: 'Recharge & BBPS',
+                price: amt,
+                qty: 1,
+                itemTotal: amt,
+                hsn: '998313',
+                gstRate: 18
+            }]
+        };
+
+        try {
+            const res = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            return await res.json();
+        } catch (err) {
+            console.error('Order save error:', err);
+            return null;
+        }
+    }
+
+    // 1. WALLET PAYMENT FLOW
+    if (payMode === 'wallet') {
+        if (typeof fpCurrentWalletBalance !== 'undefined' && fpCurrentWalletBalance < amt) {
+            if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+            await recordUtilityOrder('Failed', 'Cancelled', '', 'Insufficient Wallet Balance');
+            return alert('❌ Wallet me balance kam hai!\nAvailable: ₹' + fpCurrentWalletBalance + '\nRequired: ₹' + amt);
+        }
+
+        if (typeof fpCurrentWalletBalance !== 'undefined') fpCurrentWalletBalance -= amt;
+        if (typeof syncAllWalletElements === 'function') syncAllWalletElements();
+
+        await recordUtilityOrder('Paid', 'Delivered', 'WAL-' + Date.now());
+        if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+
+        alert('✅ Utility payment of ₹' + amt + ' successful via M J Wallet!\nTarget: ' + target);
+        if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+        if (typeof navigateTo === 'function') navigateTo('page-profile');
         return;
     }
 
-    if (payMode === 'wallet') {
-        if (fpCurrentWalletBalance < amt) {
-            return alert('❌ Wallet me balance kam hai!\nAvailable: ₹' + fpCurrentWalletBalance + '\nRequired: ₹' + amt + '\n\nKripya neeche se "+ Add Money" karein ya Payment Gateway choose karein.');
-        }
-        fpCurrentWalletBalance -= amt;
-        syncAllWalletElements();
-        alert('✅ ' + fpCurrentService.toUpperCase() + ' payment of ₹' + amt + ' successful via M J Wallet!\nTarget: ' + target + ' (' + operator + ')\nRemaining Balance: ₹' + fpCurrentWalletBalance);
-    } else {
-        if (typeof Razorpay !== 'undefined') {
-            const options = {
-                key: 'rzp_test_TkFr9r722bHvjA',
-                amount: amt * 100,
-                currency: 'INR',
-                name: 'M J DIGITAL - ' + fpCurrentService.toUpperCase(),
-                description: 'Bill Payment for ' + target,
-                image: 'https://mjdigital.co.in/favicon.ico',
-                handler: function(response) {
-                    alert('✅ Payment Successful! Bill Cleared.\nTxn ID: ' + response.razorpay_payment_id);
-                },
-                prefill: { contact: '8306669999' },
-                theme: { color: '#0d6efd' }
-            };
-            const rzp = new Razorpay(options);
-            rzp.open();
-        } else {
-            alert('✅ Payment of ₹' + amt + ' processed successfully!');
-        }
+    // 2. LIVE RAZORPAY GATEWAY FLOW
+    if (typeof Razorpay === 'undefined') {
+        if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+        return alert('Payment gateway script loading... Kripya refresh karke try karein.');
     }
+
+    const tempTxn = 'RZP_PEND_' + Date.now();
+    await recordUtilityOrder('Pending', 'Processing', tempTxn, 'Awaiting Gateway Callback');
+
+    const options = {
+        key: 'rzp_test_TkFr9r722bHvjA',
+        amount: amt * 100,
+        currency: 'INR',
+        name: 'M J DIGITAL - UTILITY',
+        description: 'Bill Payment: ' + target + ' (' + operator + ')',
+        image: 'https://mjdigital.co.in/favicon.ico',
+        handler: async function (response) {
+            if (btn) { btn.innerHTML = '<i class="fa-solid fa-check me-2"></i>Payment Verified!'; }
+            await recordUtilityOrder('Paid', 'Delivered', response.razorpay_payment_id);
+            alert('🎉 Payment Successful!\nStatus: SUCCESS\nTxn ID: ' + response.razorpay_payment_id);
+            if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+            if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+            if (typeof navigateTo === 'function') navigateTo('page-profile');
+        },
+        modal: {
+            ondismiss: async function () {
+                if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+                await recordUtilityOrder('Pending', 'Processing', tempTxn, 'User closed modal (Pending Auto-Sync)');
+                alert('⚠️ Transaction window close ho gayi thi.\nStatus: PENDING\nYeh dashboard me auto-sync ho jayega.');
+                if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+            }
+        },
+        prefill: {
+            name: document.getElementById('profileNameInput')?.value || 'Mohsin J',
+            contact: '8306669999',
+            email: 'mjdigitalworlds@gmail.com'
+        },
+        theme: { color: '#0d6efd' }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', async function (response) {
+        if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+        await recordUtilityOrder('Failed', 'Cancelled', response.error?.metadata?.payment_id || '', response.error?.description || '');
+        alert('❌ Payment Failed: ' + response.error?.description);
+        if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+    });
+
+    rzp.open();
 }
 
 document.addEventListener("DOMContentLoaded", function() {
