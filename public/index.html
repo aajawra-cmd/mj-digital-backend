@@ -1885,7 +1885,7 @@ window.addEventListener('popstate', function(e) {
                     cachedAllProducts = items;
                     return items;
                 }
-            } catch (e) {
+            } catch(e) {
                 console.warn('Backend waking up or offline, using cache fallback:', e.message);
             }
             // Return cached / fallback products so page is NEVER blank
@@ -1956,7 +1956,7 @@ window.addEventListener('popstate', function(e) {
                     travels = Array.isArray(data) ? data : (data.data || []);
                     travels.forEach(t => { catalogItemsCache[t._id] = t; });
                 }
-            } catch (e) {
+            } catch(e) {
                 travels = travelMemory.all || [];
             }
 
@@ -1990,7 +1990,7 @@ window.addEventListener('popstate', function(e) {
                     travels = Array.isArray(data) ? data : (data.data || []);
                     travels.forEach(t => { catalogItemsCache[t._id] = t; });
                 }
-            } catch (e) {
+            } catch(e) {
                 travels = travelMemory.all || [];
             }
 
@@ -2064,9 +2064,86 @@ window.addEventListener('popstate', function(e) {
                 return cat.includes('serv') || cat.includes('it');
             });
         }
+
+        async function setupCategoryStore(catKey, gridId, chipsContainerId, filterFn) {
+            const grid = document.getElementById(gridId);
+            const chipsCont = document.getElementById(chipsContainerId);
+            if (!grid) return;
+
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading catalog...</div>';
+            
+            let allItems = await fetchStoreItems();
+            if (!allItems || allItems.length === 0) {
+                allItems = (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined') ? PRODUCT_FALLBACK_ITEMS : [];
+            }
+            
+            const catItems = allItems.filter(filterFn);
+
+            categoryMemory[catKey].all = catItems;
+            categoryMemory[catKey].filtered = catItems;
+            categoryMemory[catKey].activeBrand = 'All';
+            categoryMemory[catKey].query = '';
+
+            const searchInput = document.querySelector(`#page-${catKey} input[type="text"]`);
+            if (searchInput) searchInput.value = '';
+
+            if (chipsCont) {
+                const brands = ['All', ...new Set(catItems.map(p => {
+                    if (p.brand && p.brand.trim() !== '') return p.brand.trim();
+                    return '';
+                }).filter(Boolean))];
+
+                chipsCont.innerHTML = brands.map(b => `
+                    <button type="button" 
+                        onclick="filterCategoryByBrand('${catKey}', '${b}', this)" 
+                        class="brand-chip-btn ${b === 'All' ? 'active' : ''}">
+                        ${b}
+                    </button>
+                `).join('');
+            }
+
+            renderCategoryGrid(gridId, catItems, `No ${catKey} items found.`);
+        }
+
+        async function filterTravels(regionType = 'All', btnEl = null) {
+            travelMemory.activeRegion = regionType;
+            travelMemory.activeDestination = 'All';
+            travelMemory.query = '';
+
+            const tSearch = document.getElementById('travelSearchInput');
+            if (tSearch) tSearch.value = '';
+
+            document.querySelectorAll('.travel-tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnEl) {
+                btnEl.classList.add('active');
+            } else if (regionType === 'All') {
+                document.getElementById('btn-all-travel')?.classList.add('active');
+            } else if (regionType === 'International') {
+                document.getElementById('btn-intl')?.classList.add('active');
+            } else if (regionType === 'India') {
+                document.getElementById('btn-india')?.classList.add('active');
+            }
+
+            const grid = document.getElementById('travelGrid');
+            if (!grid) return;
+
+            if (!travelMemory.all || travelMemory.all.length === 0) {
+                travelMemory.all = (typeof TRAVEL_FALLBACK_PACKAGES !== 'undefined') ? TRAVEL_FALLBACK_PACKAGES : [];
+            }
+
+            try {
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                if (res.ok) {
+                    const result = await res.json();
+                    const remoteData = Array.isArray(result) ? result : (result.data || []);
+                    if (remoteData.length > 0) {
+                        travelMemory.all = remoteData;
+                        remoteData.forEach(t => { catalogItemsCache[t._id] = t; });
+                    }
+                }
             } catch (err) {
                 if (travelMemory.all.length === 0) {
-                    travelMemory.all = TRAVEL_FALLBACK_PACKAGES;
+                    travelMemory.all = (typeof TRAVEL_FALLBACK_PACKAGES !== 'undefined') ? TRAVEL_FALLBACK_PACKAGES : [];
                 }
             }
 
@@ -3211,7 +3288,7 @@ window.addEventListener('popstate', function(e) {
                                         alert('Payment verification failed.');
                                         resetButton();
                                     }
-                                } catch (e) {
+                                } catch(e) {
                                     alert('Verification error: ' + e.message);
                                     resetButton();
                                 }
@@ -3236,7 +3313,7 @@ window.addEventListener('popstate', function(e) {
                         finishCheckout();
                     }
                 }
-            } catch (err) {
+            } catch(err) {
                 alert('Checkout error: ' + (err.message || 'Server connection fail'));
                 resetButton();
             }
@@ -3358,7 +3435,7 @@ window.location.reload();
                 });
 
                 filterCustomerOrders();
-            } catch (err) {
+            } catch(err) {
                 container.innerHTML = `<div class="text-center text-danger py-4">Error loading order history.</div>`;
             }
         }
@@ -3625,7 +3702,7 @@ window.location.reload();
                 } else {
                     alert('Cancellation failed on server.');
                 }
-            } catch (err) {
+            } catch(err) {
                 alert('Network error while cancelling order.');
             } finally {
                 if (btn) {
@@ -3651,7 +3728,7 @@ window.location.reload();
                         if (el) el.innerHTML = content;
                     });
                 }
-            } catch (err) {
+            } catch(err) {
                 console.log('Using static policies fallback');
             }
         }
@@ -3687,7 +3764,7 @@ window.location.reload();
                     if (cAddr) cAddr.innerHTML = formatted;
                     if (fAddr) fAddr.innerHTML = formatted;
                 }
-            } catch (err) {}
+            } catch(err) {}
         }
 
         function openLiveTracking(orderId) {
@@ -3829,7 +3906,7 @@ window.location.reload();
                     alert('Payment Failed: ' + response.error.description);
                 });
                 rzp.open();
-            } catch (err) {
+            } catch(err) {
                 console.error(err);
                 alert('Razorpay open error: ' + err.message);
             }
@@ -3871,7 +3948,7 @@ window.openRazorpayModal = function() {
             alert("Payment Failed: " + response.error.description);
         });
         rzp.open();
-    } catch (e) {
+    } catch(e) {
         console.error("Razorpay Error:", e);
         alert("Error opening Razorpay: " + e.message);
     }
