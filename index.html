@@ -1830,32 +1830,29 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
 function routeCurrentPath() {
     const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
     const params = new URLSearchParams(window.location.search);
-    const itemId = params.get('id');
-    const isTravel = params.get('type') === 'travel';
+    let itemId = params.get('id') || localStorage.getItem('mj_last_viewed_item');
+    let isTravel = params.get('type') === 'travel' || localStorage.getItem('mj_last_viewed_is_travel') === '1';
 
-    if (path.includes('item') && itemId) {
+    if (path.includes('item') || path.includes('view')) {
         let attempts = 0;
         const interval = setInterval(() => {
             attempts++;
-            const hasData = (typeof catalogItemsCache !== 'undefined' && catalogItemsCache[itemId]) ||
-                            (typeof travelMemory !== 'undefined' && travelMemory.all && travelMemory.all.length > 0);
-            if (hasData || attempts > 25) {
-                clearInterval(interval);
-                if (typeof openItemDetailsPage === 'function') openItemDetailsPage(itemId, isTravel, false);
+            if (typeof forceRenderAllCategories === 'function') forceRenderAllCategories();
+            
+            if (!itemId) {
+                itemId = 'm2'; // Default fallback to Samsung Galaxy S24 Ultra
             }
-        }, 120);
+
+            const hasItem = (typeof catalogItemsCache !== 'undefined' && catalogItemsCache[itemId]);
+            if (hasItem || attempts > 15) {
+                clearInterval(interval);
+                if (typeof openItemDetailsPage === 'function') {
+                    openItemDetailsPage(itemId, isTravel, false);
+                }
+            }
+        }, 100);
         return;
     }
-
-    const navIdMap = {
-        'page-home': 'nav-home',
-        'page-travels': 'nav-travels',
-        'page-mobile': 'nav-mobile',
-        'page-fashion': 'nav-fashion',
-        'page-electronics': 'nav-electronics',
-        'page-services': 'nav-services',
-        'page-utility-hub': 'nav-utility'
-    };
 
     const targetPage = ROUTE_PAGE_MAP[path] || 'page-home';
     const navBtn = document.querySelector(`a[onclick*="${targetPage}"]`);
@@ -2718,11 +2715,15 @@ window.addEventListener('popstate', function(e) {
 
         // FULL ITEM DETAILS WITH CLEAN MULTI-IMAGE & NATIVE VIDEO GALLERY
         function openItemDetailsPage(id, isTravel = false, updateUrl = true) {
-    if (updateUrl) {
-        const itemUrl = '/view/item?id=' + encodeURIComponent(id) + (isTravel ? '&type=travel' : '');
-        try { history.pushState({ pageId: 'page-item-details', itemId: id, isTravel: isTravel }, '', itemUrl); } catch(e) {}
-    }
-            const item = catalogItemsCache[id] || travelMemory.all.find(t => String(t._id) === String(id));
+            if (!id) return;
+            localStorage.setItem('mj_last_viewed_item', id);
+            localStorage.setItem('mj_last_viewed_is_travel', isTravel ? '1' : '0');
+
+            if (updateUrl) {
+                const itemUrl = '/view/item?id=' + encodeURIComponent(id) + (isTravel ? '&type=travel' : '');
+                try { history.pushState({ pageId: 'page-item-details', itemId: id, isTravel: isTravel }, '', itemUrl); } catch(e) {}
+            }
+            const item = catalogItemsCache[id] || (typeof travelMemory !== 'undefined' && travelMemory.all ? travelMemory.all.find(t => String(t._id) === String(id)) : null) || (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined' ? PRODUCT_FALLBACK_ITEMS.find(p => String(p._id) === String(id)) : null);
             if (!item) return;
 
             const title = item.title || item.name || 'Item Overview';
