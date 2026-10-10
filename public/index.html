@@ -2127,10 +2127,22 @@ window.addEventListener('popstate', function(e) {
             const grid = document.getElementById('travelGrid');
             if (!grid) return;
 
+            // Ensure baseline fallback data is always ready immediately
             if (!travelMemory.all || travelMemory.all.length === 0) {
-                travelMemory.all = (typeof TRAVEL_FALLBACK_PACKAGES !== 'undefined') ? TRAVEL_FALLBACK_PACKAGES : [];
+                travelMemory.all = (typeof TRAVEL_FALLBACK_PACKAGES !== 'undefined' && TRAVEL_FALLBACK_PACKAGES.length > 0) 
+                    ? TRAVEL_FALLBACK_PACKAGES 
+                    : [
+                        { _id: 't1', title: 'New Zealand Alpine Escape', destination: 'new zeeland', duration: { days: 7, nights: 6 }, pricingTiers: { standard: { price: 98000 } } },
+                        { _id: 't2', title: 'Hong Kong Skyline Tour', destination: 'hongkong', duration: { days: 5, nights: 4 }, pricingTiers: { standard: { price: 95000 } } },
+                        { _id: 't3', title: 'Burj Khalifa Luxury Experience', destination: 'Burj Khalifa,UAE', duration: { days: 4, nights: 3 }, pricingTiers: { standard: { price: 35000 } } },
+                        { _id: 't4', title: 'Goa Beach Retreat', destination: 'goa', duration: { days: 3, nights: 2 }, pricingTiers: { standard: { price: 25000 } } }
+                    ];
             }
 
+            // Pehle offline/cache packages instant render karo bina wait kiye
+            applyTravelFilters();
+
+            // Background me live data fetch karo
             try {
                 const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
                 if (res.ok) {
@@ -2139,15 +2151,12 @@ window.addEventListener('popstate', function(e) {
                     if (remoteData.length > 0) {
                         travelMemory.all = remoteData;
                         remoteData.forEach(t => { catalogItemsCache[t._id] = t; });
+                        applyTravelFilters();
                     }
                 }
             } catch (err) {
-                if (travelMemory.all.length === 0) {
-                    travelMemory.all = (typeof TRAVEL_FALLBACK_PACKAGES !== 'undefined') ? TRAVEL_FALLBACK_PACKAGES : [];
-                }
+                console.warn("Using offline fallback packages:", err.message);
             }
-
-            applyTravelFilters();
         }
 
         function filterTravelByDestination(destinationName, btnEl) {
