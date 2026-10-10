@@ -1890,22 +1890,36 @@ window.addEventListener('popstate', function(e) {
             if (!forceRefresh && cachedAllProducts && cachedAllProducts.length > 0) {
                 return cachedAllProducts;
             }
-            try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products');
-                if (!res.ok) throw new Error('API fetch failed');
-                const data = await res.json();
-                const items = Array.isArray(data) ? data : (data.data || []);
-                if (items.length > 0) {
-                    items.forEach(it => { catalogItemsCache[it._id] = it; });
-                    cachedAllProducts = items;
-                    return items;
-                }
-            } catch(e) {
-                console.warn('Backend waking up or offline, using cache fallback:', e.message);
+            
+            // Baseline fallback data instantly ready
+            const baseFallback = (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined' && PRODUCT_FALLBACK_ITEMS.length > 0)
+                ? PRODUCT_FALLBACK_ITEMS
+                : [
+                    { _id: 'm1', title: 'Iphone 18 pro', category: 'Mobile', brand: 'Apple', price: 349999, discountPrice: 314999, stock: 10, imageUrl: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500', description: 'Flagship smartphone.' },
+                    { _id: 'm2', title: 'Samsung Galaxy S24 Ultra', category: 'Mobile', brand: 'Samsung', price: 134999, discountPrice: 129999, stock: 12, imageUrl: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=500', description: 'Galaxy AI smartphone.' },
+                    { _id: 'e1', title: 'MacBook Air M3', category: 'Electronics', brand: 'Apple', price: 119900, discountPrice: 104900, stock: 15, imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500', description: 'Apple M3 chip laptop.' },
+                    { _id: 'e2', title: 'Sony WH-1000XM5 Wireless Headphones', category: 'Electronics', brand: 'Sony', price: 29990, discountPrice: 26990, stock: 20, imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500', description: 'Noise cancelling headphones.' },
+                    { _id: 'f1', title: 'Casual Slim Fit Cotton T-Shirt', category: 'Fashion', brand: 'MjHouse', price: 2399, discountPrice: 1499, stock: 50, imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500', description: 'Combed cotton t-shirt.' }
+                ];
+
+            if (!cachedAllProducts || cachedAllProducts.length === 0) {
+                cachedAllProducts = baseFallback;
+                baseFallback.forEach(it => { catalogItemsCache[it._id] = it; });
             }
-            // Return cached / fallback products so page is NEVER blank
-            const fallbackList = Object.values(catalogItemsCache).filter(item => !item.destination);
-            return fallbackList.length > 0 ? fallbackList : PRODUCT_FALLBACK_ITEMS;
+
+            // Background fetch without freezing the UI
+            fetch('https://mj-digital-backend-3.onrender.com/api/products')
+                .then(res => res.json())
+                .then(data => {
+                    const items = Array.isArray(data) ? data : (data.data || []);
+                    if (items.length > 0) {
+                        items.forEach(it => { catalogItemsCache[it._id] = it; });
+                        cachedAllProducts = items;
+                    }
+                })
+                .catch(err => console.warn('Using instant cache catalog'));
+
+            return cachedAllProducts;
         }
 
         // 2. PRODUCT CARD BUILDER (Safe Media Tag & Strikethrough Pricing)
