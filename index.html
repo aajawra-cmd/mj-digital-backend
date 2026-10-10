@@ -1678,33 +1678,121 @@ function cleanStuckBackdrops() {
     document.body.style.removeProperty('padding-right');
 }
 
-function navigateTo(pageId, navEl = null) {
-    cleanStuckBackdrops();
-            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
-            const target = document.getElementById(pageId);
-            if (target) {
-                target.classList.add('active');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-            if (navEl) {
-                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-                navEl.classList.add('active');
-            }
+const ROUTE_PAGE_MAP = {
+    '/': 'page-home',
+    '/home': 'page-home',
+    '/travels': 'page-travels',
+    '/mobiles': 'page-mobile',
+    '/fashion': 'page-fashion',
+    '/electronics': 'page-electronics',
+    '/services': 'page-services',
+    '/pay/utility': 'page-utility-hub',
+    '/wishlist': 'page-wishlist',
+    '/bag': 'page-cart',
+    '/cart': 'page-cart',
+    '/checkout': 'page-checkout',
+    '/account/orders': 'page-profile',
+    '/profile': 'page-profile',
+    '/view/item': 'page-item-details'
+};
 
-            if (pageId === 'page-home') loadHomeTrending();
-            if (pageId === 'page-all-catalog') {
-                const searchVal = document.getElementById('globalLiveSearchInput')?.value?.trim();
-                if (!searchVal) loadAllCatalog();
+const PAGE_ROUTE_MAP = {
+    'page-home': '/',
+    'page-travels': '/travels',
+    'page-mobile': '/mobiles',
+    'page-fashion': '/fashion',
+    'page-electronics': '/electronics',
+    'page-services': '/services',
+    'page-utility-hub': '/pay/utility',
+    'page-wishlist': '/wishlist',
+    'page-cart': '/bag',
+    'page-checkout': '/checkout',
+    'page-profile': '/account/orders',
+    'page-item-details': '/view/item'
+};
+
+function navigateTo(pageId, navEl = null, updateUrl = true) {
+    cleanStuckBackdrops();
+
+    document.querySelectorAll('.page-view').forEach(p => {
+        p.classList.remove('active');
+        p.style.display = 'none';
+    });
+
+    const target = document.getElementById(pageId);
+    if (target) {
+        target.classList.add('active');
+        target.style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    document.querySelectorAll('.nav-btn, .nav-link').forEach(btn => btn.classList.remove('active'));
+    if (navEl) {
+        navEl.classList.add('active');
+    }
+
+    if (updateUrl && PAGE_ROUTE_MAP[pageId]) {
+        try { history.pushState({ pageId: pageId }, '', PAGE_ROUTE_MAP[pageId]); } catch(e) {}
+    }
+
+    if (pageId === 'page-home') {
+        if (typeof loadHomeTrending === 'function') loadHomeTrending();
+        if (typeof fetchStoreItems === 'function') fetchStoreItems();
+    } else if (pageId === 'page-mobile') {
+        if (typeof loadMobiles === 'function') loadMobiles();
+        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
+    } else if (pageId === 'page-fashion') {
+        if (typeof loadFashion === 'function') loadFashion();
+        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
+    } else if (pageId === 'page-electronics') {
+        if (typeof loadElectronics === 'function') loadElectronics();
+        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
+    } else if (pageId === 'page-services') {
+        if (typeof loadServices === 'function') loadServices();
+    } else if (pageId === 'page-travels') {
+        if (typeof filterTravels === 'function') filterTravels('All');
+    } else if (pageId === 'page-profile') {
+        if (typeof loadOrdersTable === 'function') loadOrdersTable();
+    } else if (pageId === 'page-utility-hub') {
+        if (typeof switchUtilityTab === 'function') switchUtilityTab(typeof fpCurrentService !== 'undefined' ? fpCurrentService : 'mobile');
+    }
+}
+
+function routeCurrentPath() {
+    const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+    const params = new URLSearchParams(window.location.search);
+    const itemId = params.get('id');
+    const isTravel = params.get('type') === 'travel';
+
+    if (path.includes('item') && itemId) {
+        let attempts = 0;
+        const interval = setInterval(() => {
+            attempts++;
+            const hasData = (typeof catalogItemsCache !== 'undefined' && catalogItemsCache[itemId]) ||
+                            (typeof travelMemory !== 'undefined' && travelMemory.all && travelMemory.all.length > 0);
+            if (hasData || attempts > 25) {
+                clearInterval(interval);
+                if (typeof openItemDetailsPage === 'function') openItemDetailsPage(itemId, isTravel, false);
             }
-            if (pageId === 'page-mobile') loadMobiles();
-            if (pageId === 'page-fashion') loadFashion();
-            if (pageId === 'page-electronics') loadElectronics();
-            if (pageId === 'page-services') loadServices();
-            if (pageId === 'page-travels') filterTravels('All');
-            if (pageId === 'page-profile') loadOrdersTable();
-            if (pageId === 'page-wishlist') renderWishlistPage();
-            if (pageId === 'page-cart') renderCartPage();
+        }, 120);
+        return;
+    }
+
+    const targetPage = ROUTE_PAGE_MAP[path] || 'page-home';
+    navigateTo(targetPage, null, false);
+}
+
+window.addEventListener('popstate', function(e) {
+    if (e.state && e.state.pageId) {
+        if (e.state.pageId === 'page-item-details' && e.state.itemId) {
+            openItemDetailsPage(e.state.itemId, e.state.isTravel, false);
+        } else {
+            navigateTo(e.state.pageId, null, false);
         }
+    } else {
+        routeCurrentPath();
+    }
+});
 
         let cachedAllProducts = null;
 
@@ -2545,7 +2633,11 @@ function navigateTo(pageId, navEl = null) {
         }
 
         // FULL ITEM DETAILS WITH CLEAN MULTI-IMAGE & NATIVE VIDEO GALLERY
-        function openItemDetailsPage(id, isTravel = false) {
+        function openItemDetailsPage(id, isTravel = false, updateUrl = true) {
+    if (updateUrl) {
+        const itemUrl = '/view/item?id=' + encodeURIComponent(id) + (isTravel ? '&type=travel' : '');
+        try { history.pushState({ pageId: 'page-item-details', itemId: id, isTravel: isTravel }, '', itemUrl); } catch(e) {}
+    }
             const item = catalogItemsCache[id] || travelMemory.all.find(t => String(t._id) === String(id));
             if (!item) return;
 
@@ -4576,171 +4668,3 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ==========================================
-// M J DIGITAL PERSISTENT APP ROUTER
-// ==========================================
-const ROUTE_PAGE_MAP = {
-    '/': 'page-home',
-    '/home': 'page-home',
-    '/travels': 'page-travels',
-    '/mobiles': 'page-mobile',
-    '/fashion': 'page-fashion',
-    '/electronics': 'page-electronics',
-    '/services': 'page-services',
-    '/pay/utility': 'page-utility-hub',
-    '/wishlist': 'page-wishlist',
-    '/bag': 'page-cart',
-    '/cart': 'page-cart',
-    '/checkout': 'page-checkout',
-    '/account/orders': 'page-profile',
-    '/profile': 'page-profile',
-    '/view/item': 'page-item-details'
-};
-
-const PAGE_ROUTE_MAP = {
-    'page-home': '/',
-    'page-travels': '/travels',
-    'page-mobile': '/mobiles',
-    'page-fashion': '/fashion',
-    'page-electronics': '/electronics',
-    'page-services': '/services',
-    'page-utility-hub': '/pay/utility',
-    'page-wishlist': '/wishlist',
-    'page-cart': '/bag',
-    'page-checkout': '/checkout',
-    'page-profile': '/account/orders',
-    'page-item-details': '/view/item'
-};
-
-function navigateTo(pageId, navEl = null, updateUrl = true) {
-    if (typeof cleanStuckBackdrops === 'function') cleanStuckBackdrops();
-
-    document.querySelectorAll('.page-view').forEach(p => {
-        p.classList.remove('active');
-        p.style.display = 'none';
-    });
-
-    const target = document.getElementById(pageId);
-    if (target) {
-        target.classList.add('active');
-        target.style.display = 'block';
-        window.scrollTo(0, 0);
-    }
-
-    document.querySelectorAll('.nav-btn, .nav-link').forEach(btn => btn.classList.remove('active'));
-    if (navEl) {
-        navEl.classList.add('active');
-    }
-
-    if (updateUrl && PAGE_ROUTE_MAP[pageId]) {
-        try { history.pushState({ pageId: pageId }, '', PAGE_ROUTE_MAP[pageId]); } catch(e) {}
-    }
-
-    // Trigger data fetch for current view
-    if (pageId === 'page-home') {
-        if (typeof loadHomeTrending === 'function') loadHomeTrending();
-        if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-mobile') {
-        if (typeof loadMobiles === 'function') loadMobiles();
-        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-fashion') {
-        if (typeof loadFashion === 'function') loadFashion();
-        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-electronics') {
-        if (typeof loadElectronics === 'function') loadElectronics();
-        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-services') {
-        if (typeof loadServices === 'function') loadServices();
-    } else if (pageId === 'page-travels') {
-        if (typeof filterTravels === 'function') filterTravels('All');
-        if (typeof fetchTravelPackages === 'function') fetchTravelPackages();
-    } else if (pageId === 'page-profile') {
-        if (typeof loadOrdersTable === 'function') loadOrdersTable();
-    } else if (pageId === 'page-utility-hub') {
-        if (typeof switchUtilityTab === 'function') switchUtilityTab('mobile_prepaid');
-    }
-}
-
-function openItemDetailsPage(id, isTravel = false, updateUrl = true) {
-    if (updateUrl) {
-        const itemUrl = '/view/item?id=' + encodeURIComponent(id) + (isTravel ? '&type=travel' : '');
-        try { history.pushState({ pageId: 'page-item-details', itemId: id, isTravel: isTravel }, '', itemUrl); } catch(e) {}
-    }
-
-    document.querySelectorAll('.page-view').forEach(p => {
-        p.classList.remove('active');
-        p.style.display = 'none';
-    });
-
-    const targetDetails = document.getElementById('page-item-details');
-    if (targetDetails) {
-        targetDetails.classList.add('active');
-        targetDetails.style.display = 'block';
-        window.scrollTo(0, 0);
-    }
-
-    if (isTravel && typeof renderTravelDetails === 'function') {
-        renderTravelDetails(id);
-    } else if (typeof renderItemDetails === 'function') {
-        renderItemDetails(id);
-    }
-}
-
-function routeCurrentPath() {
-    const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
-    const params = new URLSearchParams(window.location.search);
-    const itemId = params.get('id');
-    const isTravel = params.get('type') === 'travel';
-
-    if (path.includes('item') && itemId) {
-        let attempts = 0;
-        const interval = setInterval(() => {
-            attempts++;
-            const hasData = (typeof catalogItemsCache !== 'undefined' && catalogItemsCache[itemId]) ||
-                            (typeof travelMemory !== 'undefined' && travelMemory.all && travelMemory.all.length > 0);
-            if (hasData || attempts > 25) {
-                clearInterval(interval);
-                openItemDetailsPage(itemId, isTravel, false);
-            }
-        }, 120);
-        return;
-    }
-
-    const targetPage = ROUTE_PAGE_MAP[path] || 'page-home';
-    navigateTo(targetPage, null, false);
-}
-
-window.addEventListener('popstate', function(e) {
-    if (e.state && e.state.pageId) {
-        if (e.state.pageId === 'page-item-details' && e.state.itemId) {
-            openItemDetailsPage(e.state.itemId, e.state.isTravel, false);
-        } else {
-            navigateTo(e.state.pageId, null, false);
-        }
-    } else {
-        routeCurrentPath();
-    }
-});
-
-window.addEventListener('DOMContentLoaded', routeCurrentPath);
