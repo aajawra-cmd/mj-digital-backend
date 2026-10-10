@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
@@ -936,20 +936,10 @@ app.put('/api/settings', verifyAdminToken, async (req, res) => {
 });
 
 // ==========================================
-// 8. SERVER LISTENER
+
 // ==========================================
-const PORT = process.env.PORT || 5000;
-
-  }
-  const targetIndex = fs.existsSync(path.join(__dirname, 'public', 'index.html'))
-    ? path.join(__dirname, 'public', 'index.html')
-    : path.join(__dirname, 'index.html');
-  res.sendFile(targetIndex);
-});
-
-
-
-// --- BULLETPROOF SPA CATCH-ALL ROUTE ---
+// 8. SPA WILDCARD ROUTING & SERVER LISTENER
+// ==========================================
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return next();
@@ -964,6 +954,7 @@ app.get('*', (req, res, next) => {
   res.status(404).send('Not Found');
 });
 
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
