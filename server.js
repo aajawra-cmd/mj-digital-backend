@@ -938,9 +938,11 @@ app.put('/api/settings', verifyAdminToken, async (req, res) => {
 // ==========================================
 
 // ==========================================
-// 8. SPA WILDCARD ROUTING & SERVER LISTENER
 // ==========================================
-app.get('*', (req, res, next) => {
+// 8. SPA WILDCARD ROUTING (EXPRESS 5 COMPATIBLE)
+// ==========================================
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return next();
   }
@@ -955,6 +957,6 @@ app.get('*', (req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
