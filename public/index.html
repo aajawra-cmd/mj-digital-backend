@@ -2037,182 +2037,33 @@ window.addEventListener('popstate', function(e) {
         async function loadMobiles() {
             await setupCategoryStore('mobile', 'mobileGrid', 'mobileBrandChips', it => {
                 const cat = (it.category || '').toLowerCase().trim();
-                return cat === 'mobile' || cat === 'mobiles' || cat === 'smartphone';
+                const title = (it.title || it.name || '').toLowerCase();
+                return cat.includes('mob') || cat.includes('phone') || title.includes('iphone') || title.includes('galaxy') || title.includes('phone');
             });
         }
 
         async function loadElectronics() {
             await setupCategoryStore('electronics', 'electronicsProductsGrid', 'electronicsBrandChips', it => {
                 const cat = (it.category || '').toLowerCase().trim();
-                return cat === 'electronics' || cat === 'electronic' || cat === 'laptops';
+                const title = (it.title || it.name || '').toLowerCase();
+                return cat.includes('elect') || cat.includes('laptop') || title.includes('headphone') || title.includes('macbook') || title.includes('sony') || title.includes('laptop');
             });
         }
 
         async function loadFashion() {
             await setupCategoryStore('fashion', 'fashionProductsGrid', 'fashionBrandChips', it => {
                 const cat = (it.category || '').toLowerCase().trim();
-                return cat === 'fashion' || cat === 'clothing' || cat === 'apparel';
+                const title = (it.title || it.name || '').toLowerCase();
+                return cat.includes('fash') || cat.includes('cloth') || cat.includes('shirt') || title.includes('t-shirt') || title.includes('shirt');
             });
         }
 
         async function loadServices() {
             await setupCategoryStore('services', 'servicesProductsGrid', 'servicesBrandChips', it => {
                 const cat = (it.category || '').toLowerCase().trim();
-                return cat === 'services' || cat === 'service' || cat === 'it services';
+                return cat.includes('serv') || cat.includes('it');
             });
         }
-
-        async function setupCategoryStore(catKey, gridId, chipsContainerId, filterFn) {
-            const grid = document.getElementById(gridId);
-            const chipsCont = document.getElementById(chipsContainerId);
-            if (!grid) return;
-
-            grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading catalog...</div>';
-            const allItems = await fetchStoreItems();
-            const catItems = allItems.filter(filterFn);
-
-            categoryMemory[catKey].all = catItems;
-            categoryMemory[catKey].filtered = catItems;
-            categoryMemory[catKey].activeBrand = 'All';
-            categoryMemory[catKey].query = '';
-
-            const searchInput = document.querySelector(`#page-${catKey} input[type="text"]`);
-            if (searchInput) searchInput.value = '';
-
-            if (chipsCont) {
-                const brands = ['All', ...new Set(catItems.map(p => {
-                    if (p.brand && p.brand.trim() !== '') return p.brand.trim();
-                    return '';
-                }).filter(Boolean))];
-
-                chipsCont.innerHTML = brands.map(b => `
-                    <button type="button" 
-                        onclick="filterCategoryByBrand('${catKey}', '${b}', this)" 
-                        class="brand-chip-btn ${b === 'All' ? 'active' : ''}">
-                        ${b}
-                    </button>
-                `).join('');
-            }
-
-            renderCategoryGrid(gridId, catItems, `No ${catKey} items found.`);
-        }
-
-        function filterCategoryByBrand(catKey, selectedBrand, btnEl) {
-            categoryMemory[catKey].activeBrand = selectedBrand;
-            categoryMemory[catKey].query = '';
-            const searchInput = document.querySelector(`#page-${catKey} input[type="text"]`);
-            if (searchInput) searchInput.value = '';
-
-            const parent = btnEl.parentElement;
-            parent.querySelectorAll('.brand-chip-btn').forEach(btn => btn.classList.remove('active'));
-            btnEl.classList.add('active');
-            applyCategoryFilters(catKey);
-        }
-
-        function filterCategoryBySearch(catKey, queryVal) {
-            categoryMemory[catKey].query = String(queryVal || '').trim().toLowerCase();
-            applyCategoryFilters(catKey);
-        }
-
-        function sortCategoryProducts(catKey, sortOrder) {
-            let list = [...categoryMemory[catKey].filtered];
-            const getPrice = (item) => Number(item.discountPrice ? item.discountPrice : (item.price || 0));
-            if (sortOrder === 'low-high') {
-                list.sort((a, b) => getPrice(a) - getPrice(b));
-            } else if (sortOrder === 'high-low') {
-                list.sort((a, b) => getPrice(b) - getPrice(a));
-            }
-            const gridMap = {
-                mobile: 'mobileGrid',
-                electronics: 'electronicsProductsGrid',
-                fashion: 'fashionProductsGrid',
-                services: 'servicesProductsGrid'
-            };
-            renderCategoryGrid(gridMap[catKey], list, `No items matching filter.`);
-        }
-
-        function applyCategoryFilters(catKey) {
-            const state = categoryMemory[catKey];
-            let result = [...state.all];
-
-            if (state.activeBrand && state.activeBrand !== 'All') {
-                result = result.filter(item => {
-                    const brandMatch = String(item.brand || '').toLowerCase() === state.activeBrand.toLowerCase();
-                    const titleMatch = String(item.title || item.name || '').toLowerCase().includes(state.activeBrand.toLowerCase());
-                    return brandMatch || titleMatch;
-                });
-            }
-
-            if (state.query) {
-                result = result.filter(item => {
-                    const title = String(item.title || item.name || '').toLowerCase();
-                    const brand = String(item.brand || '').toLowerCase();
-                    const desc = String(item.description || '').toLowerCase();
-                    return title.includes(state.query) || brand.includes(state.query) || desc.includes(state.query);
-                });
-            }
-
-            state.filtered = result;
-            const gridMap = {
-                mobile: 'mobileGrid',
-                electronics: 'electronicsProductsGrid',
-                fashion: 'fashionProductsGrid',
-                services: 'servicesProductsGrid'
-            };
-            renderCategoryGrid(gridMap[catKey], result, `No products found matching filters.`);
-        }
-
-        function renderCategoryGrid(gridId, items, emptyMessage) {
-            const grid = document.getElementById(gridId);
-            if (!grid) return;
-            if (items.length === 0) {
-                grid.innerHTML = `
-                    <div class="col-12 text-center text-muted py-5">
-                        <i class="fa-solid fa-filter-circle-xmark fs-2 mb-2 d-block text-secondary opacity-50"></i>
-                        <p class="small fw-semibold mb-0">${emptyMessage}</p>
-                    </div>
-                `;
-                return;
-            }
-            grid.innerHTML = items.map(createProductCardHTML).join('');
-        }
-
-        async function filterTravels(regionType = 'All', btnEl = null) {
-            travelMemory.activeRegion = regionType;
-            travelMemory.activeDestination = 'All';
-            travelMemory.query = '';
-
-            const tSearch = document.getElementById('travelSearchInput');
-            if (tSearch) tSearch.value = '';
-
-            document.querySelectorAll('.travel-tab-btn').forEach(btn => btn.classList.remove('active'));
-            if (btnEl) {
-                btnEl.classList.add('active');
-            } else if (regionType === 'All') {
-                document.getElementById('btn-all-travel')?.classList.add('active');
-            } else if (regionType === 'International') {
-                document.getElementById('btn-intl')?.classList.add('active');
-            } else if (regionType === 'India') {
-                document.getElementById('btn-india')?.classList.add('active');
-            }
-
-            const grid = document.getElementById('travelGrid');
-            if (!grid) return;
-
-            if (!travelMemory.all || travelMemory.all.length === 0) {
-                travelMemory.all = TRAVEL_FALLBACK_PACKAGES;
-            }
-
-            try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
-                if (res.ok) {
-                    const result = await res.json();
-                    const remoteData = Array.isArray(result) ? result : (result.data || []);
-                    if (remoteData.length > 0) {
-                        travelMemory.all = remoteData;
-                        remoteData.forEach(t => { catalogItemsCache[t._id] = t; });
-                    }
-                }
             } catch (err) {
                 if (travelMemory.all.length === 0) {
                     travelMemory.all = TRAVEL_FALLBACK_PACKAGES;
