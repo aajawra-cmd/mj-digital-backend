@@ -1884,7 +1884,7 @@ window.addEventListener('popstate', function(e) {
     }
 });
 
-        let cachedAllProducts = null;
+        let cachedAllProducts = (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined') ? [...PRODUCT_FALLBACK_ITEMS] : [];
 
         async function fetchStoreItems(forceRefresh = false) {
             if (!forceRefresh && cachedAllProducts && cachedAllProducts.length > 0) {
@@ -2085,10 +2085,10 @@ window.addEventListener('popstate', function(e) {
             const chipsCont = document.getElementById(chipsContainerId);
             if (!grid) return;
 
-            // Instant render fallback products first if cache is ready
-            let allItems = (typeof cachedAllProducts !== 'undefined' && cachedAllProducts && cachedAllProducts.length > 0)
+            // Ensure baseline items are available instantly
+            let allItems = (cachedAllProducts && cachedAllProducts.length > 0)
                 ? cachedAllProducts
-                : (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined' ? PRODUCT_FALLBACK_ITEMS : []);
+                : ((typeof PRODUCT_FALLBACK_ITEMS !== 'undefined') ? PRODUCT_FALLBACK_ITEMS : []);
 
             let catItems = allItems.filter(filterFn);
             if (catItems.length > 0) {
@@ -2099,22 +2099,22 @@ window.addEventListener('popstate', function(e) {
                 grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading catalog...</div>';
             }
 
-            // Now fetch latest from remote backend
+            // Sync with backend API
             try {
-                const freshItems = await fetchStoreItems();
-                if (freshItems && freshItems.length > 0) {
-                    const freshCatItems = freshItems.filter(filterFn);
-                    if (freshCatItems.length > 0) {
-                        catItems = freshCatItems;
+                const fresh = await fetchStoreItems();
+                if (fresh && fresh.length > 0) {
+                    const freshCat = fresh.filter(filterFn);
+                    if (freshCat.length > 0) {
+                        catItems = freshCat;
                         categoryMemory[catKey].all = catItems;
                         categoryMemory[catKey].filtered = catItems;
+                        renderCategoryGrid(gridId, catItems, "No products found.");
                     }
                 }
             } catch(e) {
-                console.warn("Backend waking up, using fallback cache");
+                console.warn("Using baseline catalog:", e.message);
             }
 
-            // Render final list & chips
             if (chipsCont) {
                 const brands = ['All', ...new Set(catItems.map(p => {
                     if (p.brand && p.brand.trim() !== '') return p.brand.trim();
@@ -2129,8 +2129,6 @@ window.addEventListener('popstate', function(e) {
                     </button>
                 `).join('');
             }
-
-            renderCategoryGrid(gridId, catItems, `No ${catKey} items found.`);
         }
 
         async function filterTravels(regionType = 'All', btnEl = null) {
@@ -4650,7 +4648,7 @@ async function handleFullPageUtilitySubmit(e) {
         if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
 
         alert('✅ Utility payment of ₹' + amt + ' successful via M J Wallet!\nTarget: ' + target);
-        if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') loadOrdersTable();
+        if (typeof loadOrdersTable === 'function') loadOrdersTable();
         if (typeof navigateTo === 'function') navigateTo('page-profile');
         return;
     }
@@ -4676,7 +4674,7 @@ async function handleFullPageUtilitySubmit(e) {
             await recordUtilityOrder('Paid', 'Delivered', response.razorpay_payment_id);
             alert('🎉 Payment Successful!\nStatus: SUCCESS\nTxn ID: ' + response.razorpay_payment_id);
             if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
-            if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') loadOrdersTable();
+            if (typeof loadOrdersTable === 'function') loadOrdersTable();
             if (typeof navigateTo === 'function') navigateTo('page-profile');
         },
         modal: {
@@ -4684,7 +4682,7 @@ async function handleFullPageUtilitySubmit(e) {
                 if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
                 await recordUtilityOrder('Pending', 'Processing', tempTxn, 'User closed modal (Pending Auto-Sync)');
                 alert('⚠️ Transaction window close ho gayi thi.\nStatus: PENDING\nYeh dashboard me auto-sync ho jayega.');
-                if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') loadOrdersTable();
+                if (typeof loadOrdersTable === 'function') loadOrdersTable();
             }
         },
         prefill: {
@@ -4700,7 +4698,7 @@ async function handleFullPageUtilitySubmit(e) {
         if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
         await recordUtilityOrder('Failed', 'Cancelled', response.error?.metadata?.payment_id || '', response.error?.description || '');
         alert('❌ Payment Failed: ' + response.error?.description);
-        if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') loadOrdersTable();
+        if (typeof loadOrdersTable === 'function') loadOrdersTable();
     });
 
     rzp.open();
