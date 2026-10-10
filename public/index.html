@@ -1830,7 +1830,7 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
     } else if (pageId === 'page-travels') {
         if (typeof filterTravels === 'function') filterTravels('All');
     } else if (pageId === 'page-profile') {
-        if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') loadOrdersTable();
+        if (typeof loadOrdersTable === 'function') loadOrdersTable();
     } else if (pageId === 'page-utility-hub') {
         if (typeof switchUtilityTab === 'function') switchUtilityTab(typeof fpCurrentService !== 'undefined' ? fpCurrentService : 'mobile');
     }
@@ -3397,7 +3397,7 @@ window.addEventListener('popstate', function(e) {
                 if (detailTab) detailTab.style.display = 'none';
                 if (listTab) listTab.style.display = 'block';
 
-                await if (typeof loadOrdersTable === 'function') loadOrdersTable();
+                if (typeof loadOrdersTable === 'function') await loadOrdersTable();
 window.location.reload();
                 switchProfileTab('p-orders', document.querySelector('.profile-nav-btn'));
                 navigateTo('page-profile');
@@ -3720,7 +3720,7 @@ window.location.reload();
                 if (res.ok) {
                     if (cancelModal) cancelModal.hide();
                     alert('Order cancelled successfully.');
-                    await if (typeof loadOrdersTable === 'function') loadOrdersTable();
+                    if (typeof loadOrdersTable === 'function') await loadOrdersTable();
 window.location.reload();
                 } else {
                     alert('Cancellation failed on server.');
@@ -4636,7 +4636,7 @@ async function handleFullPageUtilitySubmit(e) {
         if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
 
         alert('✅ Utility payment of ₹' + amt + ' successful via M J Wallet!\nTarget: ' + target);
-        if (typeof loadOrdersTable === 'function') await if (typeof loadOrdersTable === 'function') loadOrdersTable();
+        if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') await loadOrdersTable();
         if (typeof navigateTo === 'function') navigateTo('page-profile');
         return;
     }
@@ -4662,7 +4662,7 @@ async function handleFullPageUtilitySubmit(e) {
             await recordUtilityOrder('Paid', 'Delivered', response.razorpay_payment_id);
             alert('🎉 Payment Successful!\nStatus: SUCCESS\nTxn ID: ' + response.razorpay_payment_id);
             if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
-            if (typeof loadOrdersTable === 'function') await if (typeof loadOrdersTable === 'function') loadOrdersTable();
+            if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') await loadOrdersTable();
             if (typeof navigateTo === 'function') navigateTo('page-profile');
         },
         modal: {
@@ -4670,7 +4670,7 @@ async function handleFullPageUtilitySubmit(e) {
                 if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
                 await recordUtilityOrder('Pending', 'Processing', tempTxn, 'User closed modal (Pending Auto-Sync)');
                 alert('⚠️ Transaction window close ho gayi thi.\nStatus: PENDING\nYeh dashboard me auto-sync ho jayega.');
-                if (typeof loadOrdersTable === 'function') await if (typeof loadOrdersTable === 'function') loadOrdersTable();
+                if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') await loadOrdersTable();
             }
         },
         prefill: {
@@ -4686,7 +4686,7 @@ async function handleFullPageUtilitySubmit(e) {
         if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
         await recordUtilityOrder('Failed', 'Cancelled', response.error?.metadata?.payment_id || '', response.error?.description || '');
         alert('❌ Payment Failed: ' + response.error?.description);
-        if (typeof loadOrdersTable === 'function') await if (typeof loadOrdersTable === 'function') loadOrdersTable();
+        if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') await loadOrdersTable();
     });
 
     rzp.open();
