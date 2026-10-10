@@ -44,6 +44,16 @@ app.use('/uploads', express.static(uploadDir));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
+// Admin Panel Route
+app.get(['/admin', '/admin.html'], (req, res) => {
+  const rootAdmin = path.join(__dirname, 'admin.html');
+  const mjAdmin = path.join(__dirname, 'mj_digital', 'admin.html');
+  const pubAdmin = path.join(__dirname, 'public', 'admin.html');
+  if (fs.existsSync(rootAdmin)) return res.sendFile(rootAdmin);
+  if (fs.existsSync(mjAdmin)) return res.sendFile(mjAdmin);
+  if (fs.existsSync(pubAdmin)) return res.sendFile(pubAdmin);
+  res.status(404).send('Admin page not found');
+});
 
 // ==========================================
 // JWT AUTH GUARD FOR SENSITIVE ADMIN ACTIONS

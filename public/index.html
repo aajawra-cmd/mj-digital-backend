@@ -1740,7 +1740,7 @@
             if (typeof syncLiveStoreSettings === 'function') syncLiveStoreSettings();
             if (typeof updateCartBadge === 'function') updateCartBadge();
             if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
-            forceRenderAllCategories();
+            
             if (typeof routeCurrentPath === 'function') routeCurrentPath();
         });
 
@@ -1819,7 +1819,7 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
         if (typeof loadHomeTrending === 'function') loadHomeTrending();
         if (typeof fetchStoreItems === 'function') fetchStoreItems();
     } else if (pageId === 'page-mobile' || pageId === 'page-electronics' || pageId === 'page-fashion' || pageId === 'page-travels') {
-        forceRenderAllCategories();
+        
     } else if (pageId === 'page-profile') {
         if (typeof loadOrdersTable === 'function') loadOrdersTable();
     } else if (pageId === 'page-utility-hub') {
@@ -1837,7 +1837,7 @@ function routeCurrentPath() {
         let attempts = 0;
         const interval = setInterval(() => {
             attempts++;
-            if (typeof forceRenderAllCategories === 'function') forceRenderAllCategories();
+            if (typeof forceRenderAllCategories === 'function') 
             
             if (!itemId) {
                 itemId = 'm2'; // Default fallback to Samsung Galaxy S24 Ultra
@@ -1867,7 +1867,7 @@ window.addEventListener('popstate', function(e) {
             navigateTo(e.state.pageId, null, false);
         }
     } else {
-        forceRenderAllCategories();
+        
             if (typeof routeCurrentPath === 'function') routeCurrentPath();
     }
 });
@@ -1911,40 +1911,7 @@ window.addEventListener('popstate', function(e) {
         }
 
         // 2. PRODUCT CARD BUILDER (Safe Media Tag & Strikethrough Pricing)
-        // DIRECT INSTANT RENDERING ENGINE FOR ALL CATEGORIES
-        function forceRenderAllCategories() {
-            const fallbackList = [
-                { _id: 'm1', title: 'Iphone 18 pro', category: 'Mobile', brand: 'Apple', price: 349999, discountPrice: 314999, stock: 10, imageUrl: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500' },
-                { _id: 'm2', title: 'Samsung Galaxy S24 Ultra', category: 'Mobile', brand: 'Samsung', price: 134999, discountPrice: 129999, stock: 12, imageUrl: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=500' },
-                { _id: 'e1', title: 'MacBook Air M3', category: 'Electronics', brand: 'Apple', price: 119900, discountPrice: 104900, stock: 15, imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500' },
-                { _id: 'e2', title: 'Sony WH-1000XM5 Wireless Headphones', category: 'Electronics', brand: 'Sony', price: 29990, discountPrice: 26990, stock: 20, imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500' },
-                { _id: 'f1', title: 'Casual Slim Fit Cotton T-Shirt', category: 'Fashion', brand: 'MjHouse', price: 2399, discountPrice: 1499, stock: 50, imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500' }
-            ];
-
-            fallbackList.forEach(item => { catalogItemsCache[item._id] = item; });
-
-            const mobGrid = document.getElementById('mobileGrid');
-            if (mobGrid) {
-                const mobItems = fallbackList.filter(i => String(i.category || '').toLowerCase().includes('mob'));
-                mobGrid.innerHTML = mobItems.map(createProductCardHTML).join('');
-            }
-
-            const elecGrid = document.getElementById('electronicsProductsGrid');
-            if (elecGrid) {
-                const elecItems = fallbackList.filter(i => String(i.category || '').toLowerCase().includes('elect'));
-                elecGrid.innerHTML = elecItems.map(createProductCardHTML).join('');
-            }
-
-            const fashGrid = document.getElementById('fashionProductsGrid');
-            if (fashGrid) {
-                const fashItems = fallbackList.filter(i => String(i.category || '').toLowerCase().includes('fash'));
-                fashGrid.innerHTML = fashItems.map(createProductCardHTML).join('');
-            }
-
-            if (typeof filterTravels === 'function') {
-                filterTravels('All');
-            }
-        }
+        
 
         function createProductCardHTML(item) {
             const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
@@ -2086,36 +2053,51 @@ window.addEventListener('popstate', function(e) {
             }).join('');
         }
 
-        async function loadMobiles() {
-            await setupCategoryStore('mobile', 'mobileGrid', 'mobileBrandChips', it => {
-                const cat = (it.category || '').toLowerCase().trim();
-                const title = (it.title || it.name || '').toLowerCase();
-                return cat.includes('mob') || cat.includes('phone') || title.includes('iphone') || title.includes('galaxy') || title.includes('phone');
-            });
+        // PURE DYNAMIC DATABASE LOADER (NO HARDCODING)
+        async function loadCategoryFromDatabase(catKey, gridId, chipsContainerId) {
+            const grid = document.getElementById(gridId);
+            const chipsCont = document.getElementById(chipsContainerId);
+            if (!grid) return;
+
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading live items from database...</div>';
+
+            try {
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products?category=' + encodeURIComponent(catKey));
+                const json = await res.json();
+                let items = Array.isArray(json) ? json : (json.data || []);
+                
+                // Fallback filter if API returned all
+                if (items.length > 0 && !items.every(i => String(i.category || '').toLowerCase().includes(catKey.toLowerCase()))) {
+                    items = items.filter(i => String(i.category || '').toLowerCase().includes(catKey.toLowerCase()));
+                }
+
+                categoryMemory[catKey].all = items;
+                categoryMemory[catKey].filtered = items;
+
+                if (items.length === 0) {
+                    grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-box-open fs-2 mb-2 d-block opacity-50"></i>No ' + catKey + ' items in database yet. Add items via <a href="/admin.html" class="fw-bold text-primary">Admin Panel</a>.</div>';
+                    if (chipsCont) chipsCont.innerHTML = '';
+                    return;
+                }
+
+                items.forEach(it => { catalogItemsCache[it._id] = it; });
+                renderCategoryGrid(gridId, items, 'No products found');
+
+                if (chipsCont) {
+                    const brands = ['All', ...new Set(items.map(p => (p.brand && p.brand.trim()) || '').filter(Boolean))];
+                    chipsCont.innerHTML = brands.map(b => `
+                        <button type="button" onclick="filterCategoryByBrand('${catKey}', '${b}', this)" class="brand-chip-btn ${b === 'All' ? 'active' : ''}">${b}</button>
+                    `).join('');
+                }
+            } catch (err) {
+                grid.innerHTML = '<div class="col-12 text-center text-danger py-4">Database connect error. Please check server.</div>';
+            }
         }
 
-        async function loadElectronics() {
-            await setupCategoryStore('electronics', 'electronicsProductsGrid', 'electronicsBrandChips', it => {
-                const cat = (it.category || '').toLowerCase().trim();
-                const title = (it.title || it.name || '').toLowerCase();
-                return cat.includes('elect') || cat.includes('laptop') || title.includes('headphone') || title.includes('macbook') || title.includes('sony') || title.includes('laptop');
-            });
-        }
-
-        async function loadFashion() {
-            await setupCategoryStore('fashion', 'fashionProductsGrid', 'fashionBrandChips', it => {
-                const cat = (it.category || '').toLowerCase().trim();
-                const title = (it.title || it.name || '').toLowerCase();
-                return cat.includes('fash') || cat.includes('cloth') || cat.includes('shirt') || title.includes('t-shirt') || title.includes('shirt');
-            });
-        }
-
-        async function loadServices() {
-            await setupCategoryStore('services', 'servicesProductsGrid', 'servicesBrandChips', it => {
-                const cat = (it.category || '').toLowerCase().trim();
-                return cat.includes('serv') || cat.includes('it');
-            });
-        }
+        function loadMobiles() { loadCategoryFromDatabase('mobile', 'mobileGrid', 'mobileBrandChips'); }
+        function loadElectronics() { loadCategoryFromDatabase('electronics', 'electronicsProductsGrid', 'electronicsBrandChips'); }
+        function loadFashion() { loadCategoryFromDatabase('fashion', 'fashionProductsGrid', 'fashionBrandChips'); }
+        function loadServices() { loadCategoryFromDatabase('services', 'servicesProductsGrid', 'servicesBrandChips'); }
 
         async function setupCategoryStore(catKey, gridId, chipsContainerId, filterFn) {
             const grid = document.getElementById(gridId);
@@ -3904,7 +3886,7 @@ window.location.reload();
 
         function logout() {
             isLoggedIn = false;
-            forceRenderAllCategories();
+            
             if (typeof routeCurrentPath === 'function') routeCurrentPath();
         }
 
