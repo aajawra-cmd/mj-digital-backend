@@ -3250,7 +3250,7 @@ window.addEventListener('popstate', function(e) {
 
                     if (gateway === 'razorpay') {
                         const options = {
-                            key: 'rzp_test_TkFr9r722bHvjA',
+                            key: 'rzp_test_TmDs4QGe7kDj3V',
                             amount: orderData.order.amount,
                             currency: "INR",
                             name: "M J DIGITAL",
@@ -3873,7 +3873,7 @@ window.location.reload();
                     return;
                 }
                 const options = {
-                    key: 'rzp_test_TkFr9r722bHvjA',
+                    key: 'rzp_test_TmDs4QGe7kDj3V',
                     amount: 3499900,
                     currency: 'INR',
                     name: 'M J DIGITAL',
@@ -3914,7 +3914,7 @@ window.openRazorpayModal = function() {
         }
 
         var options = {
-            key: "rzp_test_TkFr9r722bHvjA",
+            key: "rzp_test_TmDs4QGe7kDj3V",
             amount: 3499900,
             currency: "INR",
             name: "M J DIGITAL",
@@ -3969,7 +3969,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         var options = {
-            "key": "rzp_test_TkFr9r722bHvjA",
+            "key": "rzp_test_TmDs4QGe7kDj3V",
             "amount": 3499900,
             "currency": "INR",
             "name": "M J DIGITAL",
@@ -4160,7 +4160,7 @@ function executeWalletTopup() {
 
     if (typeof Razorpay !== 'undefined') {
         const options = {
-            key: 'rzp_test_TkFr9r722bHvjA',
+            key: 'rzp_test_TmDs4QGe7kDj3V',
             amount: amt * 100,
             currency: 'INR',
             name: 'M J DIGITAL WALLET',
@@ -4252,7 +4252,7 @@ function handleUtilityPaymentSubmit(e) {
         // Direct Gateway Payment
         if (typeof Razorpay !== 'undefined') {
             const options = {
-                key: 'rzp_test_TkFr9r722bHvjA',
+                key: 'rzp_test_TmDs4QGe7kDj3V',
                 amount: amt * 100,
                 currency: 'INR',
                 name: 'M J DIGITAL - ' + activeUtilityKey.toUpperCase(),
@@ -4502,7 +4502,7 @@ function executeFullPageWalletTopup() {
 
     if (typeof Razorpay !== 'undefined') {
         const options = {
-            key: 'rzp_test_TkFr9r722bHvjA',
+            key: 'rzp_test_TmDs4QGe7kDj3V',
             amount: amt * 100,
             currency: 'INR',
             name: 'M J DIGITAL WALLET',
@@ -4619,7 +4619,7 @@ async function handleFullPageUtilitySubmit(e) {
     await recordUtilityOrder('Pending', 'Processing', tempTxn, 'Awaiting Gateway Callback');
 
     const options = {
-        key: 'rzp_test_TkFr9r722bHvjA',
+        key: 'rzp_test_TmDs4QGe7kDj3V',
         amount: amt * 100,
         currency: 'INR',
         name: 'M J DIGITAL - UTILITY',
