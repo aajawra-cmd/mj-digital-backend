@@ -970,3 +970,174 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
+
+// ==========================================
+// ADMIN USER SCHEMA & AUTH ENGINE (WITH 2FA)
+// ==========================================
+const adminUserSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true, default: 'admin' },
+  password: { type: String, required: true },
+  phone: { type: String, default: '8306669999' },
+  email: { type: String, default: 'mjdigitalworlds@gmail.com' },
+  twoFactorEnabled: { type: Boolean, default: true },
+  otpSecret: { type: String, default: '' },
+  otpExpiresAt: { type: Date }
+}, { timestamps: true });
+
+const AdminUser = mongoose.models.AdminUser || mongoose.model('AdminUser', adminUserSchema);
+
+// Initial Default Admin Creator if doesn't exist
+async function ensureAdminExists() {
+  try {
+    const existing = await AdminUser.findOne();
+    if (!existing) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash('admin123', salt);
+      await AdminUser.create({
+        username: '8306669999',
+        password: hashedPassword,
+        phone: '8306669999',
+        email: 'mjdigitalworlds@gmail.com',
+        twoFactorEnabled: true
+      });
+      console.log('✅ Default Admin created: Username: 8306669999 | Password: admin123');
+    }
+  } catch(e) {
+    console.error('Admin init check error:', e.message);
+  }
+}
+setTimeout(ensureAdminExists, 2000);
+
+// 1. ADMIN LOGIN - STEP 1 (VERIFY CREDENTIALS & GENERATE OTP)
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'Username aur password zaroori hain.' });
+    }
+
+    const admin = await AdminUser.findOne({ 
+      $or: [{ username: username.trim() }, { phone: username.trim() }, { email: username.trim().toLowerCase() }] 
+    });
+
+    if (!admin) {
+      return res.status(401).json({ success: false, message: 'Galat Username / Mobile Number' });
+    }
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Galat Password' });
+    }
+
+    // 2FA Flow
+    if (admin.twoFactorEnabled) {
+      // 4-digit secure OTP
+      const otp = Math.floor(1000 + Math.random() * 9000).toString();
+      admin.otpSecret = otp;
+      admin.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins expiry
+      await admin.save();
+
+      // Console & optional SMS/Email trigger
+      console.log(`🔑 [ADMIN 2FA OTP]: ${otp} for user ${admin.username}`);
+
+      return res.json({
+        success: true,
+        requires2FA: true,
+        adminId: admin._id,
+        phoneMasked: admin.phone.slice(-4),
+        message: 'Credentials verified! OTP send kar diya gaya hai.',
+        // Demo purpose response fallback:
+        debugOtp: otp
+      });
+    }
+
+    // Direct Login (If 2FA is off)
+    const token = jwt.sign({ id: admin._id, username: admin.username }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ success: true, requires2FA: false, token, username: admin.username });
+  } catch(err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 2. ADMIN LOGIN - STEP 2 (VERIFY 2FA OTP)
+app.post('/api/admin/verify-2fa', async (req, res) => {
+  try {
+    const { adminId, otp } = req.body;
+    if (!adminId || !otp) {
+      return res.status(400).json({ success: false, message: 'Admin ID aur OTP required hain.' });
+    }
+
+    const admin = await AdminUser.findById(adminId);
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Admin session expire ho gaya.' });
+    }
+
+    if (admin.otpSecret !== String(otp).trim() || new Date() > admin.otpExpiresAt) {
+      return res.status(400).json({ success: false, message: 'Galat ya expired OTP!' });
+    }
+
+    // Clear used OTP
+    admin.otpSecret = '';
+    await admin.save();
+
+    const token = jwt.sign({ id: admin._id, username: admin.username }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ success: true, token, username: admin.username, message: '2FA verified successfully!' });
+  } catch(err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 3. ADMIN UPDATE USERNAME & PASSWORD (FROM DASHBOARD)
+app.put('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
+  try {
+    const { currentPassword, newUsername, newPassword, phone, email, twoFactorEnabled } = req.body;
+    const admin = await AdminUser.findById(req.admin.id);
+
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Admin user not found' });
+    }
+
+    if (currentPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, admin.password);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, message: 'Current password galat hai.' });
+      }
+    }
+
+    if (newUsername && newUsername.trim()) {
+      admin.username = newUsername.trim();
+    }
+    if (phone && phone.trim()) {
+      admin.phone = phone.trim();
+    }
+    if (email && email.trim()) {
+      admin.email = email.trim().toLowerCase();
+    }
+    if (twoFactorEnabled !== undefined) {
+      admin.twoFactorEnabled = Boolean(twoFactorEnabled);
+    }
+
+    if (newPassword && newPassword.trim()) {
+      if (newPassword.trim().length < 6) {
+        return res.status(400).json({ success: false, message: 'Password kam se kam 6 characters ka hona chahiye.' });
+      }
+      const salt = await bcrypt.genSalt(10);
+      admin.password = await bcrypt.hash(newPassword.trim(), salt);
+    }
+
+    await admin.save();
+    res.json({ success: true, message: 'Credentials updated successfully!', username: admin.username });
+  } catch(err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 4. GET CURRENT ADMIN PROFILE
+app.get('/api/admin/profile', verifyAdminToken, async (req, res) => {
+  try {
+    const admin = await AdminUser.findById(req.admin.id).select('-password -otpSecret');
+    res.json({ success: true, data: admin });
+  } catch(err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
