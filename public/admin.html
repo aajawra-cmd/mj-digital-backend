@@ -35,7 +35,7 @@
             <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
             <div class="relative">
               <i class="fa-solid fa-lock absolute left-3.5 top-3 text-gray-400 text-xs"></i>
-              <input type="password" id="authPasswordInput" required placeholder="admin" class="w-full border rounded-xl pl-9 pr-3 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input  type="password" id="realAdminPass" name="adminPass" id="authPasswordInput" required placeholder="admin" class="w-full border rounded-xl pl-9 pr-3 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
 
@@ -1240,11 +1240,11 @@
         <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
           <div class="mb-3">
             <label class="form-label small fw-bold">Admin ID / Phone / Email</label>
-            <input type="text" id="adminUserInput" class="form-control" placeholder="e.g. 8306669999" required>
+            <input type="text" id="adminUserInput" class="form-control"  placeholder="8306669999" id="realAdminUser" name="adminUser" required>
           </div>
           <div class="mb-3">
             <label class="form-label small fw-bold">Password</label>
-            <input type="password" id="adminPassInput" class="form-control" placeholder="Enter password" required>
+            <input  type="password" id="realAdminPass" name="adminPass" id="adminPassInput" class="form-control" placeholder="Enter password" required>
           </div>
           <button type="submit" id="adminLoginBtn" class="btn btn-primary w-100 py-2.5 fw-bold">
             Verify & Continue
@@ -1286,7 +1286,7 @@
       <form onsubmit="handleUpdateCredentialsSubmit(event)">
         <div class="mb-3">
           <label class="small fw-bold mb-1">Current Password (Zaroori)</label>
-          <input type="password" id="currPassInput" class="form-control" required placeholder="Enter current password">
+          <input  type="password" id="realAdminPass" name="adminPass" id="currPassInput" class="form-control" required placeholder="Enter current password">
         </div>
         <div class="mb-3">
           <label class="small fw-bold mb-1">New Admin ID / Username</label>
@@ -1294,7 +1294,7 @@
         </div>
         <div class="mb-3">
           <label class="small fw-bold mb-1">New Password</label>
-          <input type="password" id="newPassInput" class="form-control" placeholder="Min 6 characters (Empty if no change)">
+          <input  type="password" id="realAdminPass" name="adminPass" id="newPassInput" class="form-control" placeholder="Min 6 characters (Empty if no change)">
         </div>
         <div class="form-check form-switch mb-3">
           <input class="form-check-input" type="checkbox" id="twoFaToggleInput" checked>
@@ -1511,5 +1511,91 @@ async function handleUpdateCredentialsSubmit(e) {
 }
 </script>
 
+<script>
+window.addEventListener("load", function() {
+  const btn = Array.from(document.querySelectorAll("button")).find(b => 
+    b.innerText.toLowerCase().includes("authenticate") || b.innerText.toLowerCase().includes("login")
+  );
+
+  if (btn) {
+    btn.type = "button";
+    btn.onclick = async function(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+
+      const allInputs = Array.from(document.querySelectorAll("input"));
+      const passInput = allInputs.find(i => i.type === "password");
+      
+      // Password field se theek pehle wala input hamesha username/email/mobile hota hai
+      let userInput = null;
+      if (passInput) {
+        const passIndex = allInputs.indexOf(passInput);
+        if (passIndex > 0) userInput = allInputs[passIndex - 1];
+      }
+      if (!userInput) {
+        userInput = allInputs.find(i => i.type === "text" || i.type === "email" || i.type === "tel");
+      }
+
+      const username = (userInput ? userInput.value : "").trim();
+      const password = (passInput ? passInput.value : "").trim();
+
+      if (!username || !password) {
+        alert("Kripya Username aur Password dono bharein.");
+        return;
+      }
+
+      const origText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = "Verifying...";
+
+      try {
+        const res = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          alert(data.message || "Invalid credentials!");
+          return;
+        }
+
+        if (data.requires2FA) {
+          const otp = prompt("🔐 2FA SECURITY OTP:\n\nAapke device / screen par OTP generate hua hai:\n" + (data.debugOtp || "1234") + "\n\nKripya 4-digit code yahan enter karein:");
+          if (!otp) return;
+
+          const verifyRes = await fetch("/api/admin/verify-2fa", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ adminId: data.adminId, otp: otp.trim() })
+          });
+          const verifyData = await verifyRes.json();
+
+          if (verifyData.success) {
+            localStorage.setItem("mj_admin_token", verifyData.token);
+            alert("✅ 2FA Verified! Entering Dashboard...");
+            // Hide login modal / overlay
+            const loginCard = btn.closest(".modal, .auth-card, [class*='modal'], [class*='auth']") || btn.parentElement;
+            if (loginCard) loginCard.style.display = "none";
+            document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
+            window.location.reload();
+          } else {
+            alert(verifyData.message || "Invalid OTP!");
+          }
+        } else {
+          localStorage.setItem("mj_admin_token", data.token);
+          alert("✅ Login Successful!");
+          window.location.reload();
+        }
+      } catch(err) {
+        alert("Server error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    };
+  }
+});
+</script>
 </body>
 </html>
