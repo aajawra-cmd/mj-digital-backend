@@ -95,7 +95,7 @@ mongoose.connect(dbUri)
 // ==========================================
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_TmDs4QGe7kDj3V',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'J16v2NqMS2bmmlSBSjjem2vB'
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'xSGlRlFRti1r4ZZten2ivbDT'
 });
 
 // ==========================================
@@ -883,7 +883,7 @@ app.post(['/api/verify-payment', '/api/payment/verify'], async (req, res) => {
 
     const signPayload = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'J16v2NqMS2bmmlSBSjjem2vB')
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'xSGlRlFRti1r4ZZten2ivbDT')
       .update(signPayload.toString())
       .digest('hex');
 
