@@ -1613,6 +1613,69 @@
             services: { all: [], filtered: [], activeBrand: 'All', query: '' }
         };
 
+        const PRODUCT_FALLBACK_ITEMS = [
+            {
+                _id: 'e1',
+                title: 'MacBook Air M3',
+                category: 'Electronics',
+                brand: 'Apple',
+                price: 119900,
+                discountPrice: 104900,
+                stock: 15,
+                imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500',
+                images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500'],
+                description: 'Supercharged by Apple M3 chip with 8-core CPU and 10-core GPU.'
+            },
+            {
+                _id: 'e2',
+                title: 'Sony WH-1000XM5 Wireless Headphones',
+                category: 'Electronics',
+                brand: 'Sony',
+                price: 29990,
+                discountPrice: 26990,
+                stock: 20,
+                imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
+                images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'],
+                description: 'Industry-leading noise cancellation with two processors and Auto NC Optimizer.'
+            },
+            {
+                _id: 'm1',
+                title: 'Iphone 18 pro',
+                category: 'Mobile',
+                brand: 'Apple',
+                price: 349999,
+                discountPrice: 314999,
+                stock: 10,
+                imageUrl: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500',
+                images: ['https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500'],
+                description: 'Flagship smartphone with titanium design and next-gen camera performance.'
+            },
+            {
+                _id: 'm2',
+                title: 'Samsung Galaxy S24 Ultra',
+                category: 'Mobile',
+                brand: 'Samsung',
+                price: 134999,
+                discountPrice: 129999,
+                stock: 12,
+                imageUrl: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=500',
+                images: ['https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=500'],
+                description: 'Galaxy AI is here. Epic titanium build with integrated S-Pen.'
+            },
+            {
+                _id: 'f1',
+                title: 'Casual Slim Fit Cotton T-Shirt',
+                category: 'Fashion',
+                brand: 'MjHouse',
+                price: 2399,
+                discountPrice: 1499,
+                stock: 50,
+                imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500',
+                images: ['https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500'],
+                description: 'Premium pure combed cotton t-shirt designed for everyday luxury.'
+            }
+        ];
+
         const TRAVEL_FALLBACK_PACKAGES = [
             { _id: 't1', title: 'New Zealand Alpine Escape', destination: 'new zeeland', pricingTiers: { standard: { price: 98000 } } },
             { _id: 't2', title: 'Hong Kong Skyline Tour', destination: 'hongkong', pricingTiers: { standard: { price: 95000 } } },
@@ -1655,13 +1718,14 @@
             if (canEl) cancelModal = new bootstrap.Modal(canEl);
             
             TRAVEL_FALLBACK_PACKAGES.forEach(t => { catalogItemsCache[t._id] = t; });
+            PRODUCT_FALLBACK_ITEMS.forEach(p => { catalogItemsCache[p._id] = p; });
 
             loadOrdersTable();
             //// loadMainSitePolicies();
             syncLiveStoreSettings();
             updateCartBadge();
             updateWishlistBadge();
-            navigateTo('page-home');
+            routeCurrentPath();
         });
 
         setTimeout(() => {
@@ -1778,8 +1842,19 @@ function routeCurrentPath() {
         return;
     }
 
+    const navIdMap = {
+        'page-home': 'nav-home',
+        'page-travels': 'nav-travels',
+        'page-mobile': 'nav-mobile',
+        'page-fashion': 'nav-fashion',
+        'page-electronics': 'nav-electronics',
+        'page-services': 'nav-services',
+        'page-utility-hub': 'nav-utility'
+    };
+
     const targetPage = ROUTE_PAGE_MAP[path] || 'page-home';
-    navigateTo(targetPage, null, false);
+    const navBtn = document.querySelector(`a[onclick*="${targetPage}"]`);
+    navigateTo(targetPage, navBtn, false);
 }
 
 window.addEventListener('popstate', function(e) {
@@ -1802,14 +1877,20 @@ window.addEventListener('popstate', function(e) {
             }
             try {
                 const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products');
+                if (!res.ok) throw new Error('API fetch failed');
                 const data = await res.json();
                 const items = Array.isArray(data) ? data : (data.data || []);
-                items.forEach(it => { catalogItemsCache[it._id] = it; });
-                cachedAllProducts = items;
-                return items;
+                if (items.length > 0) {
+                    items.forEach(it => { catalogItemsCache[it._id] = it; });
+                    cachedAllProducts = items;
+                    return items;
+                }
             } catch (e) {
-                return Object.values(catalogItemsCache).filter(item => !item.destination);
+                console.warn('Backend waking up or offline, using cache fallback:', e.message);
             }
+            // Return cached / fallback products so page is NEVER blank
+            const fallbackList = Object.values(catalogItemsCache).filter(item => !item.destination);
+            return fallbackList.length > 0 ? fallbackList : PRODUCT_FALLBACK_ITEMS;
         }
 
         // 2. PRODUCT CARD BUILDER (Safe Media Tag & Strikethrough Pricing)
@@ -3819,7 +3900,7 @@ window.location.reload();
 
         function logout() {
             isLoggedIn = false;
-            navigateTo('page-home');
+            routeCurrentPath();
         }
 
         function switchProfileTab(tabId, el) {
