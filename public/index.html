@@ -1733,6 +1733,7 @@
             
             TRAVEL_FALLBACK_PACKAGES.forEach(t => { catalogItemsCache[t._id] = t; });
             PRODUCT_FALLBACK_ITEMS.forEach(p => { catalogItemsCache[p._id] = p; });
+            cachedAllProducts = PRODUCT_FALLBACK_ITEMS;
 
             if (typeof loadOrdersTable === 'function') loadOrdersTable();
             //// loadMainSitePolicies();
@@ -2084,23 +2085,36 @@ window.addEventListener('popstate', function(e) {
             const chipsCont = document.getElementById(chipsContainerId);
             if (!grid) return;
 
-            grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading catalog...</div>';
-            
-            let allItems = await fetchStoreItems();
-            if (!allItems || allItems.length === 0) {
-                allItems = (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined') ? PRODUCT_FALLBACK_ITEMS : [];
+            // Instant render fallback products first if cache is ready
+            let allItems = (typeof cachedAllProducts !== 'undefined' && cachedAllProducts && cachedAllProducts.length > 0)
+                ? cachedAllProducts
+                : (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined' ? PRODUCT_FALLBACK_ITEMS : []);
+
+            let catItems = allItems.filter(filterFn);
+            if (catItems.length > 0) {
+                categoryMemory[catKey].all = catItems;
+                categoryMemory[catKey].filtered = catItems;
+                renderCategoryGrid(gridId, catItems, "No products found.");
+            } else {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading catalog...</div>';
             }
-            
-            const catItems = allItems.filter(filterFn);
 
-            categoryMemory[catKey].all = catItems;
-            categoryMemory[catKey].filtered = catItems;
-            categoryMemory[catKey].activeBrand = 'All';
-            categoryMemory[catKey].query = '';
+            // Now fetch latest from remote backend
+            try {
+                const freshItems = await fetchStoreItems();
+                if (freshItems && freshItems.length > 0) {
+                    const freshCatItems = freshItems.filter(filterFn);
+                    if (freshCatItems.length > 0) {
+                        catItems = freshCatItems;
+                        categoryMemory[catKey].all = catItems;
+                        categoryMemory[catKey].filtered = catItems;
+                    }
+                }
+            } catch(e) {
+                console.warn("Backend waking up, using fallback cache");
+            }
 
-            const searchInput = document.querySelector(`#page-${catKey} input[type="text"]`);
-            if (searchInput) searchInput.value = '';
-
+            // Render final list & chips
             if (chipsCont) {
                 const brands = ['All', ...new Set(catItems.map(p => {
                     if (p.brand && p.brand.trim() !== '') return p.brand.trim();
@@ -3397,7 +3411,7 @@ window.addEventListener('popstate', function(e) {
                 if (detailTab) detailTab.style.display = 'none';
                 if (listTab) listTab.style.display = 'block';
 
-                if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+                if (typeof loadOrdersTable === 'function') loadOrdersTable();
 window.location.reload();
                 switchProfileTab('p-orders', document.querySelector('.profile-nav-btn'));
                 navigateTo('page-profile');
@@ -3720,7 +3734,7 @@ window.location.reload();
                 if (res.ok) {
                     if (cancelModal) cancelModal.hide();
                     alert('Order cancelled successfully.');
-                    if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+                    if (typeof loadOrdersTable === 'function') loadOrdersTable();
 window.location.reload();
                 } else {
                     alert('Cancellation failed on server.');
@@ -4636,7 +4650,7 @@ async function handleFullPageUtilitySubmit(e) {
         if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
 
         alert('✅ Utility payment of ₹' + amt + ' successful via M J Wallet!\nTarget: ' + target);
-        if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+        if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') loadOrdersTable();
         if (typeof navigateTo === 'function') navigateTo('page-profile');
         return;
     }
@@ -4662,7 +4676,7 @@ async function handleFullPageUtilitySubmit(e) {
             await recordUtilityOrder('Paid', 'Delivered', response.razorpay_payment_id);
             alert('🎉 Payment Successful!\nStatus: SUCCESS\nTxn ID: ' + response.razorpay_payment_id);
             if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
-            if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+            if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') loadOrdersTable();
             if (typeof navigateTo === 'function') navigateTo('page-profile');
         },
         modal: {
@@ -4670,7 +4684,7 @@ async function handleFullPageUtilitySubmit(e) {
                 if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
                 await recordUtilityOrder('Pending', 'Processing', tempTxn, 'User closed modal (Pending Auto-Sync)');
                 alert('⚠️ Transaction window close ho gayi thi.\nStatus: PENDING\nYeh dashboard me auto-sync ho jayega.');
-                if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+                if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') loadOrdersTable();
             }
         },
         prefill: {
@@ -4686,7 +4700,7 @@ async function handleFullPageUtilitySubmit(e) {
         if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
         await recordUtilityOrder('Failed', 'Cancelled', response.error?.metadata?.payment_id || '', response.error?.description || '');
         alert('❌ Payment Failed: ' + response.error?.description);
-        if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+        if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') loadOrdersTable();
     });
 
     rzp.open();
