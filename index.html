@@ -2,6 +2,20 @@
 <!-- FILE-01 | VERSION: 11.0 | 100% UNIFIED ERROR-FREE MJ DIGITAL PORTAL -->
 <html lang="en">
 <head>
+<script>
+  window.loadOrdersTable = window.loadOrdersTable || async function() {
+    const container = document.getElementById('amazonOrdersContainer');
+    if (!container) return;
+    try {
+      const res = await fetch('/api/orders');
+      if (res.ok) {
+        const rawOrders = await res.json();
+        window.userOrders = Array.isArray(rawOrders) ? rawOrders : (rawOrders.data || rawOrders.orders || []);
+        if (typeof filterCustomerOrders === 'function') filterCustomerOrders();
+      }
+    } catch(e) {}
+  };
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M J DIGITAL - Premium Multi-Store & Travel Portal</title>
@@ -1720,12 +1734,12 @@
             TRAVEL_FALLBACK_PACKAGES.forEach(t => { catalogItemsCache[t._id] = t; });
             PRODUCT_FALLBACK_ITEMS.forEach(p => { catalogItemsCache[p._id] = p; });
 
-            loadOrdersTable();
+            if (typeof loadOrdersTable === 'function') loadOrdersTable();
             //// loadMainSitePolicies();
-            syncLiveStoreSettings();
-            updateCartBadge();
-            updateWishlistBadge();
-            routeCurrentPath();
+            if (typeof syncLiveStoreSettings === 'function') syncLiveStoreSettings();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
+            if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
+            if (typeof routeCurrentPath === 'function') routeCurrentPath();
         });
 
         setTimeout(() => {
@@ -1816,7 +1830,7 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
     } else if (pageId === 'page-travels') {
         if (typeof filterTravels === 'function') filterTravels('All');
     } else if (pageId === 'page-profile') {
-        if (typeof loadOrdersTable === 'function') loadOrdersTable();
+        if (typeof loadOrdersTable === 'function') if (typeof loadOrdersTable === 'function') loadOrdersTable();
     } else if (pageId === 'page-utility-hub') {
         if (typeof switchUtilityTab === 'function') switchUtilityTab(typeof fpCurrentService !== 'undefined' ? fpCurrentService : 'mobile');
     }
@@ -1865,7 +1879,7 @@ window.addEventListener('popstate', function(e) {
             navigateTo(e.state.pageId, null, false);
         }
     } else {
-        routeCurrentPath();
+        if (typeof routeCurrentPath === 'function') routeCurrentPath();
     }
 });
 
@@ -2834,7 +2848,7 @@ window.addEventListener('popstate', function(e) {
                     myCart.push({ id, title, price, img, type, qty: 1 });
                 }
             }
-            updateCartBadge();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
             
             const targetBtn = e ? e.currentTarget : null;
             if (targetBtn) {
@@ -2867,7 +2881,7 @@ window.addEventListener('popstate', function(e) {
             } else {
                 myWishlist.push({ id, title, price, img, type });
             }
-            updateWishlistBadge();
+            if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
 
             const targetBtn = e ? e.currentTarget : null;
             if (targetBtn && targetBtn.classList.contains('btn-action-icon')) {
@@ -2940,15 +2954,15 @@ window.addEventListener('popstate', function(e) {
             }
 
             myWishlist = myWishlist.filter(w => String(w.id) !== String(id));
-            updateWishlistBadge();
-            updateCartBadge();
+            if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
             renderWishlistPage();
             alert(`"${item.title}" moved to Shopping Bag!`);
         }
 
         function removeWishlistItem(id) {
             myWishlist = myWishlist.filter(w => String(w.id) !== String(id));
-            updateWishlistBadge();
+            if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
             renderWishlistPage();
         }
 
@@ -2961,7 +2975,7 @@ window.addEventListener('popstate', function(e) {
                 if (item.adults < 1) {
                     if (confirm(`Remove "${item.title}"?`)) {
                         myCart.splice(index, 1);
-                        updateCartBadge();
+                        if (typeof updateCartBadge === 'function') updateCartBadge();
                         renderCartPage();
                         return;
                     } else {
@@ -2973,7 +2987,7 @@ window.addEventListener('popstate', function(e) {
             }
 
             item.qty = (item.adults || 1) + (item.children || 0);
-            updateCartBadge();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
             renderCartPage();
         }
 
@@ -2987,7 +3001,7 @@ window.addEventListener('popstate', function(e) {
                     myCart[index].qty = 1;
                 }
             }
-            updateCartBadge();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
             renderCartPage();
         }
 
@@ -3090,7 +3104,7 @@ window.addEventListener('popstate', function(e) {
 
         function removeCartItem(idx) {
             myCart.splice(idx, 1);
-            updateCartBadge();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
             renderCartPage();
         }
 
@@ -3100,7 +3114,7 @@ window.addEventListener('popstate', function(e) {
             const price = item ? (item.discountPrice ? item.discountPrice : item.price) : 0;
             const img = item?.images?.[0] || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300';
             myCart = [{ id, title, price, img, type: 'Product', qty: 1 }];
-            updateCartBadge();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
             checkoutFromCart();
         }
 
@@ -3110,7 +3124,7 @@ window.addEventListener('popstate', function(e) {
             const price = item ? (item.pricingTiers?.standard?.price || item.price || 45000) : 45000;
             const img = item?.images?.[0] || 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500';
             myCart = [{ id, title, price, img, type: 'Travel', adults: 1, children: 0, qty: 1 }];
-            updateCartBadge();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
             checkoutFromCart();
         }
 
@@ -3370,7 +3384,7 @@ window.addEventListener('popstate', function(e) {
 
             async function finishCheckout() {
                 myCart = [];
-                updateCartBadge();
+                if (typeof updateCartBadge === 'function') updateCartBadge();
                 resetButton();
 
                 const defaultRadio = document.querySelector('input[name="fpPaymentGateway"][value="razorpay"]');
@@ -3383,7 +3397,7 @@ window.addEventListener('popstate', function(e) {
                 if (detailTab) detailTab.style.display = 'none';
                 if (listTab) listTab.style.display = 'block';
 
-                await loadOrdersTable();
+                await if (typeof loadOrdersTable === 'function') loadOrdersTable();
 window.location.reload();
                 switchProfileTab('p-orders', document.querySelector('.profile-nav-btn'));
                 navigateTo('page-profile');
@@ -3662,7 +3676,7 @@ window.location.reload();
                 });
             }
 
-            updateCartBadge();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
             renderCartPage();
             navigateTo('page-cart');
         }
@@ -3706,7 +3720,7 @@ window.location.reload();
                 if (res.ok) {
                     if (cancelModal) cancelModal.hide();
                     alert('Order cancelled successfully.');
-                    await loadOrdersTable();
+                    await if (typeof loadOrdersTable === 'function') loadOrdersTable();
 window.location.reload();
                 } else {
                     alert('Cancellation failed on server.');
@@ -3805,7 +3819,7 @@ window.location.reload();
                 if (listTab) listTab.style.display = 'block';
 
                 switchProfileTab('p-orders', document.querySelector('.profile-nav-btn'));
-                loadOrdersTable();
+                if (typeof loadOrdersTable === 'function') loadOrdersTable();
                 navigateTo('page-profile');
             } else {
                 navigateTo('page-auth');
@@ -3837,7 +3851,7 @@ window.location.reload();
 
         function logout() {
             isLoggedIn = false;
-            routeCurrentPath();
+            if (typeof routeCurrentPath === 'function') routeCurrentPath();
         }
 
         function switchProfileTab(tabId, el) {
@@ -4622,7 +4636,7 @@ async function handleFullPageUtilitySubmit(e) {
         if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
 
         alert('✅ Utility payment of ₹' + amt + ' successful via M J Wallet!\nTarget: ' + target);
-        if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+        if (typeof loadOrdersTable === 'function') await if (typeof loadOrdersTable === 'function') loadOrdersTable();
         if (typeof navigateTo === 'function') navigateTo('page-profile');
         return;
     }
@@ -4648,7 +4662,7 @@ async function handleFullPageUtilitySubmit(e) {
             await recordUtilityOrder('Paid', 'Delivered', response.razorpay_payment_id);
             alert('🎉 Payment Successful!\nStatus: SUCCESS\nTxn ID: ' + response.razorpay_payment_id);
             if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
-            if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+            if (typeof loadOrdersTable === 'function') await if (typeof loadOrdersTable === 'function') loadOrdersTable();
             if (typeof navigateTo === 'function') navigateTo('page-profile');
         },
         modal: {
@@ -4656,7 +4670,7 @@ async function handleFullPageUtilitySubmit(e) {
                 if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
                 await recordUtilityOrder('Pending', 'Processing', tempTxn, 'User closed modal (Pending Auto-Sync)');
                 alert('⚠️ Transaction window close ho gayi thi.\nStatus: PENDING\nYeh dashboard me auto-sync ho jayega.');
-                if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+                if (typeof loadOrdersTable === 'function') await if (typeof loadOrdersTable === 'function') loadOrdersTable();
             }
         },
         prefill: {
@@ -4672,7 +4686,7 @@ async function handleFullPageUtilitySubmit(e) {
         if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
         await recordUtilityOrder('Failed', 'Cancelled', response.error?.metadata?.payment_id || '', response.error?.description || '');
         alert('❌ Payment Failed: ' + response.error?.description);
-        if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+        if (typeof loadOrdersTable === 'function') await if (typeof loadOrdersTable === 'function') loadOrdersTable();
     });
 
     rzp.open();
