@@ -1740,6 +1740,7 @@
             if (typeof syncLiveStoreSettings === 'function') syncLiveStoreSettings();
             if (typeof updateCartBadge === 'function') updateCartBadge();
             if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
+            forceRenderAllCategories();
             if (typeof routeCurrentPath === 'function') routeCurrentPath();
         });
 
@@ -1817,19 +1818,8 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
     if (pageId === 'page-home') {
         if (typeof loadHomeTrending === 'function') loadHomeTrending();
         if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-mobile') {
-        if (typeof loadMobiles === 'function') loadMobiles();
-        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-fashion') {
-        if (typeof loadFashion === 'function') loadFashion();
-        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-electronics') {
-        if (typeof loadElectronics === 'function') loadElectronics();
-        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-services') {
-        if (typeof loadServices === 'function') loadServices();
-    } else if (pageId === 'page-travels') {
-        if (typeof filterTravels === 'function') filterTravels('All');
+    } else if (pageId === 'page-mobile' || pageId === 'page-electronics' || pageId === 'page-fashion' || pageId === 'page-travels') {
+        forceRenderAllCategories();
     } else if (pageId === 'page-profile') {
         if (typeof loadOrdersTable === 'function') loadOrdersTable();
     } else if (pageId === 'page-utility-hub') {
@@ -1880,7 +1870,8 @@ window.addEventListener('popstate', function(e) {
             navigateTo(e.state.pageId, null, false);
         }
     } else {
-        if (typeof routeCurrentPath === 'function') routeCurrentPath();
+        forceRenderAllCategories();
+            if (typeof routeCurrentPath === 'function') routeCurrentPath();
     }
 });
 
@@ -1923,6 +1914,41 @@ window.addEventListener('popstate', function(e) {
         }
 
         // 2. PRODUCT CARD BUILDER (Safe Media Tag & Strikethrough Pricing)
+        // DIRECT INSTANT RENDERING ENGINE FOR ALL CATEGORIES
+        function forceRenderAllCategories() {
+            const fallbackList = [
+                { _id: 'm1', title: 'Iphone 18 pro', category: 'mobile', brand: 'Apple', price: 349999, discountPrice: 314999, stock: 10, imageUrl: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500' },
+                { _id: 'm2', title: 'Samsung Galaxy S24 Ultra', category: 'mobile', brand: 'Samsung', price: 134999, discountPrice: 129999, stock: 12, imageUrl: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=500' },
+                { _id: 'e1', title: 'MacBook Air M3', category: 'electronics', brand: 'Apple', price: 119900, discountPrice: 104900, stock: 15, imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500' },
+                { _id: 'e2', title: 'Sony WH-1000XM5 Wireless Headphones', category: 'electronics', brand: 'Sony', price: 29990, discountPrice: 26990, stock: 20, imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500' },
+                { _id: 'f1', title: 'Casual Slim Fit Cotton T-Shirt', category: 'fashion', brand: 'MjHouse', price: 2399, discountPrice: 1499, stock: 50, imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500' }
+            ];
+
+            fallbackList.forEach(item => { catalogItemsCache[item._id] = item; });
+
+            const mobGrid = document.getElementById('mobileGrid');
+            if (mobGrid) {
+                const mobItems = fallbackList.filter(i => i.category === 'mobile');
+                mobGrid.innerHTML = mobItems.map(createProductCardHTML).join('');
+            }
+
+            const elecGrid = document.getElementById('electronicsProductsGrid');
+            if (elecGrid) {
+                const elecItems = fallbackList.filter(i => i.category === 'electronics');
+                elecGrid.innerHTML = elecItems.map(createProductCardHTML).join('');
+            }
+
+            const fashGrid = document.getElementById('fashionProductsGrid');
+            if (fashGrid) {
+                const fashItems = fallbackList.filter(i => i.category === 'fashion');
+                fashGrid.innerHTML = fashItems.map(createProductCardHTML).join('');
+            }
+
+            if (typeof filterTravels === 'function') {
+                filterTravels('All');
+            }
+        }
+
         function createProductCardHTML(item) {
             const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
             const safeImg = resolveMediaUrl(rawImg);
@@ -3877,6 +3903,7 @@ window.location.reload();
 
         function logout() {
             isLoggedIn = false;
+            forceRenderAllCategories();
             if (typeof routeCurrentPath === 'function') routeCurrentPath();
         }
 
