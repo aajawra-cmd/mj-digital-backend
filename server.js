@@ -947,15 +947,21 @@ const PORT = process.env.PORT || 5000;
   res.sendFile(targetIndex);
 });
 
-// --- BULLETPROOF SPA REFRESH FALLBACK ---
-app.use((req, res, next) => {
-  if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
-    const rootIndex = path.join(__dirname, 'index.html');
-    const pubIndex = path.join(__dirname, 'public', 'index.html');
-    if (fs.existsSync(rootIndex)) return res.sendFile(rootIndex);
-    if (fs.existsSync(pubIndex)) return res.sendFile(pubIndex);
+
+
+// --- BULLETPROOF SPA CATCH-ALL ROUTE ---
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return next();
   }
-  next();
+  const rootIndex = path.join(__dirname, 'index.html');
+  const pubIndex = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(rootIndex)) {
+    return res.sendFile(rootIndex);
+  } else if (fs.existsSync(pubIndex)) {
+    return res.sendFile(pubIndex);
+  }
+  res.status(404).send('Not Found');
 });
 
 app.listen(PORT, () => {
