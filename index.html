@@ -1678,182 +1678,2900 @@ function cleanStuckBackdrops() {
     document.body.style.removeProperty('padding-right');
 }
 
-// ==========================================
-// M J DIGITAL PRODUCTION ROUTING ENGINE
-// ==========================================
-const ROUTE_CONFIG = {
-    '/': 'page-home',
-    '/home': 'page-home',
-    '/mobiles': 'page-mobile',
-    '/travels': 'page-travels',
-    '/fashion': 'page-fashion',
-    '/electronics': 'page-electronics',
-    '/services': 'page-services',
-    '/pay/utility': 'page-utility-hub',
-    '/wishlist': 'page-wishlist',
-    '/bag': 'page-cart',
-    '/cart': 'page-cart',
-    '/checkout': 'page-checkout',
-    '/account/orders': 'page-profile',
-    '/profile': 'page-profile',
-    '/view/item': 'page-item-details'
-};
-
-const PAGE_TO_ROUTE = {
-    'page-home': '/',
-    'page-mobile': '/mobiles',
-    'page-travels': '/travels',
-    'page-fashion': '/fashion',
-    'page-electronics': '/electronics',
-    'page-services': '/services',
-    'page-utility-hub': '/pay/utility',
-    'page-wishlist': '/wishlist',
-    'page-cart': '/bag',
-    'page-checkout': '/checkout',
-    'page-profile': '/account/orders',
-    'page-item-details': '/view/item'
-};
-
-function navigateTo(pageId, navEl = null, updateUrl = true) {
-    if (typeof cleanStuckBackdrops === 'function') cleanStuckBackdrops();
-
-    // Sabhi views hide karein
-    document.querySelectorAll('.page-view').forEach(p => {
-        p.classList.remove('active');
-        p.style.display = 'none';
-    });
-
-    // Target view display karein
-    const target = document.getElementById(pageId);
-    if (target) {
-        target.classList.add('active');
-        target.style.display = 'block';
-        window.scrollTo(0, 0);
-    }
-
-    // Navbar buttons active highlight karein
-    document.querySelectorAll('.nav-btn, .nav-link').forEach(btn => btn.classList.remove('active'));
-    if (navEl) {
-        navEl.classList.add('active');
-    } else {
-        const navMap = {
-            'page-home': 'nav-home',
-            'page-travels': 'nav-travels',
-            'page-mobile': 'nav-mobile',
-            'page-fashion': 'nav-fashion',
-            'page-electronics': 'nav-electronics',
-            'page-services': 'nav-services',
-            'page-utility-hub': 'nav-utility'
-        };
-        const activeNavBtn = document.getElementById(navMap[pageId]);
-        if (activeNavBtn) activeNavBtn.classList.add('active');
-    }
-
-    // URL sync karein
-    if (updateUrl && PAGE_TO_ROUTE[pageId]) {
-        try {
-            history.pushState({ pageId: pageId }, '', PAGE_TO_ROUTE[pageId]);
-        } catch(e) {}
-    }
-
-    // Page data trigger functions
-    // Targeted Data Loaders
-    if (pageId === 'page-home') {
-        if (typeof loadHomeTrending === 'function') loadHomeTrending();
-        if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-mobile') {
-        if (typeof loadMobiles === 'function') loadMobiles();
-        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-fashion') {
-        if (typeof loadFashion === 'function') loadFashion();
-        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-electronics') {
-        if (typeof loadElectronics === 'function') loadElectronics();
-        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-services') {
-        if (typeof loadServices === 'function') loadServices();
-    } else if (pageId === 'page-travels') {
-        if (typeof loadTravelPackages === 'function') loadTravelPackages();
-        if (typeof fetchTravelPackages === 'function') fetchTravelPackages();
-        if (typeof filterTravels === 'function') filterTravels('All');
-    } else if (pageId === 'page-profile') {
-        if (typeof loadOrdersTable === 'function') loadOrdersTable();
-    } else if (pageId === 'page-utility-hub') {
-        if (typeof switchUtilityTab === 'function') switchUtilityTab('mobile_prepaid');
-    }
-}
-
-// Global Item Details Function with URL persistence
-function openItemDetailsPage(id, isTravel = false, updateUrl = true) {
-    if (updateUrl) {
-        const itemUrl = '/view/item?id=' + encodeURIComponent(id) + (isTravel ? '&type=travel' : '');
-        try {
-            history.pushState({ pageId: 'page-item-details', itemId: id, isTravel: isTravel }, '', itemUrl);
-        } catch(e) {}
-    }
-
-    document.querySelectorAll('.page-view').forEach(p => {
-        p.classList.remove('active');
-        p.style.display = 'none';
-    });
-
-    const targetDetails = document.getElementById('page-item-details');
-    if (targetDetails) {
-        targetDetails.classList.add('active');
-        targetDetails.style.display = 'block';
-        window.scrollTo(0, 0);
-    }
-
-    if (isTravel && typeof renderTravelDetails === 'function') {
-        renderTravelDetails(id);
-    } else if (typeof renderItemDetails === 'function') {
-        renderItemDetails(id);
-    }
-}
-
-// Router Initializer & Popstate (Back Button)
-function handleAppRouting() {
-    const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
-    const params = new URLSearchParams(window.location.search);
-    const itemId = params.get('id');
-    const isTravel = params.get('type') === 'travel';
-
-    // Global background catalog fetch start
-    if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    if (typeof loadTravelPackages === 'function') loadTravelPackages();
-    if (typeof fetchTravelPackages === 'function') fetchTravelPackages();
-
-    if (path.includes('item') && itemId) {
-        let retries = 0;
-        const waitInterval = setInterval(() => {
-            retries++;
-            const hasData = (typeof catalogItemsCache !== 'undefined' && catalogItemsCache[itemId]) ||
-                            (typeof travelMemory !== 'undefined' && travelMemory.all && travelMemory.all.length > 0);
-            if (hasData || retries > 25) {
-                clearInterval(waitInterval);
-                openItemDetailsPage(itemId, isTravel, false);
+function navigateTo(pageId, navEl = null) {
+    cleanStuckBackdrops();
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(pageId);
+            if (target) {
+                target.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-        }, 100);
+            if (navEl) {
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                navEl.classList.add('active');
+            }
+
+            if (pageId === 'page-home') loadHomeTrending();
+            if (pageId === 'page-all-catalog') {
+                const searchVal = document.getElementById('globalLiveSearchInput')?.value?.trim();
+                if (!searchVal) loadAllCatalog();
+            }
+            if (pageId === 'page-mobile') loadMobiles();
+            if (pageId === 'page-fashion') loadFashion();
+            if (pageId === 'page-electronics') loadElectronics();
+            if (pageId === 'page-services') loadServices();
+            if (pageId === 'page-travels') filterTravels('All');
+            if (pageId === 'page-profile') loadOrdersTable();
+            if (pageId === 'page-wishlist') renderWishlistPage();
+            if (pageId === 'page-cart') renderCartPage();
+        }
+
+        let cachedAllProducts = null;
+
+        async function fetchStoreItems(forceRefresh = false) {
+            if (!forceRefresh && cachedAllProducts && cachedAllProducts.length > 0) {
+                return cachedAllProducts;
+            }
+            try {
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products');
+                const data = await res.json();
+                const items = Array.isArray(data) ? data : (data.data || []);
+                items.forEach(it => { catalogItemsCache[it._id] = it; });
+                cachedAllProducts = items;
+                return items;
+            } catch (e) {
+                return Object.values(catalogItemsCache).filter(item => !item.destination);
+            }
+        }
+
+        // 2. PRODUCT CARD BUILDER (Safe Media Tag & Strikethrough Pricing)
+        function createProductCardHTML(item) {
+            const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
+            const safeImg = resolveMediaUrl(rawImg);
+            const isVid = safeImg.endsWith('.mp4') || safeImg.endsWith('.webm');
+
+            const mediaTag = isVid 
+                ? `<video src="${safeImg}" class="img-fluid" muted style="max-height: 150px; object-fit: contain;"></video>`
+                : `<img src="${safeImg}" alt="${item.title || item.name}" class="img-fluid" style="max-height: 150px; object-fit: contain;" onerror="this.src='https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300'">`;
+
+            const currentPrice = Number(item.discountPrice ? item.discountPrice : (item.price || 0)).toLocaleString('en-IN');
+            const originalMrp = (item.discountPrice && item.discountPrice < item.price) ? Number(item.price).toLocaleString('en-IN') : null;
+            const title = item.title || item.name || 'Product';
+            const isWish = myWishlist.some(w => String(w.id) === String(item._id));
+
+            return `
+                <div class="col-md-4 col-sm-6">
+                    <div class="card-custom p-4 text-center h-100 d-flex flex-column justify-content-between">
+                        <div onclick="openItemDetailsPage('${item._id}', false)" style="cursor: pointer;" title="Click to view full details">
+                            <div class="bg-light rounded-4 p-3 mb-3 d-flex align-items-center justify-content-center" style="height: 180px;">
+                                ${mediaTag}
+                            </div>
+                            <span class="badge bg-primary-subtle text-primary mb-2 text-uppercase">${item.category || 'General'}</span>
+                            <h6 class="fw-bold fs-5 text-dark line-clamp-1">${title}</h6>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center justify-content-center gap-2 my-2">
+                                <h4 class="text-primary fw-bold mb-0">₹${currentPrice}</h4>
+                                ${originalMrp ? `<span class="text-muted text-decoration-line-through small">₹${originalMrp}</span>` : ''}
+                            </div>
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" onclick="handleAddToCartClick(event, '${item._id}', false)" class="btn btn-brand  py-2">
+                                    <i class="fa-solid fa-bag-shopping me-1"></i> Add to Bag
+                                </button>
+                                <button type="button" onclick="openItemDetailsPage('${item._id}', false)" class="btn-action-icon" title="View Full Page">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                                <button type="button" onclick="handleWishlistClick(event, '${item._id}', false)" class="btn-action-icon ${isWish ? 'wishlist-active' : ''}" title="Add to Wishlist">
+                                    <i class="${isWish ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadHomeTrending() {
+            const grid = document.getElementById('homeTrendingGrid');
+            if (!grid) return;
+
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading live catalog...</div>';
+
+            const products = await fetchStoreItems();
+
+            let travels = [];
+            try {
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                if (res.ok) {
+                    const data = await res.json();
+                    travels = Array.isArray(data) ? data : (data.data || []);
+                    travels.forEach(t => { catalogItemsCache[t._id] = t; });
+                }
+            } catch (e) {
+                travels = travelMemory.all || [];
+            }
+
+            const mixedTrending = [
+                ...products.slice(0, 3).map(p => ({ ...p, isTravelItem: false })),
+                ...travels.slice(0, 3).map(t => ({ ...t, isTravelItem: true }))
+            ];
+
+            if (mixedTrending.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-4">No trending items available.</div>';
+                return;
+            }
+
+            grid.innerHTML = mixedTrending.map(item => {
+                return item.isTravelItem ? createTravelCardHTML(item) : createProductCardHTML(item);
+            }).join('');
+        }
+
+        async function loadAllCatalog() {
+            const grid = document.getElementById('allCatalogGrid');
+            if (!grid) return;
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading complete store catalog...</div>';
+
+            const products = await fetchStoreItems();
+
+            let travels = [];
+            try {
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                if (res.ok) {
+                    const data = await res.json();
+                    travels = Array.isArray(data) ? data : (data.data || []);
+                    travels.forEach(t => { catalogItemsCache[t._id] = t; });
+                }
+            } catch (e) {
+                travels = travelMemory.all || [];
+            }
+
+            currentFilteredCatalogList = [
+                ...products.map(p => ({ ...p, isTravelItem: false })),
+                ...travels.map(t => ({ ...t, isTravelItem: true }))
+            ];
+
+            renderSortedCatalogGrid(currentFilteredCatalogList);
+        }
+
+        function handleCatalogSortChange(sortType) {
+            if (!currentFilteredCatalogList || currentFilteredCatalogList.length === 0) return;
+            let list = [...currentFilteredCatalogList];
+
+            const getPrice = (item) => {
+                if (item.isTravelItem || item.destination) {
+                    return Number(item.pricingTiers?.standard?.price || item.price || 0);
+                }
+                return Number(item.discountPrice ? item.discountPrice : (item.price || 0));
+            };
+
+            if (sortType === 'low-high') {
+                list.sort((a, b) => getPrice(a) - getPrice(b));
+            } else if (sortType === 'high-low') {
+                list.sort((a, b) => getPrice(b) - getPrice(a));
+            }
+            renderSortedCatalogGrid(list);
+        }
+
+        function renderSortedCatalogGrid(list) {
+            const grid = document.getElementById('allCatalogGrid');
+            if (!grid) return;
+            if (list.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5">No catalog items available.</div>';
+                return;
+            }
+            grid.innerHTML = list.map(item => {
+                const isTravel = Boolean(item.isTravelItem || item.destination || item.duration || item.pricingTiers);
+                return isTravel ? createTravelCardHTML(item) : createProductCardHTML(item);
+            }).join('');
+        }
+
+        async function loadMobiles() {
+            await setupCategoryStore('mobile', 'mobileGrid', 'mobileBrandChips', it => {
+                const cat = (it.category || '').toLowerCase().trim();
+                return cat === 'mobile' || cat === 'mobiles' || cat === 'smartphone';
+            });
+        }
+
+        async function loadElectronics() {
+            await setupCategoryStore('electronics', 'electronicsProductsGrid', 'electronicsBrandChips', it => {
+                const cat = (it.category || '').toLowerCase().trim();
+                return cat === 'electronics' || cat === 'electronic' || cat === 'laptops';
+            });
+        }
+
+        async function loadFashion() {
+            await setupCategoryStore('fashion', 'fashionProductsGrid', 'fashionBrandChips', it => {
+                const cat = (it.category || '').toLowerCase().trim();
+                return cat === 'fashion' || cat === 'clothing' || cat === 'apparel';
+            });
+        }
+
+        async function loadServices() {
+            await setupCategoryStore('services', 'servicesProductsGrid', 'servicesBrandChips', it => {
+                const cat = (it.category || '').toLowerCase().trim();
+                return cat === 'services' || cat === 'service' || cat === 'it services';
+            });
+        }
+
+        async function setupCategoryStore(catKey, gridId, chipsContainerId, filterFn) {
+            const grid = document.getElementById(gridId);
+            const chipsCont = document.getElementById(chipsContainerId);
+            if (!grid) return;
+
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading catalog...</div>';
+            const allItems = await fetchStoreItems();
+            const catItems = allItems.filter(filterFn);
+
+            categoryMemory[catKey].all = catItems;
+            categoryMemory[catKey].filtered = catItems;
+            categoryMemory[catKey].activeBrand = 'All';
+            categoryMemory[catKey].query = '';
+
+            const searchInput = document.querySelector(`#page-${catKey} input[type="text"]`);
+            if (searchInput) searchInput.value = '';
+
+            if (chipsCont) {
+                const brands = ['All', ...new Set(catItems.map(p => {
+                    if (p.brand && p.brand.trim() !== '') return p.brand.trim();
+                    return '';
+                }).filter(Boolean))];
+
+                chipsCont.innerHTML = brands.map(b => `
+                    <button type="button" 
+                        onclick="filterCategoryByBrand('${catKey}', '${b}', this)" 
+                        class="brand-chip-btn ${b === 'All' ? 'active' : ''}">
+                        ${b}
+                    </button>
+                `).join('');
+            }
+
+            renderCategoryGrid(gridId, catItems, `No ${catKey} items found.`);
+        }
+
+        function filterCategoryByBrand(catKey, selectedBrand, btnEl) {
+            categoryMemory[catKey].activeBrand = selectedBrand;
+            categoryMemory[catKey].query = '';
+            const searchInput = document.querySelector(`#page-${catKey} input[type="text"]`);
+            if (searchInput) searchInput.value = '';
+
+            const parent = btnEl.parentElement;
+            parent.querySelectorAll('.brand-chip-btn').forEach(btn => btn.classList.remove('active'));
+            btnEl.classList.add('active');
+            applyCategoryFilters(catKey);
+        }
+
+        function filterCategoryBySearch(catKey, queryVal) {
+            categoryMemory[catKey].query = String(queryVal || '').trim().toLowerCase();
+            applyCategoryFilters(catKey);
+        }
+
+        function sortCategoryProducts(catKey, sortOrder) {
+            let list = [...categoryMemory[catKey].filtered];
+            const getPrice = (item) => Number(item.discountPrice ? item.discountPrice : (item.price || 0));
+            if (sortOrder === 'low-high') {
+                list.sort((a, b) => getPrice(a) - getPrice(b));
+            } else if (sortOrder === 'high-low') {
+                list.sort((a, b) => getPrice(b) - getPrice(a));
+            }
+            const gridMap = {
+                mobile: 'mobileGrid',
+                electronics: 'electronicsProductsGrid',
+                fashion: 'fashionProductsGrid',
+                services: 'servicesProductsGrid'
+            };
+            renderCategoryGrid(gridMap[catKey], list, `No items matching filter.`);
+        }
+
+        function applyCategoryFilters(catKey) {
+            const state = categoryMemory[catKey];
+            let result = [...state.all];
+
+            if (state.activeBrand && state.activeBrand !== 'All') {
+                result = result.filter(item => {
+                    const brandMatch = String(item.brand || '').toLowerCase() === state.activeBrand.toLowerCase();
+                    const titleMatch = String(item.title || item.name || '').toLowerCase().includes(state.activeBrand.toLowerCase());
+                    return brandMatch || titleMatch;
+                });
+            }
+
+            if (state.query) {
+                result = result.filter(item => {
+                    const title = String(item.title || item.name || '').toLowerCase();
+                    const brand = String(item.brand || '').toLowerCase();
+                    const desc = String(item.description || '').toLowerCase();
+                    return title.includes(state.query) || brand.includes(state.query) || desc.includes(state.query);
+                });
+            }
+
+            state.filtered = result;
+            const gridMap = {
+                mobile: 'mobileGrid',
+                electronics: 'electronicsProductsGrid',
+                fashion: 'fashionProductsGrid',
+                services: 'servicesProductsGrid'
+            };
+            renderCategoryGrid(gridMap[catKey], result, `No products found matching filters.`);
+        }
+
+        function renderCategoryGrid(gridId, items, emptyMessage) {
+            const grid = document.getElementById(gridId);
+            if (!grid) return;
+            if (items.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-12 text-center text-muted py-5">
+                        <i class="fa-solid fa-filter-circle-xmark fs-2 mb-2 d-block text-secondary opacity-50"></i>
+                        <p class="small fw-semibold mb-0">${emptyMessage}</p>
+                    </div>
+                `;
+                return;
+            }
+            grid.innerHTML = items.map(createProductCardHTML).join('');
+        }
+
+        async function filterTravels(regionType = 'All', btnEl = null) {
+            travelMemory.activeRegion = regionType;
+            travelMemory.activeDestination = 'All';
+            travelMemory.query = '';
+
+            const tSearch = document.getElementById('travelSearchInput');
+            if (tSearch) tSearch.value = '';
+
+            document.querySelectorAll('.travel-tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnEl) {
+                btnEl.classList.add('active');
+            } else if (regionType === 'All') {
+                document.getElementById('btn-all-travel')?.classList.add('active');
+            } else if (regionType === 'International') {
+                document.getElementById('btn-intl')?.classList.add('active');
+            } else if (regionType === 'India') {
+                document.getElementById('btn-india')?.classList.add('active');
+            }
+
+            const grid = document.getElementById('travelGrid');
+            if (!grid) return;
+
+            if (!travelMemory.all || travelMemory.all.length === 0) {
+                travelMemory.all = TRAVEL_FALLBACK_PACKAGES;
+            }
+
+            try {
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                if (res.ok) {
+                    const result = await res.json();
+                    const remoteData = Array.isArray(result) ? result : (result.data || []);
+                    if (remoteData.length > 0) {
+                        travelMemory.all = remoteData;
+                        remoteData.forEach(t => { catalogItemsCache[t._id] = t; });
+                    }
+                }
+            } catch (err) {
+                if (travelMemory.all.length === 0) {
+                    travelMemory.all = TRAVEL_FALLBACK_PACKAGES;
+                }
+            }
+
+            applyTravelFilters();
+        }
+
+        function filterTravelByDestination(destinationName, btnEl) {
+            travelMemory.activeDestination = destinationName;
+            travelMemory.query = '';
+            const tSearch = document.getElementById('travelSearchInput');
+            if (tSearch) tSearch.value = '';
+            const parent = btnEl.parentElement;
+            parent.querySelectorAll('.brand-chip-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+            applyTravelFilters();
+        }
+
+        function filterTravelsBySearch(val) {
+            travelMemory.query = String(val || '').trim().toLowerCase();
+            applyTravelFilters();
+        }
+
+        function sortTravelPackages(sortOrder) {
+            let list = [...travelMemory.filtered];
+            if (sortOrder === 'low-high') {
+                list.sort((a, b) => Number(a.pricingTiers?.standard?.price || a.price || 0) - Number(b.pricingTiers?.standard?.price || b.price || 0));
+            } else if (sortOrder === 'high-low') {
+                list.sort((a, b) => Number(b.pricingTiers?.standard?.price || b.price || 0) - Number(a.pricingTiers?.standard?.price || a.price || 0));
+            }
+            renderTravelGrid(list);
+        }
+
+        function applyTravelFilters() {
+            let list = [...travelMemory.all];
+            const indiaKeywords = ['india', 'kerala', 'goa', 'kashmir', 'manali', 'rajasthan', 'himachal', 'delhi', 'shimla', 'jaipur'];
+
+            if (travelMemory.activeRegion === 'India') {
+                list = list.filter(t => {
+                    const dest = String(t.destination || '').toLowerCase();
+                    const title = String(t.title || '').toLowerCase();
+                    return indiaKeywords.some(k => dest.includes(k) || title.includes(k));
+                });
+            } else if (travelMemory.activeRegion === 'International') {
+                list = list.filter(t => {
+                    const dest = String(t.destination || '').toLowerCase();
+                    const title = String(t.title || '').toLowerCase();
+                    return !indiaKeywords.some(k => dest.includes(k) || title.includes(k));
+                });
+            }
+
+            if (travelMemory.activeDestination && travelMemory.activeDestination !== 'All') {
+                list = list.filter(t => String(t.destination || '').toLowerCase() === travelMemory.activeDestination.toLowerCase());
+            }
+
+            if (travelMemory.query) {
+                list = list.filter(t => {
+                    const title = String(t.title || '').toLowerCase();
+                    const dest = String(t.destination || '').toLowerCase();
+                    return title.includes(travelMemory.query) || dest.includes(travelMemory.query);
+                });
+            }
+
+            travelMemory.filtered = list;
+            const chipContainer = document.getElementById('travelDestinationChips');
+            if (chipContainer) {
+                const baseSet = travelMemory.all.filter(t => {
+                    const dest = String(t.destination || '').toLowerCase();
+                    const title = String(t.title || '').toLowerCase();
+                    const indiaKeywords = ['india', 'kerala', 'goa', 'kashmir', 'manali', 'rajasthan', 'himachal', 'delhi', 'shimla', 'jaipur'];
+                    const matchesIndia = indiaKeywords.some(k => dest.includes(k) || title.includes(k));
+                    if (travelMemory.activeRegion === 'India') return matchesIndia;
+                    if (travelMemory.activeRegion === 'International') return !matchesIndia;
+                    return true;
+                });
+                const dests = ['All', ...new Set(baseSet.map(p => p.destination).filter(d => d && d.trim() !== ''))];
+                const currentActive = travelMemory.activeDestination;
+                chipContainer.innerHTML = dests.map(d => `
+                    <button type="button" onclick="filterTravelByDestination('${d}', this)" class="brand-chip-btn ${d === currentActive ? 'active' : ''}">${d}</button>
+                `).join('');
+            }
+            renderTravelGrid(list);
+        }
+
+        // 3. TRAVEL CARD BUILDER (Clean Safe Image Tag)
+        function createTravelCardHTML(t) {
+            const rawImg = (t.images && t.images.length > 0) ? t.images[0] : (t.imageUrl || '');
+            const safeImg = resolveMediaUrl(rawImg);
+            const price = t.pricingTiers?.standard?.price || t.price || 45000;
+            const days = t.duration?.days || 1;
+            const nights = t.duration?.nights || 0;
+            const isWish = myWishlist.some(w => String(w.id) === String(t._id));
+
+            return `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-custom h-100 d-flex flex-column justify-content-between">
+                        <img src="${safeImg}" class="card-img-top-custom" alt="${t.title}" onclick="openItemDetailsPage('${t._id}', true)" title="Click to view tour details" onerror="this.src='https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=500'">
+                        <div class="p-4 d-flex flex-column justify-content-between ">
+                            <div onclick="openItemDetailsPage('${t._id}', true)" style="cursor: pointer;">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-warning text-dark">${t.destination || 'Travel Tour'}</span>
+                                    <span class="text-muted small fw-semibold">${days}D / ${nights}N</span>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-2">${t.title}</h5>
+                            </div>
+                            <div class="pt-3 border-top mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold fs-5 text-primary">₹${Number(price).toLocaleString('en-IN')}</span>
+                                    <span class="text-muted small">Per Person</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-brand btn-sm  py-2" onclick="handleAddToCartClick(event, '${t._id}', true)">
+                                        <i class="fa-solid fa-bag-shopping me-1"></i> Add to Bag
+                                    </button>
+                                    <button type="button" onclick="openItemDetailsPage('${t._id}', true)" class="btn-action-icon" style="width: 38px; height: 38px;" title="View Details">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    <button type="button" onclick="handleWishlistClick(event, '${t._id}', true)" class="btn-action-icon ${isWish ? 'wishlist-active' : ''}" style="width: 38px; height: 38px;" title="Add to Wishlist">
+                                        <i class="${isWish ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTravelGrid(list) {
+            const grid = document.getElementById('travelGrid');
+            if (!grid) return;
+            if (!list || list.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-plane-slash fs-2 mb-2 d-block text-secondary opacity-50"></i><p class="small fw-semibold mb-0">No travel packages found matching criteria.</p></div>';
+                return;
+            }
+            grid.innerHTML = list.map(t => createTravelCardHTML(t)).join('');
+        }
+
+        window.createTravelCardHTML = createTravelCardHTML;
+        window.renderTravelGrid = renderTravelGrid;
+
+        // 4. LIVE DYNAMIC DISCOUNT PRICING HELPER
+        function applyDiscountPriceDisplay(finalPrice, originalMrp) {
+            const priceEl = document.getElementById('pageDetailPrice');
+            const origBox = document.getElementById('pageDetailOriginalPriceBox');
+            const origPriceEl = document.getElementById('pageDetailOriginalPrice');
+            const discountBadge = document.getElementById('pageDetailDiscountPercent');
+            const savingsText = document.getElementById('pageDetailSavingsText');
+
+            if (!priceEl) return;
+
+            finalPrice = Number(finalPrice) || 0;
+            originalMrp = Number(originalMrp) || 0;
+
+            priceEl.innerText = `₹${finalPrice.toLocaleString('en-IN')}`;
+
+            if (originalMrp > finalPrice) {
+                const diff = originalMrp - finalPrice;
+                const percent = Math.round((diff / originalMrp) * 100);
+
+                if (origBox) origBox.style.display = 'inline-flex';
+                if (origPriceEl) origPriceEl.innerText = `₹${originalMrp.toLocaleString('en-IN')}`;
+                if (discountBadge) discountBadge.innerText = `${percent}% OFF`;
+                if (savingsText) {
+                    savingsText.innerText = `You Save ₹${diff.toLocaleString('en-IN')} (${percent}%)`;
+                    savingsText.style.display = 'inline-block';
+                }
+            } else {
+                if (origBox) origBox.style.display = 'none';
+                if (savingsText) savingsText.style.display = 'none';
+            }
+        }
+
+        // 5. TWO-WAY LINKED DYNAMIC VARIANT MATRIX ENGINE (RAM <-> COLOR <-> PRICE)
+        function renderCategoryVariantsDynamic(item, isTravel = false) {
+            currentSelectedProductForPricing = item;
+            currentVariantSelectionMap = {};
+            const container = document.getElementById('pageDetailVariantsContainer');
+            if (!container) return;
+
+            if (isTravel || (item.category && item.category.toLowerCase().includes('travel')) || item.pricingTiers) {
+                const standardP = item.pricingTiers?.standard?.price || item.price || 0;
+                const deluxeP = item.pricingTiers?.deluxe?.price || 0;
+                const luxuryP = item.pricingTiers?.luxury?.price || 0;
+
+                const tiers = [];
+                if (standardP > 0) tiers.push({ name: 'Standard Tier', price: standardP, desc: item.pricingTiers?.standard?.desc || 'Standard Stay & Transfers' });
+                if (deluxeP > 0) tiers.push({ name: 'Deluxe Tier', price: deluxeP, desc: item.pricingTiers?.deluxe?.desc || '4-Star Resort & AC Cab' });
+                if (luxuryP > 0) tiers.push({ name: 'Luxury / VIP Tier', price: luxuryP, desc: item.pricingTiers?.luxury?.desc || '5-Star Luxury Stay & Private Pool' });
+
+                if (tiers.length > 0) {
+                    currentVariantSelectionMap['tier'] = tiers[0].name;
+                    container.innerHTML = `
+                        <div class="mb-3 variant-block-dynamic" data-attr="tier">
+                            <label class="small fw-bold text-dark d-block mb-1.5">Select Travel Tier: <span class="text-primary selected-val">${tiers[0].name}</span></label>
+                            <div class="d-flex flex-wrap gap-2">
+                                ${tiers.map((t, idx) => `
+                                    <button type="button" class="variant-pill ${idx === 0 ? 'active' : ''}" onclick="onTravelTierSelect('${t.name}', ${t.price})">
+                                        ${t.name} (₹${Number(t.price).toLocaleString('en-IN')})
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <p class="small text-muted mt-1.5" id="travelTierDescription">${tiers[0].desc}</p>
+                        </div>
+                    `;
+                    applyDiscountPriceDisplay(tiers[0].price, 0);
+                    return;
+                }
+            }
+
+            let parsed = item.variants;
+            if (typeof parsed === 'string' && parsed.trim() !== '') {
+                try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+            }
+
+            let configs = [];
+            let opts = {};
+
+            if (Array.isArray(parsed)) {
+                configs = parsed;
+            } else if (typeof parsed === 'object' && parsed !== null) {
+                configs = parsed.configurations || [];
+                opts = parsed.variantOptions || {};
+            }
+
+            const cat = String(item.category || '').toLowerCase();
+            const hasAnyConfig = configs.length > 0;
+            const hasAnyOpts = (opts.colors?.length > 0) || (opts.ram?.length > 0) || (opts.storage?.length > 0) || (opts.sizes?.length > 0);
+
+            if (cat.includes('service') || (!hasAnyConfig && !hasAnyOpts)) {
+                container.innerHTML = '';
+                const basePrice = Number(item.price || item.basePrice || 0);
+                const baseDiscount = item.discountPrice ? Number(item.discountPrice) : null;
+                const finalSelling = (baseDiscount && baseDiscount < basePrice) ? baseDiscount : basePrice;
+                const originalMrp = (baseDiscount && baseDiscount < basePrice) ? basePrice : 0;
+                applyDiscountPriceDisplay(finalSelling, originalMrp);
+                return;
+            }
+
+            const firstCfg = configs[0] || {};
+            const initialRam = firstCfg.ram || '';
+            const initialStorage = firstCfg.storage || firstCfg.rom || '';
+            const initialColor = firstCfg.color || firstCfg.colour || '';
+            const initialSize = firstCfg.size || '';
+
+            if (initialRam && initialStorage) {
+                currentVariantSelectionMap['config'] = `${initialRam} / ${initialStorage}`;
+            } else if (initialStorage) {
+                currentVariantSelectionMap['storage'] = initialStorage;
+            }
+            if (initialColor) currentVariantSelectionMap['color'] = initialColor;
+            if (initialSize) currentVariantSelectionMap['size'] = initialSize;
+
+            renderVariantPillsHTML(item, configs, opts);
+            updateDynamicPriceFromVariants(item);
+        }
+
+        function renderVariantPillsHTML(item, configs, opts) {
+            const container = document.getElementById('pageDetailVariantsContainer');
+            if (!container) return;
+
+            const colors = (opts.colors && opts.colors.length > 0) ? opts.colors : [...new Set(configs.map(c => c.color || c.colour).filter(Boolean))];
+            const sizes = (opts.sizes && opts.sizes.length > 0) ? opts.sizes : [...new Set(configs.map(c => c.size).filter(Boolean))];
+            
+            const combinedConfigs = configs.filter(c => c.ram && (c.storage || c.rom)).map(c => `${c.ram} / ${c.storage || c.rom}`);
+            const uniqueCombined = [...new Set(combinedConfigs)];
+            const pureStorage = [...new Set(configs.map(c => c.storage || c.rom).filter(Boolean))];
+
+            let html = '';
+
+            // Configuration Pill (RAM / Storage)
+            if (uniqueCombined.length > 0) {
+                const activeCfg = currentVariantSelectionMap['config'] || uniqueCombined[0];
+                currentVariantSelectionMap['config'] = activeCfg;
+                html += `
+                    <div class="mb-3 variant-block-dynamic" data-attr="config">
+                        <label class="small fw-bold text-dark d-block mb-1.5">Configuration (RAM/Storage): <span class="text-primary selected-val">${activeCfg}</span></label>
+                        <div class="d-flex flex-wrap gap-2">
+                            ${uniqueCombined.map(cfg => `
+                                <button type="button" class="variant-pill ${cfg === activeCfg ? 'active' : ''}" onclick="onDynamicVariantSelect('config', '${cfg}')">${cfg}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (pureStorage.length > 0) {
+                const activeRom = currentVariantSelectionMap['storage'] || pureStorage[0];
+                currentVariantSelectionMap['storage'] = activeRom;
+                html += `
+                    <div class="mb-3 variant-block-dynamic" data-attr="storage">
+                        <label class="small fw-bold text-dark d-block mb-1.5">Storage (ROM): <span class="text-primary selected-val">${activeRom}</span></label>
+                        <div class="d-flex flex-wrap gap-2">
+                            ${pureStorage.map(rom => `
+                                <button type="button" class="variant-pill ${rom === activeRom ? 'active' : ''}" onclick="onDynamicVariantSelect('storage', '${rom}')">${rom}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Size Pill
+            if (sizes.length > 0) {
+                const activeSize = currentVariantSelectionMap['size'] || sizes[0];
+                currentVariantSelectionMap['size'] = activeSize;
+                html += `
+                    <div class="mb-3 variant-block-dynamic" data-attr="size">
+                        <label class="small fw-bold text-dark d-block mb-1.5">Select Size: <span class="text-primary selected-val">${activeSize}</span></label>
+                        <div class="d-flex flex-wrap gap-2">
+                            ${sizes.map(s => `
+                                <button type="button" class="variant-pill ${s === activeSize ? 'active' : ''}" onclick="onDynamicVariantSelect('size', '${s}')">${s}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Colour Pill
+            if (colors.length > 0) {
+                const activeColor = currentVariantSelectionMap['color'] || colors[0];
+                currentVariantSelectionMap['color'] = activeColor;
+                html += `
+                    <div class="mb-3 variant-block-dynamic" data-attr="color">
+                        <label class="small fw-bold text-dark d-block mb-1.5">Colour: <span class="text-primary selected-val">${activeColor}</span></label>
+                        <div class="d-flex flex-wrap gap-2">
+                            ${colors.map(c => `
+                                <button type="button" class="variant-pill ${c === activeColor ? 'active' : ''}" onclick="onDynamicVariantSelect('color', '${c}')">${c}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // TWO-WAY LINKAGE LOGIC
+        function onDynamicVariantSelect(attrKey, val) {
+            currentVariantSelectionMap[attrKey] = val;
+            const item = currentSelectedProductForPricing;
+            if (!item) return;
+
+            let parsed = item.variants;
+            if (typeof parsed === 'string' && parsed.trim() !== '') {
+                try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+            }
+            const configs = Array.isArray(parsed) ? parsed : (parsed?.configurations || []);
+
+            // 1. Agar user ne Config (12 / 256) click kiya, toh linked Color auto-attach karein
+            if (attrKey === 'config' || attrKey === 'storage') {
+                const parts = String(val).split('/').map(s => s.trim().toLowerCase());
+                const matchingConfig = configs.find(c => {
+                    const cRam = String(c.ram || '').trim().toLowerCase();
+                    const cRom = String(c.storage || '').trim().toLowerCase();
+                    if (parts.length === 2) return cRam === parts[0] && cRom === parts[1];
+                    return cRom === parts[0];
+                });
+                if (matchingConfig && (matchingConfig.color || matchingConfig.colour)) {
+                    currentVariantSelectionMap['color'] = matchingConfig.color || matchingConfig.colour;
+                }
+            }
+            // 2. Agar user ne Color (silver) click kiya, toh linked Config auto-attach karein
+            else if (attrKey === 'color') {
+                const matchingColorConfig = configs.find(c => {
+                    const cColor = String(c.color || c.colour || '').trim().toLowerCase();
+                    return cColor === String(val).trim().toLowerCase();
+                });
+                if (matchingColorConfig) {
+                    if (matchingColorConfig.ram && matchingColorConfig.storage) {
+                        currentVariantSelectionMap['config'] = `${matchingColorConfig.ram} / ${matchingColorConfig.storage}`;
+                    } else if (matchingColorConfig.storage) {
+                        currentVariantSelectionMap['storage'] = matchingColorConfig.storage;
+                    }
+                }
+            }
+
+            // Sync visual buttons
+            Object.keys(currentVariantSelectionMap).forEach(key => {
+                const block = document.querySelector(`.variant-block-dynamic[data-attr="${key}"]`);
+                if (block) {
+                    const currentVal = currentVariantSelectionMap[key];
+                    block.querySelectorAll('.variant-pill').forEach(p => {
+                        p.classList.toggle('active', p.innerText.trim().toLowerCase() === currentVal.trim().toLowerCase());
+                    });
+                    const span = block.querySelector('.selected-val');
+                    if (span) span.innerText = currentVal;
+                }
+            });
+
+            updateDynamicPriceFromVariants(item);
+        }
+
+        // PRICE CALCULATOR WITH DYNAMIC DISCOUNT SHOWING
+        function updateDynamicPriceFromVariants(item) {
+            if (!item) return;
+            let parsed = item.variants;
+            if (typeof parsed === 'string' && parsed.trim() !== '') {
+                try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+            }
+            const configs = Array.isArray(parsed) ? parsed : (parsed?.configurations || []);
+
+            const productBasePrice = Number(item.price || item.basePrice || 0);
+            const productBaseDiscount = (item.discountPrice !== null && item.discountPrice !== undefined && item.discountPrice !== '') 
+                ? Number(item.discountPrice) 
+                : null;
+
+            if (!configs || configs.length === 0) {
+                const finalSelling = (productBaseDiscount && productBaseDiscount < productBasePrice) ? productBaseDiscount : productBasePrice;
+                const originalMrp = (productBaseDiscount && productBaseDiscount < productBasePrice) ? productBasePrice : 0;
+                applyDiscountPriceDisplay(finalSelling, originalMrp);
+                return;
+            }
+
+            const selColor = String(currentVariantSelectionMap['color'] || '').trim().toLowerCase();
+            const selConfig = String(currentVariantSelectionMap['config'] || '').trim().toLowerCase();
+            const selStorage = String(currentVariantSelectionMap['storage'] || '').trim().toLowerCase();
+            const selSize = String(currentVariantSelectionMap['size'] || '').trim().toLowerCase();
+
+            const matched = configs.find(c => {
+                let ok = true;
+                const cColor = String(c.color || c.colour || '').trim().toLowerCase();
+                const cSize = String(c.size || '').trim().toLowerCase();
+                const cComb = `${c.ram || ''} / ${c.storage || ''}`.trim().toLowerCase();
+                const cRom = String(c.storage || '').trim().toLowerCase();
+
+                if (selColor && cColor && cColor !== selColor) ok = false;
+                if (selSize && cSize && cSize !== selSize) ok = false;
+                if (selConfig && cComb && cComb !== selConfig) ok = false;
+                if (selStorage && !selConfig && cRom && cRom !== selStorage) ok = false;
+                return ok;
+            });
+
+            const resolvedConfig = matched || configs[0];
+
+            let finalSelling = productBasePrice;
+            let originalMrp = 0;
+
+            if (resolvedConfig) {
+                const varRegularPrice = Number(resolvedConfig.price) || productBasePrice;
+                const varDiscountPrice = (resolvedConfig.discountPrice !== undefined && resolvedConfig.discountPrice !== null && resolvedConfig.discountPrice !== '')
+                    ? Number(resolvedConfig.discountPrice)
+                    : null;
+
+                if (varDiscountPrice && varDiscountPrice < varRegularPrice) {
+                    finalSelling = varDiscountPrice;
+                    originalMrp = varRegularPrice;
+                } else if (varRegularPrice > 0) {
+                    finalSelling = varRegularPrice;
+                    originalMrp = 0;
+                }
+            }
+
+            applyDiscountPriceDisplay(finalSelling, originalMrp);
+        }
+
+        function onTravelTierSelect(tierName, tierPrice) {
+            currentVariantSelectionMap['tier'] = tierName;
+            const block = document.querySelector('.variant-block-dynamic[data-attr="tier"]');
+            if (block) {
+                block.querySelectorAll('.variant-pill').forEach(btn => btn.classList.toggle('active', btn.innerText.includes(tierName)));
+                const span = block.querySelector('.selected-val');
+                if (span) span.innerText = tierName;
+            }
+            applyDiscountPriceDisplay(tierPrice, 0);
+            if (currentSelectedProductForPricing?.pricingTiers) {
+                const key = tierName.toLowerCase().includes('standard') ? 'standard' : (tierName.toLowerCase().includes('deluxe') ? 'deluxe' : 'luxury');
+                const descEl = document.getElementById('travelTierDescription');
+                if (descEl) descEl.innerText = currentSelectedProductForPricing.pricingTiers[key]?.desc || '';
+            }
+        }
+
+        window.onDynamicVariantSelect = onDynamicVariantSelect;
+        window.onTravelTierSelect = onTravelTierSelect;
+        window.filterCategoryByBrand = filterCategoryByBrand;
+        window.filterCategoryBySearch = filterCategoryBySearch;
+        window.sortCategoryProducts = sortCategoryProducts;
+        window.handleCatalogSortChange = handleCatalogSortChange;
+        window.filterTravelByDestination = filterTravelByDestination;
+        window.filterTravelsBySearch = filterTravelsBySearch;
+        window.sortTravelPackages = sortTravelPackages;
+        window.filterTravels = filterTravels;
+
+        function updateDynamicBreadcrumb(item, isTravel = false) {
+            const catLink = document.getElementById('detailsBreadcrumbCategoryLink');
+            const itemTitleEl = document.getElementById('detailsBreadcrumbItemTitle');
+            if (!catLink || !itemTitleEl) return;
+            itemTitleEl.innerText = item.title || item.name || 'Overview';
+            if (isTravel || (item.category && item.category.toLowerCase().includes('travel')) || item.pricingTiers) {
+                catLink.innerText = 'Travels';
+                catLink.onclick = () => navigateTo('page-travels', document.querySelector('a[onclick*="page-travels"]'));
+                return;
+            }
+            const cat = String(item.category || '').toLowerCase().trim();
+            if (cat.includes('mobile') || cat.includes('phone')) { catLink.innerText = 'Mobile Store'; catLink.onclick = () => navigateTo('page-mobile', document.querySelector('a[onclick*="page-mobile"]')); }
+            else if (cat.includes('fashion') || cat.includes('cloth')) { catLink.innerText = 'Fashion Store'; catLink.onclick = () => navigateTo('page-fashion', document.querySelector('a[onclick*="page-fashion"]')); }
+            else if (cat.includes('electronic') || cat.includes('laptop')) { catLink.innerText = 'Electronics Store'; catLink.onclick = () => navigateTo('page-electronics', document.querySelector('a[onclick*="page-electronics"]')); }
+            else if (cat.includes('service')) { catLink.innerText = 'Services'; catLink.onclick = () => navigateTo('page-services', document.querySelector('a[onclick*="page-services"]')); }
+            else { catLink.innerText = 'All Products'; catLink.onclick = () => navigateTo('page-all-catalog'); }
+        }
+
+        // FULL ITEM DETAILS WITH CLEAN MULTI-IMAGE & NATIVE VIDEO GALLERY
+        function openItemDetailsPage(id, isTravel = false) {
+            const item = catalogItemsCache[id] || travelMemory.all.find(t => String(t._id) === String(id));
+            if (!item) return;
+
+            const title = item.title || item.name || 'Item Overview';
+            const mainImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300');
+            const desc = item.description || item.overview || 'Verified manufacturer quality guarantee.';
+            
+            // Prepare image and video media list
+            let allMedia = [];
+            if (Array.isArray(item.images) && item.images.length > 0) {
+                allMedia = item.images;
+            } else if (item.imageUrl) {
+                allMedia = [item.imageUrl];
+            } else {
+                allMedia = [mainImg];
+            }
+
+            currentGalleryMedia = allMedia.map(url => {
+                const isVideo = url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.ogg');
+                return { type: isVideo ? 'video' : 'image', url };
+            });
+
+            // Vertical Thumbnails
+            const thumbStrip = document.getElementById('pageDetailThumbnails');
+            if (thumbStrip) {
+                thumbStrip.innerHTML = currentGalleryMedia.map((m, idx) => {
+                    const safeUrl = resolveMediaUrl(m.url);
+                    const content = m.type === 'video'
+                        ? `<div class="w-100 h-100 bg-dark text-white d-flex align-items-center justify-content-center"><i class="fa-solid fa-play" style="font-size: 11px;"></i></div>`
+                        : `<img src="${safeUrl}" class="w-100 h-100 object-fit-cover" onerror="this.src='https://placehold.co/60'">`;
+                    return `<div class="v-thumb-item ${idx === 0 ? 'active' : ''}" onclick="selectGalleryMedia(${idx})">${content}</div>`;
+                }).join('');
+            }
+
+            updateDynamicBreadcrumb(item, isTravel);
+            document.getElementById('pageDetailTitle').innerText = title;
+            document.getElementById('pageDetailUnit').innerText = isTravel ? 'Per Person' : 'M.R.P. Inclusive of all taxes';
+            document.getElementById('pageDetailDesc').innerText = desc;
+            document.getElementById('pageDetailBuyText').innerText = isTravel ? 'Book Now' : 'Buy Now';
+
+            // Technical Specifications card render
+            const specsCont = document.getElementById('pageDetailSpecsContainer');
+            if (specsCont) {
+                let specs = item.specifications;
+                if (typeof specs === 'string') {
+                    try { specs = JSON.parse(specs); } catch(e) { specs = []; }
+                }
+                if (Array.isArray(specs) && specs.length > 0) {
+                    specsCont.innerHTML = `
+                        <h6 class="fw-bold text-dark mb-2">Technical Specifications</h6>
+                        <div class="row g-2 mb-3">
+                            ${specs.map(s => `
+                                <div class="col-sm-6">
+                                    <div class="p-2 border rounded-2 bg-light d-flex justify-content-between small">
+                                        <span class="text-muted fw-semibold">${s.key || s.name}:</span>
+                                        <span class="text-dark fw-bold">${s.value || s.val}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    specsCont.innerHTML = '';
+                }
+            }
+
+            renderCategoryVariantsDynamic(item, isTravel);
+            renderMediaView(0);
+
+            document.getElementById('pageDetailBuyBtn').onclick = () => isTravel ? handleBookNow(id) : handleBuyNow(id);
+            document.getElementById('pageDetailAddBagBtn').onclick = (e) => handleAddToCartClick(e, id, isTravel);
+            
+            const wishBtn = document.getElementById('pageDetailWishBtn');
+            const updateWishState = () => {
+                const isWish = myWishlist.some(w => String(w.id) === String(id));
+                wishBtn.className = `btn-action-icon ${isWish ? 'wishlist-active' : ''}`;
+                wishBtn.querySelector('i').className = `${isWish ? 'fa-solid' : 'fa-regular'} fa-heart fs-5`;
+            };
+            updateWishState();
+            wishBtn.onclick = function(e) {
+                handleWishlistClick(e, id, isTravel);
+                updateWishState();
+            };
+
+            navigateTo('page-item-details');
+        }
+
+        function selectGalleryMedia(index) {
+            document.querySelectorAll('.v-thumb-item').forEach((item, idx) => {
+                item.classList.toggle('active', idx === index);
+            });
+            renderMediaView(index);
+        }
+
+        function renderMediaView(index) {
+            const media = currentGalleryMedia[index] || currentGalleryMedia[0];
+            const box = document.getElementById('pageDetailMediaBox');
+            if (box && media) {
+                const safeUrl = resolveMediaUrl(media.url);
+                if (media.type === 'video') {
+                    box.innerHTML = `
+                        <video controls autoplay muted playsinline class="rounded-3 shadow-xs" style="max-height: 380px; width: 100%;">
+                            <source src="${safeUrl}" type="video/mp4">
+                            Your browser does not support video playback.
+                        </video>
+                    `;
+                } else {
+                    box.innerHTML = `<img src="${safeUrl}" class="img-fluid rounded-3" style="max-height: 380px; object-fit: contain;" onerror="this.src='https://placehold.co/400x400?text=Product+Image'">`;
+                }
+            }
+        }
+
+        async function handleUniversalSearch(queryText) {
+            const query = String(queryText || '').trim().toLowerCase();
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
+            if (!query) { loadAllCatalog(); return; }
+
+            let allProducts = Object.values(catalogItemsCache).filter(p => !p.destination);
+            if (allProducts.length === 0) allProducts = await fetchStoreItems();
+            const combinedList = [...allProducts, ...travelMemory.all];
+
+            currentFilteredCatalogList = combinedList.filter(item => {
+                const title = String(item.title || item.name || '').toLowerCase();
+                const cat = String(item.category || '').toLowerCase();
+                const dest = String(item.destination || '').toLowerCase();
+                return title.includes(query) || cat.includes(query) || dest.includes(query);
+            });
+
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+            const targetPage = document.getElementById('page-all-catalog');
+            if (targetPage) targetPage.classList.add('active');
+            const headerTitle = document.getElementById('catalogViewHeaderTitle');
+            if (headerTitle) headerTitle.innerHTML = `<i class="fa-solid fa-magnifying-glass text-primary me-2"></i>Search: "${queryText}"`;
+            renderSortedCatalogGrid(currentFilteredCatalogList);
+        }
+
+        function clearUniversalSearch() {
+            const input = document.getElementById('globalLiveSearchInput');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            const headerTitle = document.getElementById('catalogViewHeaderTitle');
+            if (headerTitle) headerTitle.innerHTML = `<i class="fa-solid fa-boxes-stacked text-primary me-2"></i>Complete Store Catalog`;
+            loadAllCatalog();
+        }
+
+        function handleAddToCartClick(e, id, isTravel = false) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            let item = catalogItemsCache[id];
+            if (!item && typeof travelMemory !== 'undefined') {
+                item = travelMemory.all.find(t => String(t._id) === String(id));
+            }
+            if (!item) {
+                item = { _id: id, title: 'Selected Item', price: 95899, images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=300'] };
+            }
+
+            const title = item.title || item.name || 'Item';
+            const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.discountPrice ? item.discountPrice : (item.price || item.basePrice || 95899));
+            const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
+            const img = resolveMediaUrl(rawImg);
+            const type = isTravel ? 'Travel' : 'Product';
+
+            const existing = myCart.find(c => String(c.id) === String(id));
+            if (existing) {
+                if (isTravel) {
+                    existing.adults = (existing.adults || 1) + 1;
+                    existing.qty = (existing.adults || 1) + (existing.children || 0);
+                } else {
+                    existing.qty += 1;
+                }
+            } else {
+                if (isTravel) {
+                    myCart.push({ id, title, price, img, type, adults: 1, children: 0, qty: 1 });
+                } else {
+                    myCart.push({ id, title, price, img, type, qty: 1 });
+                }
+            }
+            updateCartBadge();
+            
+            const targetBtn = e ? e.currentTarget : null;
+            if (targetBtn) {
+                const origText = targetBtn.innerHTML;
+                targetBtn.innerHTML = `<i class="fa-solid fa-check me-1"></i> Added to Bag`;
+                targetBtn.classList.add('btn-success');
+                setTimeout(() => {
+                    targetBtn.innerHTML = origText;
+                    targetBtn.classList.remove('btn-success');
+                }, 1500);
+            } else {
+                alert(`Added "${title}" to your Shopping Bag!`);
+            }
+        }
+
+        function handleWishlistClick(e, id, isTravel = false) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            const item = catalogItemsCache[id] || travelMemory.all.find(t => String(t._id) === String(id));
+            if (!item) return;
+
+            const title = item.title || item.name || 'Item';
+            const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.price || 0);
+            const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
+            const img = resolveMediaUrl(rawImg);
+            const type = isTravel ? 'Travel' : 'Product';
+
+            const index = myWishlist.findIndex(w => String(w.id) === String(id));
+            if (index > -1) {
+                myWishlist.splice(index, 1);
+            } else {
+                myWishlist.push({ id, title, price, img, type });
+            }
+            updateWishlistBadge();
+
+            const targetBtn = e ? e.currentTarget : null;
+            if (targetBtn && targetBtn.classList.contains('btn-action-icon')) {
+                targetBtn.classList.toggle('wishlist-active');
+                const icon = targetBtn.querySelector('i');
+                if (icon) {
+                    icon.className = targetBtn.classList.contains('wishlist-active') ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+                }
+            }
+        }
+
+        function updateWishlistBadge() {
+            const el = document.getElementById('wishCount');
+            if (el) el.innerText = myWishlist.length;
+        }
+
+        function updateCartBadge() {
+            const el = document.getElementById('cartCount');
+            const totalItems = myCart.reduce((sum, item) => sum + (item.qty || 1), 0);
+            if (el) el.innerText = totalItems;
+        }
+
+        function renderWishlistPage() {
+            const grid = document.getElementById('wishlistProductsGrid');
+            if (!grid) return;
+            if (myWishlist.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-regular fa-heart fs-1 d-block mb-3"></i>Your wishlist is currently empty.</div>';
+                return;
+            }
+            grid.innerHTML = myWishlist.map(item => `
+                <div class="col-md-4 col-sm-6">
+                    <div class="card-custom p-3 text-center h-100 d-flex flex-column justify-content-between">
+                        <div onclick="openItemDetailsPage('${item.id}', ${item.type === 'Travel'})" style="cursor: pointer;">
+                            <img src="${resolveMediaUrl(item.img)}" class="img-fluid rounded-3 mb-3" style="height: 140px; object-fit: cover;" onerror="this.src='https://placehold.co/140'">
+                            <h6 class="fw-bold">${item.title}</h6>
+                            <p class="text-primary fw-bold">₹${Number(item.price).toLocaleString('en-IN')}</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-brand btn-sm " onclick="moveWishlistToBag('${item.id}')">
+                                <i class="fa-solid fa-bag-shopping me-1"></i> Add to Bag
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeWishlistItem('${item.id}')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function moveWishlistToBag(id) {
+            const item = myWishlist.find(w => String(w.id) === String(id));
+            if (!item) return;
+
+            const isTravel = (item.type === 'Travel');
+            const existingInCart = myCart.find(c => String(c.id) === String(id));
+            if (existingInCart) {
+                if (isTravel) {
+                    existingInCart.adults = (existingInCart.adults || 1) + 1;
+                    existingInCart.qty = (existingInCart.adults || 1) + (existingInCart.children || 0);
+                } else {
+                    existingInCart.qty += 1;
+                }
+            } else {
+                if (isTravel) {
+                    myCart.push({ id: item.id, title: item.title, price: item.price, img: item.img, type: 'Travel', adults: 1, children: 0, qty: 1 });
+                } else {
+                    myCart.push({ id: item.id, title: item.title, price: item.price, img: item.img, type: 'Product', qty: 1 });
+                }
+            }
+
+            myWishlist = myWishlist.filter(w => String(w.id) !== String(id));
+            updateWishlistBadge();
+            updateCartBadge();
+            renderWishlistPage();
+            alert(`"${item.title}" moved to Shopping Bag!`);
+        }
+
+        function removeWishlistItem(id) {
+            myWishlist = myWishlist.filter(w => String(w.id) !== String(id));
+            updateWishlistBadge();
+            renderWishlistPage();
+        }
+
+        function updateTravelerQty(index, type, change) {
+            if (!myCart[index]) return;
+            const item = myCart[index];
+
+            if (type === 'adults') {
+                item.adults = (item.adults || 1) + change;
+                if (item.adults < 1) {
+                    if (confirm(`Remove "${item.title}"?`)) {
+                        myCart.splice(index, 1);
+                        updateCartBadge();
+                        renderCartPage();
+                        return;
+                    } else {
+                        item.adults = 1;
+                    }
+                }
+            } else if (type === 'children') {
+                item.children = Math.max(0, (item.children || 0) + change);
+            }
+
+            item.qty = (item.adults || 1) + (item.children || 0);
+            updateCartBadge();
+            renderCartPage();
+        }
+
+        function updateCartItemQty(index, change) {
+            if (!myCart[index]) return;
+            myCart[index].qty += change;
+            if (myCart[index].qty <= 0) {
+                if (confirm(`Remove "${myCart[index].title}"?`)) {
+                    myCart.splice(index, 1);
+                } else {
+                    myCart[index].qty = 1;
+                }
+            }
+            updateCartBadge();
+            renderCartPage();
+        }
+
+        function renderCartPage() {
+            const list = document.getElementById('cartItemsList');
+            const subtotalEl = document.getElementById('cartSubtotalText');
+            const totalEl = document.getElementById('cartTotalText');
+            const summaryEl = document.getElementById('cartSummaryText');
+            if (!list) return;
+
+            if (myCart.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center text-muted py-5">
+                        <i class="fa-solid fa-bag-shopping fs-1 d-block mb-3 text-primary opacity-50"></i>
+                        <h5 class="fw-bold text-dark">Your Shopping Bag is empty</h5>
+                        <p class="small text-muted mb-3">Explore our latest electronics or exciting travel tours.</p>
+                        <button class="btn btn-brand btn-sm px-4 py-2" onclick="navigateTo('page-home')">Start Shopping</button>
+                    </div>
+                `;
+                if (subtotalEl) subtotalEl.innerText = '₹0';
+                if (totalEl) totalEl.innerText = '₹0';
+                if (summaryEl) summaryEl.innerText = '0 Items in cart';
+                return;
+            }
+
+            let total = 0;
+            list.innerHTML = myCart.map((item, idx) => {
+                const isTravel = (item.type === 'Travel');
+                let itemTotal = 0;
+                let controllerHTML = '';
+
+                if (isTravel) {
+                    const adults = item.adults || 1;
+                    const children = item.children || 0;
+                    const adultCost = adults * item.price;
+                    const childCost = children * (item.price * 0.5);
+                    itemTotal = adultCost + childCost;
+                    total += itemTotal;
+
+                    controllerHTML = `
+                        <div class="d-flex flex-column gap-2 align-items-end">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-muted small fw-semibold">Adults:</span>
+                                <div class="d-flex align-items-center border rounded-pill bg-light p-1">
+                                    <button type="button" class="btn btn-sm btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;" onclick="updateTravelerQty(${idx}, 'adults', -1)">-</button>
+                                    <span class="fw-bold px-2 text-dark text-center" style="min-width: 55px; font-size: 12px;">${adults} Adult</span>
+                                    <button type="button" class="btn btn-sm btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;" onclick="updateTravelerQty(${idx}, 'adults', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-muted small fw-semibold">Kids:</span>
+                                <div class="d-flex align-items-center border rounded-pill bg-light p-1">
+                                    <button type="button" class="btn btn-sm btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;" onclick="updateTravelerQty(${idx}, 'children', -1)">-</button>
+                                    <span class="fw-bold px-2 text-dark text-center" style="min-width: 55px; font-size: 12px;">${children} Kid</span>
+                                    <button type="button" class="btn btn-sm btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;" onclick="updateTravelerQty(${idx}, 'children', 1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    itemTotal = item.price * item.qty;
+                    total += itemTotal;
+
+                    controllerHTML = `
+                        <div class="d-flex align-items-center border rounded-pill bg-light p-1">
+                            <button type="button" class="btn btn-sm btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;" onclick="updateCartItemQty(${idx}, -1)">-</button>
+                            <span class="fw-bold px-3 text-dark text-center" style="min-width: 65px; font-size: 13px;">${item.qty} Qty</span>
+                            <button type="button" class="btn btn-sm btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;" onclick="updateCartItemQty(${idx}, 1)">+</button>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="d-flex align-items-center justify-content-between py-3 border-bottom flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="${resolveMediaUrl(item.img)}" class="rounded-3 border" style="width: 65px; height: 65px; object-fit: cover;" onerror="this.src='https://placehold.co/65'">
+                            <div>
+                                <span class="badge ${isTravel ? 'bg-warning text-dark' : 'bg-primary-subtle text-primary'} text-uppercase mb-1" style="font-size: 10px;">
+                                    ${isTravel ? 'Travel Tour' : 'Product'}
+                                </span>
+                                <h6 class="fw-bold mb-0 text-dark fs-6">${item.title}</h6>
+                                <span class="text-muted small">₹${Number(item.price).toLocaleString('en-IN')} / unit</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-4 ms-auto">
+                            ${controllerHTML}
+                            <span class="fw-bold text-primary fs-6" style="min-width: 90px; text-align: right;">₹${Number(itemTotal).toLocaleString('en-IN')}</span>
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" onclick="removeCartItem(${idx})">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const totalFormatted = `₹${total.toLocaleString('en-IN')}`;
+            if (subtotalEl) subtotalEl.innerText = totalFormatted;
+            if (totalEl) totalEl.innerText = totalFormatted;
+            const totalCount = myCart.reduce((sum, i) => sum + (i.qty || 1), 0);
+            if (summaryEl) summaryEl.innerText = `${totalCount} Item${totalCount > 1 ? 's' : ''} in cart`;
+        }
+
+        function removeCartItem(idx) {
+            myCart.splice(idx, 1);
+            updateCartBadge();
+            renderCartPage();
+        }
+
+        function handleBuyNow(id) {
+            const item = catalogItemsCache[id];
+            const title = item ? (item.title || item.name) : 'Product Item';
+            const price = item ? (item.discountPrice ? item.discountPrice : item.price) : 0;
+            const img = item?.images?.[0] || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300';
+            myCart = [{ id, title, price, img, type: 'Product', qty: 1 }];
+            updateCartBadge();
+            checkoutFromCart();
+        }
+
+        function handleBookNow(id) {
+            const item = catalogItemsCache[id] || travelMemory.all.find(t => String(t._id) === String(id));
+            const title = item ? item.title : 'Tour Package';
+            const price = item ? (item.pricingTiers?.standard?.price || item.price || 45000) : 45000;
+            const img = item?.images?.[0] || 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500';
+            myCart = [{ id, title, price, img, type: 'Travel', adults: 1, children: 0, qty: 1 }];
+            updateCartBadge();
+            checkoutFromCart();
+        }
+
+        function checkoutFromCart() {
+            if (myCart.length === 0) return alert('Your cart is empty!');
+            let total = 0;
+            const summaryList = document.getElementById('fpCheckoutItemsSummary');
+            
+            if (summaryList) {
+                summaryList.innerHTML = myCart.map(c => {
+                    const cost = c.type === 'Travel' ? ((c.adults||1)*c.price + (c.children||0)*c.price*0.5) : c.price * c.qty;
+                    total += cost;
+                    return `<div class="d-flex justify-content-between py-1"><span>${c.title} (${c.type === 'Travel' ? 'Tour' : c.qty+' Qty'})</span><span class="fw-semibold">₹${Number(cost).toLocaleString('en-IN')}</span></div>`;
+                }).join('');
+            }
+
+            document.getElementById('fpCheckoutSubtotal').innerText = `₹${total.toLocaleString('en-IN')}`;
+            document.getElementById('fpCheckoutTotalPayable').innerText = `₹${total.toLocaleString('en-IN')}`;
+            
+            const hasTravel = myCart.some(c => c.type === 'Travel');
+            activeCheckoutData = {
+                title: myCart.map(c => c.title).join(' + '),
+                price: total,
+                type: hasTravel ? 'Travel' : 'Product'
+            };
+
+            navigateTo('page-checkout');
+        }
+
+        async function handleFullPageCheckoutSubmit(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('fpCheckoutSubmitBtn');
+            const resetButton = () => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-lock me-2"></i> Complete Payment & Place Order`;
+                }
+            };
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Processing...`;
+            }
+
+            const name = document.getElementById('fpCheckoutName')?.value || 'Mohsin J';
+            const phone = document.getElementById('fpCheckoutPhone')?.value || '+91 830 666 9999';
+            const street = document.getElementById('fpCheckoutAddrText')?.value || '';
+            const city = document.getElementById('fpCheckoutCity')?.value || '';
+            const pincode = document.getElementById('fpCheckoutPincode')?.value || '';
+            const state = document.getElementById('fpCheckoutState')?.value || '';
+            const country = document.getElementById('fpCheckoutCountry')?.value || '';
+            const fullAddr = `${street}, ${city} - ${pincode}, ${state}, ${country}`;
+
+            const gateway = document.querySelector('input[name="fpPaymentGateway"]:checked')?.value || 'razorpay';
+            const isCod = (gateway === 'cod');
+
+            const rawTotal = Number(activeCheckoutData?.price) || 0;
+            const totalPayable = Math.round(rawTotal);
+
+            if (totalPayable <= 0) {
+                alert('Cart total valid nahi hai!');
+                resetButton();
+                return;
+            }
+
+            function getTaxInfoForItem(item) {
+                const title = String(item.title || '').toLowerCase();
+                const type = String(item.type || '').toLowerCase();
+
+                if (type.includes('travel') || title.includes('tour') || title.includes('bali') || title.includes('kashmir')) {
+                    return { hsn: '998559', gstRate: 5, category: 'Travel Package', orderType: 'Travel' };
+                }
+                if (title.includes('service') || title.includes('it-') || title.includes('web')) {
+                    return { hsn: '998313', gstRate: 18, category: 'Services', orderType: 'Services' };
+                }
+                if (title.includes('t-shirt') || title.includes('shirt') || title.includes('fashion')) {
+                    return { hsn: '610910', gstRate: 5, category: 'Fashion', orderType: 'Fashion' };
+                }
+                if (title.includes('phone') || title.includes('mobile') || title.includes('macbook') || title.includes('headphone')) {
+                    return { hsn: '851713', gstRate: 18, category: 'Electronics', orderType: 'Electronics' };
+                }
+                return { hsn: '998559', gstRate: 18, category: 'Product', orderType: 'Product' };
+            }
+
+            async function saveSplitOrdersToDatabase(payStatus, ordStatus, transactionId = '') {
+                const groupId = 'GRP-' + Date.now().toString().slice(-6);
+
+                const orderPromises = myCart.map(c => {
+                    const taxInfo = getTaxInfoForItem(c);
+                    const itemCost = Math.round(c.type === 'Travel' 
+                        ? ((c.adults || 1) * c.price + (c.children || 0) * c.price * 0.5) 
+                        : (c.price * (c.qty || 1)));
+
+                    const payload = {
+                        customerName: name,
+                        customerPhone: phone,
+                        customerEmail: document.getElementById('profileEmailInput')?.value || 'mjdigitalworlds@gmail.com',
+                        shippingAddress: fullAddr,
+                        orderType: taxInfo.orderType,
+                        totalAmount: itemCost,
+                        paymentGateway: gateway,
+                        paymentStatus: payStatus,
+                        status: ordStatus,
+                        transactionId: transactionId || groupId,
+                        itemDetails: {
+                            itemId: c.id,
+                            title: c.title,
+                            quantity: c.type === 'Travel' ? ((c.adults || 1) + (c.children || 0)) : (c.qty || 1)
+                        },
+                        items: [{
+                            id: c.id,
+                            title: c.title,
+                            type: c.type || 'Product',
+                            category: taxInfo.category,
+                            price: Number(c.price),
+                            qty: c.type === 'Travel' ? ((c.adults || 1) + (c.children || 0)) : (c.qty || 1),
+                            adults: c.adults || 1,
+                            children: c.children || 0,
+                            itemTotal: itemCost,
+                            hsn: taxInfo.hsn,
+                            gstRate: taxInfo.gstRate
+                        }]
+                    };
+
+                    return fetch('/api/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }).then(r => r.json());
+                });
+
+                return Promise.all(orderPromises);
+            }
+
+            try {
+                if (isCod) {
+                    const createdOrders = await saveSplitOrdersToDatabase('Pending', 'Processing');
+                    triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
+                    finishCheckout();
+                } else {
+                    const orderRes = await fetch('/api/create-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ amount: totalPayable, gateway: gateway })
+                    });
+
+                    const orderData = await orderRes.json();
+
+                    if (!orderRes.ok || !orderData.success) {
+                        // bypass
+                        resetButton();
+                        return;
+                    }
+
+                    if (gateway === 'razorpay') {
+                        const options = {
+                            key: 'rzp_test_TkFr9r722bHvjA',
+                            amount: orderData.order.amount,
+                            currency: "INR",
+                            name: "M J DIGITAL",
+                            description: "Purchase Order",
+                            order_id: orderData.order.id,
+                            prefill: {
+                                name: name,
+                                email: "mjdigitalworlds@gmail.com",
+                                contact: phone
+                            },
+                            theme: { color: "#2563eb" },
+                            handler: async function (response) {
+                                try {
+                                    const verifyRes = await fetch('/api/verify-payment', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(response)
+                                    });
+                                    const verifyData = await verifyRes.json();
+
+                                    if (verifyData.success) {
+                                        const createdOrders = await saveSplitOrdersToDatabase('Paid', 'Processing', response.razorpay_payment_id);
+                                        triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
+                                        finishCheckout();
+                                    } else {
+                                        alert('Payment verification failed.');
+                                        resetButton();
+                                    }
+                                } catch (e) {
+                                    alert('Verification error: ' + e.message);
+                                    resetButton();
+                                }
+                            },
+                            modal: {
+                                ondismiss: function () {
+                                    resetButton();
+                                }
+                            }
+                        };
+
+                        const rzp = new Razorpay(options);
+                        rzp.on('payment.failed', function (resp) {
+                            alert('Payment Fail: ' + resp.error.description);
+                            resetButton();
+                        });
+                        rzp.open();
+                    } else {
+                        // Standard flow for other integrated gateways
+                        const createdOrders = await saveSplitOrdersToDatabase('Paid', 'Processing', `${gateway.toUpperCase()}-${Date.now()}`);
+                        triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
+                        finishCheckout();
+                    }
+                }
+            } catch (err) {
+                alert('Checkout error: ' + (err.message || 'Server connection fail'));
+                resetButton();
+            }
+
+            function triggerCustomerWhatsAppReceipt(createdOrders, customerPhone, customerName) {
+               const phone = String(customerPhone || '').replace(/[^0-9]/g, '').slice(-10);
+               const name = customerName || 'Customer';
+
+              let orderData = {};
+              if (Array.isArray(createdOrders) && createdOrders.length > 0) {
+                orderData = createdOrders[0]?.data || createdOrders[0] || {};
+              } else if (typeof userOrders !== 'undefined' && userOrders.length > 0) {
+                orderData = userOrders[0]?.rawItem || userOrders[0] || {};
+              }
+
+              const rawId = String(orderData._id || orderData.id || Date.now());
+              const shortId = rawId.length > 6 ? rawId.slice(-6).toUpperCase() : rawId.toUpperCase();
+
+              let grandTotal = 0;
+              if (Array.isArray(createdOrders) && createdOrders.length > 0) {
+                grandTotal = createdOrders.reduce((sum, ord) => {
+                  const o = ord?.data || ord || {};
+                  return sum + Number(o.totalAmount || o.amount || 0);
+                }, 0);
+              } else {
+                grandTotal = Number(orderData.totalAmount || orderData.amount || 0);
+              }
+
+              const formattedTotal = Number(grandTotal || 0).toLocaleString('en-IN');
+              const invoiceUrl = `https://mj-digital-backend-3.onrender.com/invoice.html?id=${rawId}`;
+
+              const messageText = `Hi ${name}! 🛍️\n\nAapka M J DIGITAL order *#ORD-${shortId}* (Total: ₹${formattedTotal}) successfully place ho gaya hai.\n\n📄 Tax Invoice Download: ${invoiceUrl}\n\nSupport Helpline: +91 830 666 9999\nM J DIGITAL — Danilimda, Ahmedabad`;
+
+              const targetPhone = phone.length === 10 ? `91${phone}` : '918306669999';
+              const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(messageText)}`;
+
+              const userWantsWA = confirm("🎉 Order successfully placed!\n\nKya aap WhatsApp par order confirmation aur Tax Invoice copy lena chahte hain?");
+              if (userWantsWA) {
+                const newTab = window.open(waUrl, '_blank');
+                if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+                  window.location.href = waUrl;
+                }
+              }
+            }
+
+            async function finishCheckout() {
+                myCart = [];
+                updateCartBadge();
+                resetButton();
+
+                const defaultRadio = document.querySelector('input[name="fpPaymentGateway"][value="razorpay"]');
+                if (defaultRadio) {
+                  defaultRadio.checked = true;
+                }
+
+                const detailTab = document.getElementById('orderDetailViewTab');
+                const listTab = document.getElementById('ordersListView');
+                if (detailTab) detailTab.style.display = 'none';
+                if (listTab) listTab.style.display = 'block';
+
+                await loadOrdersTable();
+window.location.reload();
+                switchProfileTab('p-orders', document.querySelector('.profile-nav-btn'));
+                navigateTo('page-profile');
+            }
+        }
+
+        async function loadOrdersTable() {
+            const container = document.getElementById('amazonOrdersContainer');
+            if (!container) return;
+
+            try {
+                const res = await fetch('/api/orders');
+                const rawOrders = await res.json();
+                const orders = Array.isArray(rawOrders) ? rawOrders : (rawOrders.data || rawOrders.orders || []);
+
+                if (!orders || orders.length === 0) {
+                    container.innerHTML = `<div class="text-center text-muted py-5"><i class="fa-solid fa-box-open fs-2 mb-2 d-block"></i>No orders placed yet.</div>`;
+                    return;
+                }
+
+                userOrders = orders.map(ord => {
+                    const rawType = String(ord.orderType || ord.type || '').toLowerCase();
+                    const rawCat = String(ord.itemDetails?.category || ord.category || '').toLowerCase();
+                    const titleLower = String(ord.itemDetails?.title || ord.title || '').toLowerCase();
+                    const isTravel = rawType.includes('travel') || rawType.includes('tour') || titleLower.includes('tour') || titleLower.includes('package') || titleLower.includes('zeeland');
+
+                    let detectedType = 'Product';
+                    if (isTravel) detectedType = 'Travel';
+                    else if (rawType.includes('mobile') || rawCat.includes('mobile') || titleLower.includes('phone') || titleLower.includes('iphone') || titleLower.includes('pro')) detectedType = 'Mobile';
+                    else if (rawType.includes('electronic') || rawCat.includes('electronic') || titleLower.includes('laptop') || titleLower.includes('gadget') || titleLower.includes('mac') || titleLower.includes('apple')) detectedType = 'Electronics';
+                    else if (rawType.includes('fashion') || rawCat.includes('fashion') || titleLower.includes('tshirt') || titleLower.includes('shirt')) detectedType = 'Fashion';
+                    else if (rawType.includes('service') || rawCat.includes('service')) detectedType = 'Services';
+
+                    let badge = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+                    if (ord.status === 'Confirmed') badge = 'bg-info-subtle text-info-emphasis border border-info-subtle';
+                    else if (ord.status === 'In Transit') badge = 'bg-primary-subtle text-primary border border-primary-subtle';
+                    else if (ord.status === 'Delivered') badge = 'bg-success-subtle text-success-emphasis border border-success-subtle';
+                    else if (ord.status === 'Cancelled') badge = 'bg-danger-subtle text-danger border border-danger-subtle';
+
+                    const d = new Date(ord.createdAt || Date.now());
+                    const dateFormatted = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+                    return {
+                        id: ord._id,
+                        shortId: String(ord._id).slice(-4).toUpperCase(),
+                        fullOrderId: String(ord._id).slice(-10).toUpperCase(),
+                        type: detectedType,
+                        title: ord.itemDetails?.title || ord.title || 'Order Item',
+                        date: dateFormatted,
+                        rawAmount: ord.totalAmount || ord.amount || 0,
+                        price: `₹${Number(ord.totalAmount || ord.amount || 0).toLocaleString('en-IN')}`,
+                        status: ord.status || 'Processing',
+                        badge: badge,
+                        customerName: ord.customerName || (ord.customer ? ord.customer.name : 'Mohsin J'),
+                        address: ord.shippingAddress || 'Danilimda, Ahmedabad, Gujarat - 380028',
+                        rawItem: ord
+                    };
+                });
+
+                filterCustomerOrders();
+            } catch (err) {
+                container.innerHTML = `<div class="text-center text-danger py-4">Error loading order history.</div>`;
+            }
+        }
+
+        function filterCustomerOrders() {
+            const query = (document.getElementById('customerOrderSearchInput')?.value || '').toLowerCase().trim();
+            const filter = (document.getElementById('customerOrderStatusFilter')?.value || 'all').toLowerCase();
+            const container = document.getElementById('amazonOrdersContainer');
+            if (!container) return;
+
+            const filtered = userOrders.filter(o => {
+                const matchSearch = !query || o.title.toLowerCase().includes(query) || o.shortId.toLowerCase().includes(query);
+                const matchStatus = (filter === 'all') || (o.status.toLowerCase() === filter);
+                return matchSearch && matchStatus;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted py-5 border rounded-3 bg-white"><i class="fa-solid fa-filter-circle-xmark fs-2 mb-2 d-block opacity-50"></i>No matching orders found.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(o => {
+                const specs = o.rawItem?.itemDetails?.specifications || o.rawItem?.specifications || [];
+                const specsHtml = Array.isArray(specs) && specs.length > 0 
+                  ? specs.map(s => `<span class="badge bg-light text-secondary border me-1" style="font-size: 10px;">${s.key || s.name}: ${s.value}</span>`).join('')
+                  : `<span class="badge bg-light text-secondary border me-1" style="font-size: 10px;">${o.type}</span>`;
+
+                return `
+                    <div class="card border rounded-3 overflow-hidden shadow-xs mb-3">
+                        <div class="bg-light px-3 py-2 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2 text-muted" style="font-size: 12px;">
+                            <div class="d-flex gap-4">
+                                <div>
+                                    <span class="d-block text-uppercase" style="font-size: 10px;">Order Placed</span>
+                                    <strong class="text-dark">${o.date}</strong>
+                                </div>
+                                <div>
+                                    <span class="d-block text-uppercase" style="font-size: 10px;">Total</span>
+                                    <strong class="text-dark">${o.price}</strong>
+                                </div>
+                                <div>
+                                    <span class="d-block text-uppercase" style="font-size: 10px;">Ship To</span>
+                                    <span class="text-primary fw-semibold">${o.customerName}</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="d-block text-uppercase" style="font-size: 10px;">Order # ${o.fullOrderId}</span>
+                                <div>
+                                    <a href="javascript:void(0)" onclick="openCustomerOrderDetail('${o.id}')" class="text-primary text-decoration-none fw-semibold me-2">View order details</a>
+                                    <span class="text-muted">|</span>
+                                    <a href="javascript:void(0)" onclick="window.open('invoice.html?id=${o.id}', '_blank')" class="text-primary text-decoration-none fw-semibold ms-2">Invoice</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-white d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-3 border bg-white p-1 d-flex align-items-center justify-content-center" style="width: 72px; height: 72px; min-width: 72px;">
+                                    <img src="${resolveMediaUrl(o.rawItem?.imageUrl || (o.rawItem?.images && o.rawItem?.images[0]) || '')}" 
+                                         class="img-fluid rounded object-fit-contain" 
+                                         style="max-height: 100%; max-width: 100%;" 
+                                         onerror="this.src='https://placehold.co/70?text=Item'">
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">${o.title}</h6>
+                                    <div class="mb-2">${specsHtml}</div>
+                                    <span class="badge rounded-pill px-2.5 py-1 ${o.badge}" style="font-size: 11px;">
+                                        ● ${o.status}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-column gap-2" style="min-width: 160px;">
+                                <button type="button" class="btn btn-warning rounded-pill btn-sm fw-semibold text-dark shadow-xs" onclick="buyAgainCustomerItem('${o.id}')">
+                                    <i class="fa-solid fa-rotate-right me-1"></i> Buy It Again
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary rounded-pill btn-sm fw-semibold" onclick="openLiveTracking('${o.id}')">
+                                    <i class="fa-solid fa-location-crosshairs me-1"></i> Track package
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openCustomerOrderDetail(orderId) {
+            const ord = userOrders.find(o => String(o.id) === String(orderId) || String(o.rawItem?._id) === String(orderId));
+            if (!ord) return;
+
+            const raw = ord.rawItem || {};
+
+            document.getElementById('detailOrderDateHead').innerText = `Ordered on ${ord.date || 'Recent'} | Order #${ord.shortId}`;
+            document.getElementById('tabShipName').innerText = ord.customerName || 'Customer';
+            document.getElementById('tabShipAddr').innerText = ord.address || 'Danilimda, Ahmedabad, Gujarat';
+            document.getElementById('tabPaymentMethod').innerText = `${raw.paymentGateway || 'Razorpay'} (${raw.paymentStatus || 'Paid'})`;
+            document.getElementById('tabContactInfo').innerText = `${raw.customerPhone || '+91 830 666 9999'} • ${raw.customerEmail || 'mjdigitalworlds@gmail.com'}`;
+
+            document.getElementById('tabSubtotal').innerText = ord.price;
+            document.getElementById('tabGrandTotal').innerText = ord.price;
+
+            document.getElementById('tabProdTitle').innerText = ord.title;
+            document.getElementById('tabProdPrice').innerText = ord.price;
+            document.getElementById('tabProdImg').src = resolveMediaUrl(raw.imageUrl || (raw.images && raw.images[0]) || '');
+
+            document.getElementById('tabTrackBtn').onclick = () => {
+                openLiveTracking(ord.id);
+            };
+
+            const badgesCont = document.getElementById('tabVariantBadges');
+            badgesCont.innerHTML = '';
+            const specs = raw.itemDetails?.specifications || raw.specifications || [];
+
+            if (Array.isArray(specs) && specs.length > 0) {
+                specs.forEach(s => {
+                    badgesCont.innerHTML += `<span class="badge bg-secondary-subtle text-secondary border px-2 py-1" style="font-size: 11px;">${s.key || s.name}: ${s.value}</span>`;
+                });
+            } else {
+                badgesCont.innerHTML = `<span class="badge bg-primary-subtle text-primary border px-2 py-1" style="font-size: 11px;">Category: ${ord.type}</span>`;
+            }
+
+            document.getElementById('tabInvoiceBtn').onclick = () => {
+                window.open(`invoice.html?id=${ord.id}`, '_blank');
+            };
+
+            const cancelCont = document.getElementById('tabCancelContainer');
+            const canCancel = (ord.status === 'Processing' || ord.status === 'Pending');
+            if (canCancel) {
+                cancelCont.innerHTML = `
+                  <div class="p-3 bg-danger bg-opacity-10 rounded-3 border border-danger border-opacity-25 d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong class="text-danger small d-block">Need to cancel this order?</strong>
+                      <span class="text-muted" style="font-size: 11.5px;">Orders can be cancelled before dispatch without any cancellation fee.</span>
+                    </div>
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold" onclick="openCancelOrderModal('${ord.id}')">
+                      Cancel Order
+                    </button>
+                  </div>
+                `;
+            } else {
+                cancelCont.innerHTML = '';
+            }
+
+            document.getElementById('ordersListView').style.display = 'none';
+            document.getElementById('orderDetailViewTab').style.display = 'block';
+        }
+
+        function backToOrdersList() {
+            document.getElementById('orderDetailViewTab').style.display = 'none';
+            document.getElementById('ordersListView').style.display = 'block';
+        }
+
+        async function buyAgainCustomerItem(targetOrderId = null) {
+            let ord = null;
+            if (targetOrderId) {
+                ord = userOrders.find(o => String(o.id) === String(targetOrderId) || String(o.rawItem?._id) === String(targetOrderId));
+            }
+            if (!ord) {
+                const detailHeadText = document.getElementById('detailOrderDateHead')?.innerText || '';
+                const match = detailHeadText.match(/Order #([A-F0-9]+)/i);
+                const shortId = match ? match[1].trim() : '';
+                ord = userOrders.find(o => o.shortId === shortId || String(o.id).slice(-4).toUpperCase() === shortId);
+            }
+
+            if (!ord) return;
+
+            const raw = ord.rawItem || {};
+            const itemTitle = ord.title;
+            const isTravel = ord.type === 'Travel';
+
+            let matchedItem = null;
+            let isAvailable = false;
+
+            if (isTravel) {
+                let travels = [];
+                try {
+                    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                    const data = await res.json();
+                    travels = Array.isArray(data) ? data : (data.data || []);
+                } catch(e) {
+                    travels = travelMemory?.all || [];
+                }
+                matchedItem = travels.find(t => (t.title && t.title.toLowerCase().trim() === itemTitle.toLowerCase().trim()) || String(t._id) === String(raw.itemDetails?.itemId || raw.itemDetails?.productId));
+                if (matchedItem && matchedItem.status !== 'Inactive') isAvailable = true;
+            } else {
+                const products = await fetchStoreItems(true);
+                matchedItem = products.find(p => (p.title && p.title.toLowerCase().trim() === itemTitle.toLowerCase().trim()) || String(p._id) === String(raw.itemDetails?.itemId || raw.itemDetails?.productId));
+                if (matchedItem && (Number(matchedItem.stock) > 0 && matchedItem.status !== 'Out of Stock' && matchedItem.status !== 'Inactive')) isAvailable = true;
+            }
+
+            if (!isAvailable) {
+                alert(`⚠️ "${itemTitle}" is currently unavailable.`);
+                return;
+            }
+
+            const targetPrice = isTravel 
+                ? (matchedItem.pricingTiers?.standard?.price || matchedItem.price || ord.rawAmount) 
+                : (matchedItem.discountPrice ? matchedItem.discountPrice : (matchedItem.price || ord.rawAmount));
+
+            const rawImg = (matchedItem.images && matchedItem.images[0]) || matchedItem.imageUrl || '';
+            const img = resolveMediaUrl(rawImg);
+
+            const existingInCart = myCart.find(c => String(c.id) === String(matchedItem._id));
+            if (existingInCart) {
+                existingInCart.qty = (existingInCart.qty || 1) + 1;
+            } else {
+                myCart.push({
+                    id: matchedItem._id,
+                    title: matchedItem.title || itemTitle,
+                    price: Number(targetPrice),
+                    img: img,
+                    type: isTravel ? 'Travel' : 'Product',
+                    qty: 1,
+                    adults: 1,
+                    children: 0
+                });
+            }
+
+            updateCartBadge();
+            renderCartPage();
+            navigateTo('page-cart');
+        }
+
+        function openCancelOrderModal(orderId) {
+            const order = userOrders.find(o => String(o.id) === String(orderId));
+            if (!order) return;
+            document.getElementById('cancelOrderIdInput').value = order.id;
+            document.getElementById('cancelItemTitle').innerText = order.title;
+            document.getElementById('cancelOrderIdText').innerText = `Order ID: #${order.shortId} | Amount: ${order.price}`;
+            if (cancelModal) cancelModal.show();
+        }
+
+        function handleCancelReasonChange(val) {
+            const customBox = document.getElementById('cancelReasonCustom');
+            if (val === 'Other') {
+                customBox.style.display = 'block';
+                customBox.required = true;
+            } else {
+                customBox.style.display = 'none';
+                customBox.required = false;
+            }
+        }
+
+        async function submitCustomerCancellation(e) {
+            e.preventDefault();
+            const btn = document.getElementById('cancelSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = `Cancelling...`;
+            const orderId = document.getElementById('cancelOrderIdInput').value;
+            const selectVal = document.getElementById('cancelReasonSelect').value;
+            const finalReason = selectVal === 'Other' ? document.getElementById('cancelReasonCustom').value : selectVal;
+
+            try {
+                const res = await fetch(`/api/orders/${orderId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'Cancelled', cancelReason: finalReason })
+                });
+
+                if (res.ok) {
+                    if (cancelModal) cancelModal.hide();
+                    alert('Order cancelled successfully.');
+                    await loadOrdersTable();
+window.location.reload();
+                } else {
+                    alert('Cancellation failed on server.');
+                }
+            } catch (err) {
+                alert('Network error while cancelling order.');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `Confirm Cancellation`;
+                }
+            }
+        }
+
+        async function loadMainSitePolicies() {
+            try {
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/cms/policies');
+                if (!res.ok) return;
+                const result = await res.json();
+                const policies = Array.isArray(result) ? result : (result.data || []);
+                if (Array.isArray(policies) && policies.length > 0) {
+                    policies.forEach(p => {
+                        const key = (p.policyKey || '').toLowerCase().trim();
+                        const content = p.content || '';
+                        if (!content || content.trim() === '') return;
+                        localStorage.setItem('mj_cms_' + key, content);
+                        const el = document.getElementById(`live-${key}-content`);
+                        if (el) el.innerHTML = content;
+                    });
+                }
+            } catch (err) {
+                console.log('Using static policies fallback');
+            }
+        }
+
+        async function syncLiveStoreSettings() {
+            try {
+                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/settings');
+                const result = await res.json();
+                if (!res.ok || !result.success || !result.data) return;
+                const s = result.data;
+                if (s.storeName) {
+                    const c1 = document.getElementById('live-contact-store-name');
+                    const f1 = document.getElementById('live-footer-store-name');
+                    if (c1) c1.innerText = s.storeName;
+                    if (f1) f1.innerText = s.storeName;
+                }
+                if (s.phone) {
+                    const cPhone = document.getElementById('live-contact-phone');
+                    const fPhone = document.getElementById('live-footer-phone');
+                    if (cPhone) cPhone.innerText = s.phone;
+                    if (fPhone) fPhone.innerText = s.phone;
+                }
+                if (s.email) {
+                    const cEmail = document.getElementById('live-contact-email');
+                    const fEmail = document.getElementById('live-footer-email');
+                    if (cEmail) { cEmail.innerText = s.email; cEmail.href = `mailto:${s.email}`; }
+                    if (fEmail) { fEmail.innerText = s.email; fEmail.href = `mailto:${s.email}`; }
+                }
+                if (s.address) {
+                    const formatted = String(s.address).trim().replace(/\n/g, '<br>');
+                    const cAddr = document.getElementById('live-contact-address');
+                    const fAddr = document.getElementById('live-footer-address');
+                    if (cAddr) cAddr.innerHTML = formatted;
+                    if (fAddr) fAddr.innerHTML = formatted;
+                }
+            } catch (err) {}
+        }
+
+        function openLiveTracking(orderId) {
+            const order = userOrders.find(o => String(o.id) === String(orderId));
+            if (!order) return;
+            document.getElementById('trackItemTitle').innerText = order.title;
+            document.getElementById('trackIdText').innerText = `Tracking ID: #TRK-${order.shortId}`;
+            const steps = ['Order Placed', 'Packed & Ready', 'In Transit', 'Delivered'];
+            const statusIdx = ['Processing', 'Pending', 'Confirmed', 'In Transit', 'Delivered'].indexOf(order.status);
+            const container = document.getElementById('trackingTimelineContainer');
+            if (order.status === 'Cancelled') {
+                container.innerHTML = `<div class="p-3 bg-danger bg-opacity-10 border border-danger rounded-3 text-danger fw-bold"><i class="fa-solid fa-ban me-2"></i>Order Cancelled by Customer</div>`;
+            } else {
+                container.innerHTML = steps.map((s, idx) => `
+                    <div class="tracking-step ${idx <= statusIdx ? 'completed' : ''} ${idx === statusIdx ? 'active' : ''}">
+                        <div class="tracking-icon"><i class="fa-solid ${idx <= statusIdx ? 'fa-check' : 'fa-circle-dot'}"></i></div>
+                        <h6 class="fw-bold mb-0">${s}</h6>
+                    </div>
+                `).join('');
+            }
+            if (trackingModal) trackingModal.show();
+        }
+
+        function checkAuthAndNavigate() {
+            if (isLoggedIn) {
+                const detailTab = document.getElementById('orderDetailViewTab');
+                const listTab = document.getElementById('ordersListView');
+                if (detailTab) detailTab.style.display = 'none';
+                if (listTab) listTab.style.display = 'block';
+
+                switchProfileTab('p-orders', document.querySelector('.profile-nav-btn'));
+                loadOrdersTable();
+                navigateTo('page-profile');
+            } else {
+                navigateTo('page-auth');
+            }
+        }
+
+        function toggleAuthMode(mode) {
+            document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+            document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
+            document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+            document.getElementById('signupForm').style.display = mode === 'signup' ? 'block' : 'none';
+        }
+
+        function requestOtp(e, actionType) {
+            e.preventDefault();
+            pendingAction = actionType;
+            if (otpModal) otpModal.show();
+        }
+
+        function verifyOtpAndProceed() {
+            if (otpModal) otpModal.hide();
+            if (pendingAction === 'update-profile') {
+                alert('Profile Updated!');
+            } else {
+                isLoggedIn = true;
+                navigateTo('page-profile');
+            }
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            navigateTo('page-home');
+        }
+
+        function switchProfileTab(tabId, el) {
+            document.querySelectorAll('.profile-tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.profile-nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).style.display = 'block';
+            el.classList.add('active');
+        }
+
+        function toggleInlineAddressForm() {
+            const c = document.getElementById('inlineAddressContainer');
+            const btn = document.getElementById('toggleAddressFormBtn');
+            const isHidden = c.style.display === 'none';
+            c.style.display = isHidden ? 'block' : 'none';
+            btn.style.display = isHidden ? 'none' : 'inline-block';
+        }
+
+        function saveNewAddress(e) {
+            e.preventDefault();
+            const labelEl = document.querySelector('input[name="addrLabelRadio"]:checked');
+            const label = labelEl ? labelEl.value : 'Home';
+            const name = document.getElementById('newAddrName')?.value || 'Customer';
+            const phone = document.getElementById('newAddrPhone')?.value || '+91 8306669999';
+            const street = document.getElementById('newAddrText')?.value || '';
+            const city = document.getElementById('newAddrCity')?.value || 'Ahmedabad';
+            const pincode = document.getElementById('newAddrPincode')?.value || '380028';
+            const state = document.getElementById('newAddrState')?.value || 'Gujarat';
+            const country = document.getElementById('newAddrNation')?.value || 'India';
+
+            const container = document.getElementById('addressListContainer');
+            if (container) {
+                const newCol = document.createElement('div');
+                newCol.className = 'col-md-6';
+                newCol.innerHTML = `
+                    <div class="border rounded-3 p-3 position-relative bg-white shadow-sm h-100">
+                        <span class="badge bg-primary position-absolute top-0 end-0 m-2">${label}</span>
+                        <h6 class="fw-bold mb-1">${name}</h6>
+                        <p class="small text-muted mb-1">${street}, ${city} - ${pincode}, ${state}, ${country}</p>
+                        <p class="small text-muted mb-0">Phone: ${phone}</p>
+                    </div>
+                `;
+                container.appendChild(newCol);
+            }
+            toggleInlineAddressForm();
+            if(e.target) e.target.reset();
+        }
+            async function initiateRazorpay() {
+            try {
+                if (typeof Razorpay === 'undefined') {
+                    alert('Razorpay SDK load nahi hua hai. Kripya page refresh karein.');
+                    return;
+                }
+                const options = {
+                    key: 'rzp_test_TkFr9r722bHvjA',
+                    amount: 3499900,
+                    currency: 'INR',
+                    name: 'M J DIGITAL',
+                    description: 'Order Payment Test',
+                    image: 'https://mjdigital.co.in/favicon.ico',
+                    handler: async function (response) {
+                        alert('Payment Successful! Payment ID: ' + response.razorpay_payment_id);
+                        window.location.reload();
+                    },
+                    prefill: {
+                        name: 'Mohsin J',
+                        email: 'support@mjdigital.co.in',
+                        contact: '8306669999'
+                    },
+                    theme: {
+                        color: '#0d6efd'
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (response) {
+                    alert('Payment Failed: ' + response.error.description);
+                });
+                rzp.open();
+            } catch (err) {
+                console.error(err);
+                alert('Razorpay open error: ' + err.message);
+            }
+        }
+</script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+window.openRazorpayModal = function() {
+    try {
+        if (typeof Razorpay === 'undefined') {
+            alert("Razorpay script load ho rahi hai. Kripya 2 second baad dobara koshish karein.");
+            return;
+        }
+
+        var options = {
+            key: "rzp_test_TkFr9r722bHvjA",
+            amount: 3499900,
+            currency: "INR",
+            name: "M J DIGITAL",
+            description: "Test Order Checkout",
+            image: "https://mjdigital.co.in/favicon.ico",
+            handler: async function (response) {
+                alert("Payment Successful! ID: " + response.razorpay_payment_id);
+                window.location.reload();
+            },
+            prefill: {
+                name: "Mohsin J",
+                email: "support@mjdigital.co.in",
+                contact: "8306669999"
+            },
+            theme: {
+                color: "#0d6efd"
+            }
+        };
+
+        var rzp = new Razorpay(options);
+        rzp.on('payment.failed', function (response){
+            alert("Payment Failed: " + response.error.description);
+        });
+        rzp.open();
+    } catch (e) {
+        console.error("Razorpay Error:", e);
+        alert("Error opening Razorpay: " + e.message);
+    }
+};
+
+window.initiateRazorpay = window.openRazorpayModal;
+window.initiatePayment = window.openRazorpayModal;
+</script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    function launchRazorpayDirect(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+        }
+        
+        var selectedPg = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'razorpay';
+        if (selectedPg !== 'razorpay' && !selectedPg.toLowerCase().includes('razor')) {
+            return; // Agar COD ya PhonePe select ho toh default form chalne do
+        }
+
+        if (typeof Razorpay === 'undefined') {
+            alert("Razorpay script connect ho rahi hai. 2 second me dubara dabayein.");
+            return false;
+        }
+
+        var options = {
+            "key": "rzp_test_TkFr9r722bHvjA",
+            "amount": 3499900,
+            "currency": "INR",
+            "name": "M J DIGITAL",
+            "description": "Order Payment Test",
+            "image": "https://mjdigital.co.in/favicon.ico",
+            "handler": async function (response) {
+                    try {
+        var cartData = (typeof myCart !== "undefined" && myCart.length > 0) 
+            ? myCart[0] 
+            : { id: "item-1", title: "Iphone 18 pro", price: 314999, qty: 1 };
+        
+        await fetch("/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                customerName: document.getElementById("fpCheckoutName")?.value || "Mohsin J",
+                customerPhone: document.getElementById("fpCheckoutPhone")?.value || "8306669999",
+                customerEmail: "mjdigitalworlds@gmail.com",
+                shippingAddress: "GF5, Imran Residency, Danilimda, Ahmedabad, Gujarat",
+                orderType: "Product",
+                totalAmount: cartData.price || 314999,
+                paymentGateway: "razorpay",
+                paymentStatus: "Paid",
+                transactionId: response.razorpay_payment_id,
+                status: "Processing",
+                itemDetails: {
+                    itemId: cartData.id,
+                    title: cartData.title,
+                    quantity: cartData.qty || 1
+                }
+            })
+        });
+    } catch(err) {
+        console.error("Order save error:", err);
+    }
+            alert("Payment Success! Order Placed. ID: " + response.razorpay_payment_id);
+    if (typeof triggerCustomerWhatsAppReceipt === "function") {
+        var custPhone = document.getElementById("fpCheckoutPhone")?.value || "8306669999";
+        var custName = document.getElementById("fpCheckoutName")?.value || "Mohsin J";
+        triggerCustomerWhatsAppReceipt(cartData ? [cartData] : [], custPhone, custName);
+    }
+    if (typeof triggerCustomerWhatsAppReceipt === "function") {
+        var custPhone = document.getElementById("fpCheckoutPhone")?.value || "8306669999";
+        var custName = document.getElementById("fpCheckoutName")?.value || "Mohsin J";
+        triggerCustomerWhatsAppReceipt(cartData ? [cartData] : [], custPhone, custName);
+    }
+                window.location.reload();
+            },
+            "prefill": {
+                "name": document.getElementById('custName')?.value || "Mohsin J",
+                "email": "support@mjdigital.co.in",
+                "contact": document.getElementById('custPhone')?.value || "8306669999"
+            },
+            "theme": {
+                "color": "#0d6efd"
+            }
+        };
+
+        var rzp = new Razorpay(options);
+        rzp.on('payment.failed', function (resp){
+            alert("Payment Failed: " + resp.error.description);
+        });
+        rzp.open();
+        return false;
+    }
+
+    var btn = document.getElementById('fpCheckoutSubmitBtn');
+    if (btn) {
+        btn.addEventListener('click', launchRazorpayDirect, true);
+    }
+    window.launchRazorpayDirect = launchRazorpayDirect;
+});
+</script>
+
+<script>
+window.openWalletModal = function() {
+    alert("👛 M J DIGITAL WALLET\n\nCurrent Balance: ₹0.00\nStatus: Active\n\n(Top-up & ledger engine hook is ready)");
+};
+window.openUtilityModal = function(service) {
+    alert("⚡ " + service.toUpperCase() + " SERVICE\n\nOperator auto-fetch & BBPS biller channel ready to connect!");
+};
+</script>
+
+
+    <!-- INTERACTIVE UTILITY PAYMENT MODAL -->
+    <div class="modal fade" id="interactiveUtilityModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 p-4 shadow">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark d-flex align-items-center">
+                        <span id="modalServiceEmoji" class="me-2 fs-4">📱</span>
+                        <span id="modalServiceTitle">Mobile Recharge</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form onsubmit="handleUtilityPaymentSubmit(event)">
+                    <div id="dynamicServiceFieldsContainer" class="mb-3"></div>
+
+                    <!-- Payment Source Choice -->
+                    <div class="card p-3 bg-light rounded-3 border mb-3">
+                        <label class="small fw-bold text-dark d-block mb-2">Select Payment Method:</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="utilityPayMode" id="payViaWalletRadio" value="wallet" checked>
+                            <label class="form-check-label d-flex justify-content-between small fw-semibold" for="payViaWalletRadio">
+                                <span>👛 Pay via M J Wallet</span>
+                                <span class="text-muted" id="modalWalletBalText">Bal: ₹0.00</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="utilityPayMode" id="payViaGatewayRadio" value="gateway">
+                            <label class="form-check-label small fw-semibold" for="payViaGatewayRadio">
+                                <span>⚡ Pay via UPI / Payment Gateway (Razorpay/Cards)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="utilitySubmitPayBtn" class="btn btn-brand w-100 py-2.5 fw-bold">
+                        Proceed to Pay
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- WALLET TOP-UP / ADD MONEY MODAL -->
+    <div class="modal fade" id="walletAddMoneyModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 p-4 shadow text-center">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="fw-bold mb-0 text-dark">👛 Add Money</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <p class="text-muted small mb-3">Instant Top-up via UPI, Cards, Netbanking & Wallets</p>
+
+                <div class="mb-3 text-start">
+                    <label class="small fw-bold mb-1">Enter Amount (₹)</label>
+                    <input type="number" id="walletTopupAmountInput" class="form-control fw-bold fs-5 text-center" value="500" min="10" required>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center mb-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-2.5 py-1" onclick="setTopupVal(100)">+₹100</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-2.5 py-1" onclick="setTopupVal(500)">+₹500</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-2.5 py-1" onclick="setTopupVal(1000)">+₹1,000</button>
+                </div>
+
+                <button type="button" onclick="executeWalletTopup()" class="btn btn-success w-100 py-2 fw-bold">
+                    Proceed to Add Money (UPI, Cards, NetBanking)
+                </button>
+            </div>
+        </div>
+    </div>
+  
+
+<script>
+let currentWalletBalance = 0;
+let activeUtilityKey = 'mobile';
+let utilityModalInstance, walletModalInstance;
+
+document.addEventListener("DOMContentLoaded", function() {
+    const uEl = document.getElementById('interactiveUtilityModal');
+    if (uEl) utilityModalInstance = new bootstrap.Modal(uEl);
+    const wEl = document.getElementById('walletAddMoneyModal');
+    if (wEl) walletModalInstance = new bootstrap.Modal(wEl);
+    syncStripWallet();
+});
+
+function syncStripWallet() {
+    const balText = '₹' + Number(currentWalletBalance).toFixed(2);
+    const el1 = document.getElementById('mainStripWalletBalance');
+    if (el1) el1.innerText = balText;
+    const el2 = document.getElementById('modalWalletBalText');
+    if (el2) el2.innerText = 'Bal: ' + balText;
+}
+
+function openAddMoneyModal() {
+    if (walletModalInstance) walletModalInstance.show();
+}
+
+function setTopupVal(val) {
+    const input = document.getElementById('walletTopupAmountInput');
+    if (input) input.value = val;
+}
+
+function executeWalletTopup() {
+    const amt = Number(document.getElementById('walletTopupAmountInput')?.value || 0);
+    if (amt <= 0) return alert('Kripya valid amount daalein.');
+
+    if (typeof Razorpay !== 'undefined') {
+        const options = {
+            key: 'rzp_test_TkFr9r722bHvjA',
+            amount: amt * 100,
+            currency: 'INR',
+            name: 'M J DIGITAL WALLET',
+            description: 'Wallet Top-up (All Payment Modes Supported)',
+            image: 'https://mjdigital.co.in/favicon.ico',
+            handler: function(response) {
+                currentWalletBalance += amt;
+                syncStripWallet();
+                if (walletModalInstance) walletModalInstance.hide();
+                alert('🎉 ₹' + amt + ' successfully added to your M J Wallet!\nPayment ID: ' + response.razorpay_payment_id);
+            },
+            prefill: { 
+                name: 'Mohsin J', 
+                email: 'mjdigitalworlds@gmail.com',
+                contact: '8306669999' 
+            },
+            theme: { color: '#16a34a' }
+        };
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(response) {
+            alert('Payment Fail: ' + response.error.description);
+        });
+        rzp.open();
+    } else {
+        currentWalletBalance += amt;
+        syncStripWallet();
+        if (walletModalInstance) walletModalInstance.hide();
+        alert('🎉 ₹' + amt + ' added to wallet demo!');
+    }
+}
+
+function openInteractiveUtility(serviceKey, title, emoji) {
+    activeUtilityKey = serviceKey;
+    document.getElementById('modalServiceEmoji').innerText = emoji;
+    document.getElementById('modalServiceTitle').innerText = title;
+    const container = document.getElementById('dynamicServiceFieldsContainer');
+
+    if (serviceKey === 'mobile') {
+        container.innerHTML = `
+            <div class="mb-2"><label class="small fw-bold mb-1">Mobile Number</label><input type="tel" id="utilTargetNumber" class="form-control" placeholder="e.g. 9876543210" maxlength="10" required></div>
+            <div class="row g-2 mb-2">
+                <div class="col-6"><label class="small fw-bold mb-1">Operator</label><select id="utilOperator" class="form-select"><option>Jio Prepaid</option><option>Airtel</option><option>Vi (Vodafone Idea)</option><option>BSNL</option></select></div>
+                <div class="col-6"><label class="small fw-bold mb-1">Circle</label><select id="utilCircle" class="form-select"><option>Gujarat</option><option>Mumbai</option><option>Delhi</option><option>Maharashtra</option></select></div>
+            </div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Recharge Amount (₹)</label><div class="input-group"><input type="number" id="utilAmount" class="form-control" placeholder="239" required><button type="button" class="btn btn-outline-primary btn-sm" onclick="alert('Recommended Plans:\n₹239: 1.5GB/day (28 Days)\n₹299: 2GB/day (28 Days)\n₹666: 1.5GB/day (70 Days)')">Browse Plans</button></div></div>
+        `;
+    } else if (serviceKey === 'electricity') {
+        container.innerHTML = `
+            <div class="mb-2"><label class="small fw-bold mb-1">Electricity Board</label><select id="utilOperator" class="form-select"><option>Torrent Power - Ahmedabad/Surat</option><option>UGVCL - Uttar Gujarat</option><option>DGVCL - Dakshin Gujarat</option><option>MGVCL - Madhya Gujarat</option><option>PGVCL - Paschim Gujarat</option></select></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Consumer Number / Service No.</label><div class="input-group"><input type="text" id="utilTargetNumber" class="form-control" placeholder="e.g. 100234891" required><button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('utilAmount').value='1420'; alert('Bill Fetched! Consumer: Mohsin J | Due Amount: ₹1,420');">Fetch Bill</button></div></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Bill Amount (₹)</label><input type="number" id="utilAmount" class="form-control" placeholder="Amount to pay" required></div>
+        `;
+    } else if (serviceKey === 'dth') {
+        container.innerHTML = `
+            <div class="mb-2"><label class="small fw-bold mb-1">DTH Operator</label><select id="utilOperator" class="form-select"><option>Tata Play</option><option>Airtel Digital TV</option><option>Dish TV</option><option>Sun Direct</option><option>d2h</option></select></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Subscriber ID / Smart Card No.</label><input type="text" id="utilTargetNumber" class="form-control" placeholder="e.g. 1029384756" required></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Recharge Amount (₹)</label><input type="number" id="utilAmount" class="form-control" placeholder="e.g. 350" required></div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="mb-2"><label class="small fw-bold mb-1">Provider / Biller Name</label><input type="text" id="utilOperator" class="form-control" placeholder="e.g. Municipal Corp / Bank / Agency" required></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Account / Reference / Vehicle Number</label><input type="text" id="utilTargetNumber" class="form-control" placeholder="Enter identifier" required></div>
+            <div class="mb-2"><label class="small fw-bold mb-1">Payable Amount (₹)</label><input type="number" id="utilAmount" class="form-control" placeholder="Amount" required></div>
+        `;
+    }
+
+    syncStripWallet();
+    if (utilityModalInstance) utilityModalInstance.show();
+}
+
+function handleUtilityPaymentSubmit(e) {
+    e.preventDefault();
+    const amt = Number(document.getElementById('utilAmount')?.value || 0);
+    const target = document.getElementById('utilTargetNumber')?.value || '';
+    const operator = document.getElementById('utilOperator')?.value || '';
+    const mode = document.querySelector('input[name="utilityPayMode"]:checked')?.value || 'wallet';
+
+    if (amt <= 0) return alert('Kripya valid amount bharein.');
+
+    if (mode === 'wallet') {
+        if (currentWalletBalance < amt) {
+            return alert('❌ Wallet me balance kam hai!\nAvailable: ₹' + currentWalletBalance + '\nRequired: ₹' + amt + '\n\nKripya pehle "+ Add Money" karein ya Gateway choose karein.');
+        }
+        currentWalletBalance -= amt;
+        syncStripWallet();
+        if (utilityModalInstance) utilityModalInstance.hide();
+        alert('✅ ' + activeUtilityKey.toUpperCase() + ' payment of ₹' + amt + ' successful via M J Wallet!\nTarget: ' + target + ' (' + operator + ')\nRemaining Balance: ₹' + currentWalletBalance);
+    } else {
+        // Direct Gateway Payment
+        if (typeof Razorpay !== 'undefined') {
+            const options = {
+                key: 'rzp_test_TkFr9r722bHvjA',
+                amount: amt * 100,
+                currency: 'INR',
+                name: 'M J DIGITAL - ' + activeUtilityKey.toUpperCase(),
+                description: 'Bill Payment for ' + target,
+                image: 'https://mjdigital.co.in/favicon.ico',
+                handler: function(response) {
+                    if (utilityModalInstance) utilityModalInstance.hide();
+                    alert('✅ Payment Successful! Bill Processed.\nTxn ID: ' + response.razorpay_payment_id);
+                },
+                prefill: { contact: '8306669999' },
+                theme: { color: '#0d6efd' }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } else {
+            if (utilityModalInstance) utilityModalInstance.hide();
+            alert('✅ Payment of ₹' + amt + ' processed successfully!');
+        }
+    }
+}
+</script>
+
+
+<script>
+let fpCurrentWalletBalance = 0;
+let fpCurrentService = 'mobile';
+
+const DUMMY_TELECOM_PLANS = [
+    { amount: 239, validity: '28 Days', data: '1.5 GB/day', desc: 'Unlimited True 5G Data, 100 SMS/day & National Calls' },
+    { amount: 299, validity: '28 Days', data: '2.0 GB/day', desc: 'Binge-all-night, Weekend Data Rollover & True 5G Unlimited' },
+    { amount: 666, validity: '70 Days', data: '1.5 GB/day', desc: 'Best Seller Long-term pack + Free OTT Subscription' },
+    { amount: 899, validity: '90 Days', data: '2.0 GB/day', desc: 'Quarterly Super Saver Plan with 20GB extra bonus data' },
+    { amount: 2999, validity: '365 Days', data: '2.5 GB/day', desc: 'Annual Mega Pack: 912.5 GB high speed total data' }
+];
+
+function openUtilityFullPage(serviceKey) {
+    navigateTo('page-utility-hub');
+    switchUtilityTab(serviceKey);
+}
+
+function syncAllWalletElements() {
+    const balFormatted = '₹' + Number(fpCurrentWalletBalance).toFixed(2);
+    const e1 = document.getElementById('homeStripWalletBalance');
+    if (e1) e1.innerText = balFormatted;
+    const e2 = document.getElementById('fpFormWalletBalText');
+    if (e2) e2.innerText = 'Bal: ' + balFormatted;
+    const e3 = document.getElementById('fpWalletWidgetBal');
+    if (e3) e3.innerText = balFormatted;
+}
+
+function switchUtilityTab(serviceKey, btnEl = null) {
+    fpCurrentService = serviceKey;
+    document.querySelectorAll('.utility-tab-selector').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+
+    const fieldsContainer = document.getElementById('fullPageDynamicFields');
+    const rightPanelTitle = document.getElementById('fpRightPanelTitle');
+    const rightBadge = document.getElementById('fpActiveServiceBadge');
+    const rightContent = document.getElementById('fpRightDynamicContent');
+    const submitBtn = document.getElementById('fpUtilityProceedBtn');
+
+    if (!fieldsContainer || !rightContent) return;
+
+    if (serviceKey === 'mobile') {
+        rightPanelTitle.innerText = "Browse Operator Plans & Offers";
+        rightBadge.innerText = "MOBILE PREPAID";
+        submitBtn.innerText = "Proceed to Recharge Mobile";
+
+        fieldsContainer.innerHTML = `
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Mobile Number</label>
+                <input type="tel" id="fpTargetInput" class="form-control" placeholder="10-digit mobile number" maxlength="10" value="9876543210" required>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="small fw-bold mb-1">Operator</label>
+                    <select id="fpOperatorSelect" class="form-select">
+                        <option>Jio Prepaid</option>
+                        <option>Airtel</option>
+                        <option>Vi (Vodafone Idea)</option>
+                        <option>BSNL Prepaid</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label class="small fw-bold mb-1">Circle</label>
+                    <select class="form-select">
+                        <option>Gujarat</option>
+                        <option>Mumbai</option>
+                        <option>Delhi NCR</option>
+                        <option>Maharashtra</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Amount (₹)</label>
+                <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" placeholder="239" value="239" required>
+            </div>
+        `;
+
+        rightContent.innerHTML = `
+            <div class="d-flex flex-column gap-3">
+                ${DUMMY_TELECOM_PLANS.map(p => `
+                    <div class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h5 class="fw-bold text-primary mb-0">₹${p.amount}</h5>
+                                <span class="badge bg-dark">${p.validity}</span>
+                                <span class="badge bg-info text-dark">${p.data}</span>
+                            </div>
+                            <p class="small text-muted mb-0">${p.desc}</p>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm px-3 fw-bold rounded-pill" onclick="document.getElementById('fpAmountInput').value='${p.amount}'">
+                            Select Plan
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else if (serviceKey === 'electricity') {
+        rightPanelTitle.innerText = "Live Bill Details (BBPS)";
+        rightBadge.innerText = "ELECTRICITY BOARD";
+        submitBtn.innerText = "Pay Electricity Bill";
+
+        fieldsContainer.innerHTML = `
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Electricity Board</label>
+                <select id="fpOperatorSelect" class="form-select">
+                    <option>Torrent Power - Ahmedabad</option>
+                    <option>UGVCL - Uttar Gujarat</option>
+                    <option>DGVCL - Dakshin Gujarat</option>
+                    <option>MGVCL - Madhya Gujarat</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Consumer / Service Number</label>
+                <div class="input-group">
+                    <input type="text" id="fpTargetInput" class="form-control" placeholder="e.g. 10098234" value="10098234" required>
+                    <button class="btn btn-primary" type="button" onclick="fetchLiveBillDemo()">Fetch Bill</button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Bill Amount (₹)</label>
+                <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" placeholder="Amount" value="1420" required>
+            </div>
+        `;
+
+        rightContent.innerHTML = `
+            <div class="p-4 border rounded-3 bg-light text-center" id="fpBillDetailsCard">
+                <div style="font-size: 40px; margin-bottom: 8px;">💡</div>
+                <h5 class="fw-bold text-dark mb-1">Torrent Power (Ahmedabad)</h5>
+                <span class="badge bg-success mb-3">Consumer Verified: Mohsin J</span>
+                <div class="card p-3 bg-white border mb-3 text-start">
+                    <div class="d-flex justify-content-between small text-muted mb-1"><span>Consumer No:</span><strong class="text-dark">10098234</strong></div>
+                    <div class="d-flex justify-content-between small text-muted mb-1"><span>Bill Due Date:</span><strong class="text-danger">18-Oct-2026</strong></div>
+                    <div class="d-flex justify-content-between small text-muted"><span>Status:</span><span class="badge bg-warning text-dark">Unpaid</span></div>
+                </div>
+                <h3 class="fw-bold text-primary">₹1,420.00</h3>
+                <small class="text-muted">BBPS Assured Instant NOC Receipt</small>
+            </div>
+        `;
+    } else if (serviceKey === 'wallet') {
+        rightPanelTitle.innerText = "Wallet Passbook & Transaction Ledger";
+        rightBadge.innerText = "M J DIGITAL WALLET";
+        submitBtn.innerText = "Add Money to Wallet";
+
+        fieldsContainer.innerHTML = `
+            <div class="p-3 bg-success bg-opacity-10 border border-success rounded-3 mb-3 text-center">
+                <span class="text-muted small d-block mb-1">Current Active Balance</span>
+                <h2 class="fw-bold text-success mb-0" id="fpWalletMainDisplay">₹${Number(fpCurrentWalletBalance).toFixed(2)}</h2>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Top-Up Amount (₹)</label>
+                <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-center" value="1000" min="10" required>
+            </div>
+        `;
+
+        rightContent.innerHTML = `
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th class="text-end">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-success-subtle text-success">+ CREDIT</span></td>
+                            <td><strong>UPI Top-up (Razorpay)</strong><br><span class="text-muted">Ref: RZP_TOP_9182</span></td>
+                            <td>Today</td>
+                            <td><span class="badge bg-success">Success</span></td>
+                            <td class="text-end fw-bold text-success">+ ₹500.00</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-danger-subtle text-danger">- DEBIT</span></td>
+                            <td><strong>Jio Prepaid 28-Days Recharge</strong><br><span class="text-muted">Number: 9876543210</span></td>
+                            <td>Yesterday</td>
+                            <td><span class="badge bg-success">Completed</span></td>
+                            <td class="text-end fw-bold text-danger">- ₹239.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } else {
+        rightPanelTitle.innerText = "Biller Verification & Payment";
+        rightBadge.innerText = serviceKey.toUpperCase();
+        submitBtn.innerText = "Proceed to Pay";
+
+        fieldsContainer.innerHTML = `
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Biller / Service Name</label>
+                <input type="text" id="fpOperatorSelect" class="form-control" placeholder="e.g. FASTag Bank / Gas Agency" required>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Account / Vehicle / Consumer Number</label>
+                <input type="text" id="fpTargetInput" class="form-control" placeholder="Enter identifier" required>
+            </div>
+            <div class="mb-3">
+                <label class="small fw-bold mb-1">Bill Amount (₹)</label>
+                <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" placeholder="Amount" value="500" required>
+            </div>
+        `;
+
+        rightContent.innerHTML = `
+            <div class="p-5 text-center text-muted border rounded-3 bg-light">
+                <i class="fa-solid fa-shield-halved fs-1 text-primary opacity-50 mb-3"></i>
+                <h6 class="fw-bold text-dark">Bharat BillPay (BBPS) Secured Channel</h6>
+                <p class="small mb-0">Fill out your account details on the left to verify bills and execute instant clearance.</p>
+            </div>
+        `;
+    }
+
+    syncAllWalletElements();
+}
+
+function fetchLiveBillDemo() {
+    alert("✅ Bill Fetched Successfully via BBPS!\nConsumer: Mohsin J\nDue Amount: ₹1,420.00\nDue Date: 18-Oct-2026");
+}
+
+function executeFullPageWalletTopup() {
+    const amt = Number(document.getElementById('fpWalletTopupInput')?.value || 0);
+    if (amt <= 0) return alert('Kripya valid amount daalein.');
+
+    if (typeof Razorpay !== 'undefined') {
+        const options = {
+            key: 'rzp_test_TkFr9r722bHvjA',
+            amount: amt * 100,
+            currency: 'INR',
+            name: 'M J DIGITAL WALLET',
+            description: 'Wallet Top-up',
+            image: 'https://mjdigital.co.in/favicon.ico',
+            handler: function(response) {
+                fpCurrentWalletBalance += amt;
+                syncAllWalletElements();
+                if (fpCurrentService === 'wallet') switchUtilityTab('wallet');
+                alert('🎉 ₹' + amt + ' successfully added to your M J Wallet! Txn: ' + response.razorpay_payment_id);
+            },
+            prefill: { name: 'Customer', contact: '8306669999' },
+            theme: { color: '#16a34a' }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+    } else {
+        fpCurrentWalletBalance += amt;
+        syncAllWalletElements();
+        if (fpCurrentService === 'wallet') switchUtilityTab('wallet');
+        alert('🎉 Demo: ₹' + amt + ' added to wallet!');
+    }
+}
+
+async function handleFullPageUtilitySubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('fpUtilityProceedBtn');
+    const origBtnHtml = btn ? btn.innerHTML : 'Proceed to Payment';
+
+    const amt = Number(document.getElementById('fpAmountInput')?.value || 0);
+    const target = document.getElementById('fpTargetInput')?.value || '';
+    const operator = document.getElementById('fpOperatorSelect')?.value || 'Standard';
+    const payMode = document.querySelector('input[name="fpPaySource"]:checked')?.value || 'wallet';
+
+    if (amt <= 0) return alert('Kripya valid amount enter karein.');
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Processing Request...';
+    }
+
+    async function recordUtilityOrder(payStatus, ordStatus, txnId, failureReason = '') {
+        const payload = {
+            customerName: document.getElementById('profileNameInput')?.value || 'Mohsin J',
+            customerPhone: document.getElementById('profilePhoneInput')?.value || '8306669999',
+            customerEmail: document.getElementById('profileEmailInput')?.value || 'mjdigitalworlds@gmail.com',
+            shippingAddress: 'Digital Service Clearance (Instant BBPS Dispatch)',
+            orderType: 'Utility',
+            totalAmount: amt,
+            paymentGateway: payMode === 'wallet' ? 'MJ_WALLET' : 'razorpay',
+            paymentStatus: payStatus,
+            status: ordStatus,
+            transactionId: txnId || ('UTIL-' + Date.now().toString().slice(-8)),
+            itemDetails: {
+                itemId: 'UTIL-' + (typeof fpCurrentService !== 'undefined' ? fpCurrentService.toUpperCase() : 'UTILITY'),
+                title: (typeof fpCurrentService !== 'undefined' ? fpCurrentService.toUpperCase() : 'SERVICE') + ' - ' + target + ' (' + operator + ')',
+                category: 'Utility & Recharge',
+                quantity: 1,
+                notes: failureReason || ''
+            },
+            items: [{
+                id: 'UTIL-' + (typeof fpCurrentService !== 'undefined' ? fpCurrentService : 'service'),
+                title: (typeof fpCurrentService !== 'undefined' ? fpCurrentService.toUpperCase() : 'SERVICE') + ' - ' + target + ' (' + operator + ')',
+                type: 'Utility',
+                category: 'Recharge & BBPS',
+                price: amt,
+                qty: 1,
+                itemTotal: amt,
+                hsn: '998313',
+                gstRate: 18
+            }]
+        };
+
+        try {
+            const res = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            return await res.json();
+        } catch (err) {
+            console.error('Order save error:', err);
+            return null;
+        }
+    }
+
+    // 1. WALLET PAYMENT FLOW
+    if (payMode === 'wallet') {
+        if (typeof fpCurrentWalletBalance !== 'undefined' && fpCurrentWalletBalance < amt) {
+            if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+            await recordUtilityOrder('Failed', 'Cancelled', '', 'Insufficient Wallet Balance');
+            return alert('❌ Wallet me balance kam hai!\nAvailable: ₹' + fpCurrentWalletBalance + '\nRequired: ₹' + amt);
+        }
+
+        if (typeof fpCurrentWalletBalance !== 'undefined') fpCurrentWalletBalance -= amt;
+        if (typeof syncAllWalletElements === 'function') syncAllWalletElements();
+
+        await recordUtilityOrder('Paid', 'Delivered', 'WAL-' + Date.now());
+        if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+
+        alert('✅ Utility payment of ₹' + amt + ' successful via M J Wallet!\nTarget: ' + target);
+        if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+        if (typeof navigateTo === 'function') navigateTo('page-profile');
         return;
     }
 
-    const matchedPage = (typeof ROUTE_CONFIG !== 'undefined' && ROUTE_CONFIG[path]) ? ROUTE_CONFIG[path] : 'page-home';
-    navigateTo(matchedPage, null, false);
+    // 2. LIVE RAZORPAY GATEWAY FLOW
+    if (typeof Razorpay === 'undefined') {
+        if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+        return alert('Payment gateway script loading... Kripya refresh karke try karein.');
+    }
+
+    const tempTxn = 'RZP_PEND_' + Date.now();
+    await recordUtilityOrder('Pending', 'Processing', tempTxn, 'Awaiting Gateway Callback');
+
+    const options = {
+        key: 'rzp_test_TkFr9r722bHvjA',
+        amount: amt * 100,
+        currency: 'INR',
+        name: 'M J DIGITAL - UTILITY',
+        description: 'Bill Payment: ' + target + ' (' + operator + ')',
+        image: 'https://mjdigital.co.in/favicon.ico',
+        handler: async function (response) {
+            if (btn) { btn.innerHTML = '<i class="fa-solid fa-check me-2"></i>Payment Verified!'; }
+            await recordUtilityOrder('Paid', 'Delivered', response.razorpay_payment_id);
+            alert('🎉 Payment Successful!\nStatus: SUCCESS\nTxn ID: ' + response.razorpay_payment_id);
+            if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+            if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+            if (typeof navigateTo === 'function') navigateTo('page-profile');
+        },
+        modal: {
+            ondismiss: async function () {
+                if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+                await recordUtilityOrder('Pending', 'Processing', tempTxn, 'User closed modal (Pending Auto-Sync)');
+                alert('⚠️ Transaction window close ho gayi thi.\nStatus: PENDING\nYeh dashboard me auto-sync ho jayega.');
+                if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+            }
+        },
+        prefill: {
+            name: document.getElementById('profileNameInput')?.value || 'Mohsin J',
+            contact: '8306669999',
+            email: 'mjdigitalworlds@gmail.com'
+        },
+        theme: { color: '#0d6efd' }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', async function (response) {
+        if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+        await recordUtilityOrder('Failed', 'Cancelled', response.error?.metadata?.payment_id || '', response.error?.description || '');
+        alert('❌ Payment Failed: ' + response.error?.description);
+        if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+    });
+
+    rzp.open();
 }
 
-window.addEventListener('popstate', function(e) {
-    if (e.state && e.state.pageId) {
-        if (e.state.pageId === 'page-item-details' && e.state.itemId) {
-            openItemDetailsPage(e.state.itemId, e.state.isTravel, false);
-        } else {
-            navigateTo(e.state.pageId, null, false);
-        }
-    } else {
-        handleAppRouting();
-    }
+document.addEventListener("DOMContentLoaded", function() {
+    syncAllWalletElements();
+    switchUtilityTab('mobile');
 });
-
-window.addEventListener('DOMContentLoaded', handleAppRouting);
 </script>
 
 </body>
@@ -1877,3 +4595,152 @@ window.addEventListener('DOMContentLoaded', handleAppRouting);
 
 
 
+
+
+// ==========================================
+// M J DIGITAL PERSISTENT APP ROUTER
+// ==========================================
+const ROUTE_PAGE_MAP = {
+    '/': 'page-home',
+    '/home': 'page-home',
+    '/travels': 'page-travels',
+    '/mobiles': 'page-mobile',
+    '/fashion': 'page-fashion',
+    '/electronics': 'page-electronics',
+    '/services': 'page-services',
+    '/pay/utility': 'page-utility-hub',
+    '/wishlist': 'page-wishlist',
+    '/bag': 'page-cart',
+    '/cart': 'page-cart',
+    '/checkout': 'page-checkout',
+    '/account/orders': 'page-profile',
+    '/profile': 'page-profile',
+    '/view/item': 'page-item-details'
+};
+
+const PAGE_ROUTE_MAP = {
+    'page-home': '/',
+    'page-travels': '/travels',
+    'page-mobile': '/mobiles',
+    'page-fashion': '/fashion',
+    'page-electronics': '/electronics',
+    'page-services': '/services',
+    'page-utility-hub': '/pay/utility',
+    'page-wishlist': '/wishlist',
+    'page-cart': '/bag',
+    'page-checkout': '/checkout',
+    'page-profile': '/account/orders',
+    'page-item-details': '/view/item'
+};
+
+function navigateTo(pageId, navEl = null, updateUrl = true) {
+    if (typeof cleanStuckBackdrops === 'function') cleanStuckBackdrops();
+
+    document.querySelectorAll('.page-view').forEach(p => {
+        p.classList.remove('active');
+        p.style.display = 'none';
+    });
+
+    const target = document.getElementById(pageId);
+    if (target) {
+        target.classList.add('active');
+        target.style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    document.querySelectorAll('.nav-btn, .nav-link').forEach(btn => btn.classList.remove('active'));
+    if (navEl) {
+        navEl.classList.add('active');
+    }
+
+    if (updateUrl && PAGE_ROUTE_MAP[pageId]) {
+        try { history.pushState({ pageId: pageId }, '', PAGE_ROUTE_MAP[pageId]); } catch(e) {}
+    }
+
+    // Trigger data fetch for current view
+    if (pageId === 'page-home') {
+        if (typeof loadHomeTrending === 'function') loadHomeTrending();
+        if (typeof fetchStoreItems === 'function') fetchStoreItems();
+    } else if (pageId === 'page-mobile') {
+        if (typeof loadMobiles === 'function') loadMobiles();
+        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
+    } else if (pageId === 'page-fashion') {
+        if (typeof loadFashion === 'function') loadFashion();
+        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
+    } else if (pageId === 'page-electronics') {
+        if (typeof loadElectronics === 'function') loadElectronics();
+        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
+    } else if (pageId === 'page-services') {
+        if (typeof loadServices === 'function') loadServices();
+    } else if (pageId === 'page-travels') {
+        if (typeof filterTravels === 'function') filterTravels('All');
+        if (typeof fetchTravelPackages === 'function') fetchTravelPackages();
+    } else if (pageId === 'page-profile') {
+        if (typeof loadOrdersTable === 'function') loadOrdersTable();
+    } else if (pageId === 'page-utility-hub') {
+        if (typeof switchUtilityTab === 'function') switchUtilityTab('mobile_prepaid');
+    }
+}
+
+function openItemDetailsPage(id, isTravel = false, updateUrl = true) {
+    if (updateUrl) {
+        const itemUrl = '/view/item?id=' + encodeURIComponent(id) + (isTravel ? '&type=travel' : '');
+        try { history.pushState({ pageId: 'page-item-details', itemId: id, isTravel: isTravel }, '', itemUrl); } catch(e) {}
+    }
+
+    document.querySelectorAll('.page-view').forEach(p => {
+        p.classList.remove('active');
+        p.style.display = 'none';
+    });
+
+    const targetDetails = document.getElementById('page-item-details');
+    if (targetDetails) {
+        targetDetails.classList.add('active');
+        targetDetails.style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    if (isTravel && typeof renderTravelDetails === 'function') {
+        renderTravelDetails(id);
+    } else if (typeof renderItemDetails === 'function') {
+        renderItemDetails(id);
+    }
+}
+
+function routeCurrentPath() {
+    const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+    const params = new URLSearchParams(window.location.search);
+    const itemId = params.get('id');
+    const isTravel = params.get('type') === 'travel';
+
+    if (path.includes('item') && itemId) {
+        let attempts = 0;
+        const interval = setInterval(() => {
+            attempts++;
+            const hasData = (typeof catalogItemsCache !== 'undefined' && catalogItemsCache[itemId]) ||
+                            (typeof travelMemory !== 'undefined' && travelMemory.all && travelMemory.all.length > 0);
+            if (hasData || attempts > 25) {
+                clearInterval(interval);
+                openItemDetailsPage(itemId, isTravel, false);
+            }
+        }, 120);
+        return;
+    }
+
+    const targetPage = ROUTE_PAGE_MAP[path] || 'page-home';
+    navigateTo(targetPage, null, false);
+}
+
+window.addEventListener('popstate', function(e) {
+    if (e.state && e.state.pageId) {
+        if (e.state.pageId === 'page-item-details' && e.state.itemId) {
+            openItemDetailsPage(e.state.itemId, e.state.isTravel, false);
+        } else {
+            navigateTo(e.state.pageId, null, false);
+        }
+    } else {
+        routeCurrentPath();
+    }
+});
+
+window.addEventListener('DOMContentLoaded', routeCurrentPath);
