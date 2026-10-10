@@ -1353,13 +1353,39 @@ function ensureSecurityNavButton() {
 }
 
 async function handleAdminLogin(e) {
-  e.preventDefault();
-  const btn = document.getElementById('adminLoginBtn');
-  btn.disabled = true;
-  btn.innerHTML = 'Verifying...';
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
 
-  const username = document.getElementById('adminUserInput').value;
-  const password = document.getElementById('adminPassInput').value;
+  // Auto-detect username/email/phone from any possible input element
+  const userEl = document.getElementById('adminUserInput') || 
+                 document.getElementById('adminEmail') || 
+                 document.getElementById('adminPhone') || 
+                 document.getElementById('username') ||
+                 document.querySelector('input[type="text"]') ||
+                 document.querySelector('input[type="tel"]') ||
+                 document.querySelector('input[type="email"]');
+
+  const passEl = document.getElementById('adminPassInput') || 
+                 document.getElementById('adminPassword') || 
+                 document.getElementById('password') ||
+                 document.querySelector('input[type="password"]');
+
+  const username = (userEl ? userEl.value : '').trim();
+  const password = (passEl ? passEl.value : '').trim();
+
+  if (!username || !password) {
+    alert("Kripya Username aur Password dono bharein.");
+    return false;
+  }
+
+  const btn = document.querySelector('button[type="submit"]') || document.getElementById('adminLoginBtn');
+  const origBtnText = btn ? btn.innerHTML : 'Authenticate & Login';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = 'Verifying...';
+  }
 
   try {
     const res = await fetch('/api/admin/login', {
@@ -1371,30 +1397,44 @@ async function handleAdminLogin(e) {
 
     if (!data.success) {
       alert(data.message || 'Login failed!');
-      btn.disabled = false;
-      btn.innerHTML = 'Verify & Continue';
-      return;
+      return false;
     }
 
     if (data.requires2FA) {
       currentAdminIdPending2FA = data.adminId;
-      document.getElementById('authStep1').style.display = 'none';
-      document.getElementById('authStep2').style.display = 'block';
+      const s1 = document.getElementById('authStep1');
+      const s2 = document.getElementById('authStep2');
+      if (s1 && s2) {
+        s1.style.display = 'none';
+        s2.style.display = 'block';
+      }
       if (data.debugOtp) {
-        alert('🎉 2FA OTP Generated: ' + data.debugOtp + '\n(Production me ye registered phone/console par aayega)');
+        alert('🔑 2FA OTP: ' + data.debugOtp + '\n(Ye OTP niche box me daalein)');
       }
     } else {
       localStorage.setItem('mj_admin_token', data.token);
-      if (adminAuthModalInstance) adminAuthModalInstance.hide();
-      window.location.reload();
+      alert('Login successful!');
+      window.location.href = '/admin.html';
     }
   } catch(err) {
     alert('Server connection error: ' + err.message);
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = 'Verify & Continue';
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origBtnText;
+    }
   }
+  return false;
 }
+
+// Hook all login forms on the page
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll('form').forEach(f => {
+    if (f.innerText.toLowerCase().includes('authenticate') || f.innerText.toLowerCase().includes('login') || f.querySelector('input[type="password"]')) {
+      f.onsubmit = handleAdminLogin;
+    }
+  });
+});
 
 function backToLoginStep1() {
   document.getElementById('authStep2').style.display = 'none';
