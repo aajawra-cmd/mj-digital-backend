@@ -1757,25 +1757,27 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
     }
 
     // Page data trigger functions
+    // Targeted Data Loaders
     if (pageId === 'page-home') {
         if (typeof loadHomeTrending === 'function') loadHomeTrending();
         if (typeof fetchStoreItems === 'function') fetchStoreItems();
     } else if (pageId === 'page-mobile') {
         if (typeof loadMobiles === 'function') loadMobiles();
+        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
     } else if (pageId === 'page-fashion') {
         if (typeof loadFashion === 'function') loadFashion();
+        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
     } else if (pageId === 'page-electronics') {
         if (typeof loadElectronics === 'function') loadElectronics();
+        else if (typeof fetchStoreItems === 'function') fetchStoreItems();
     } else if (pageId === 'page-services') {
         if (typeof loadServices === 'function') loadServices();
     } else if (pageId === 'page-travels') {
+        if (typeof loadTravelPackages === 'function') loadTravelPackages();
+        if (typeof fetchTravelPackages === 'function') fetchTravelPackages();
         if (typeof filterTravels === 'function') filterTravels('All');
     } else if (pageId === 'page-profile') {
         if (typeof loadOrdersTable === 'function') loadOrdersTable();
-    } else if (pageId === 'page-wishlist') {
-        if (typeof renderWishlistPage === 'function') renderWishlistPage();
-    } else if (pageId === 'page-cart') {
-        if (typeof renderCartPage === 'function') renderCartPage();
     } else if (pageId === 'page-utility-hub') {
         if (typeof switchUtilityTab === 'function') switchUtilityTab('mobile_prepaid');
     }
@@ -1816,6 +1818,11 @@ function handleAppRouting() {
     const itemId = params.get('id');
     const isTravel = params.get('type') === 'travel';
 
+    // Global background catalog fetch start
+    if (typeof fetchStoreItems === 'function') fetchStoreItems();
+    if (typeof loadTravelPackages === 'function') loadTravelPackages();
+    if (typeof fetchTravelPackages === 'function') fetchTravelPackages();
+
     if (path.includes('item') && itemId) {
         let retries = 0;
         const waitInterval = setInterval(() => {
@@ -1830,7 +1837,7 @@ function handleAppRouting() {
         return;
     }
 
-    const matchedPage = ROUTE_CONFIG[path] || 'page-home';
+    const matchedPage = (typeof ROUTE_CONFIG !== 'undefined' && ROUTE_CONFIG[path]) ? ROUTE_CONFIG[path] : 'page-home';
     navigateTo(matchedPage, null, false);
 }
 

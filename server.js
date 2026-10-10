@@ -939,15 +939,23 @@ app.put('/api/settings', verifyAdminToken, async (req, res) => {
 // 8. SERVER LISTENER
 // ==========================================
 const PORT = process.env.PORT || 5000;
-// --- SPA REFRESH CATCH-ALL ROUTE ---
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
-    return res.status(404).json({ error: 'Endpoint not found' });
+
   }
   const targetIndex = fs.existsSync(path.join(__dirname, 'public', 'index.html'))
     ? path.join(__dirname, 'public', 'index.html')
     : path.join(__dirname, 'index.html');
   res.sendFile(targetIndex);
+});
+
+// --- BULLETPROOF SPA REFRESH FALLBACK ---
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+    const rootIndex = path.join(__dirname, 'index.html');
+    const pubIndex = path.join(__dirname, 'public', 'index.html');
+    if (fs.existsSync(rootIndex)) return res.sendFile(rootIndex);
+    if (fs.existsSync(pubIndex)) return res.sendFile(pubIndex);
+  }
+  next();
 });
 
 app.listen(PORT, () => {
