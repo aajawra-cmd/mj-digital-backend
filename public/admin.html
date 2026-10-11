@@ -52,30 +52,7 @@
 </script>
 </head>
   <body class="bg-gray-100 font-sans text-gray-800">
-<style id="adminUnlockForceStyle">
-  /* Jab token ho tab login overlay aur auth card completely gayab */
-  body.admin-authenticated .auth-card,
-  body.admin-authenticated .login-container,
-  body.admin-authenticated #loginOverlay,
-  body.admin-authenticated #authContainer,
-  body.admin-authenticated #loginSection,
-  body.admin-authenticated .modal-backdrop {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-  }
 
-  /* Dashboard wrapper ko full show karna */
-  body.admin-authenticated #adminDashboard,
-  body.admin-authenticated #dashboardContainer,
-  body.admin-authenticated #mainDashboard,
-  body.admin-authenticated .dashboard-wrapper,
-  body.admin-authenticated .admin-panel {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-</style>
 
 <script>
 (function() {
@@ -1749,17 +1726,7 @@ async function loadLiveDashboardStats() {
     const orders = Array.isArray(ordRes) ? ordRes : (ordRes.data || ordRes.orders || []);
 
     // Active Products Card
-    document.querySelectorAll('h2, h3, h4, div').forEach(node => {
-      if (node.innerText && node.innerText.includes('0 Items')) {
-        node.innerHTML = prods.length + ' <span style="font-size:18px;">Items</span>';
-      }
-      if (node.innerText && node.innerText.includes('0 Packages')) {
-        node.innerHTML = travels.length + ' <span style="font-size:18px;">Packages</span>';
-      }
-      if (node.innerText && node.innerText.includes('0 Total')) {
-        node.innerHTML = orders.length + ' <span style="font-size:18px;">Total</span>';
-      }
-    });
+    
 
     // Total Revenue calculation
     let revenue = 0;
@@ -1769,11 +1736,7 @@ async function loadLiveDashboardStats() {
       }
     });
 
-    document.querySelectorAll('h2, h3, h4, div').forEach(node => {
-      if (node.innerText && node.innerText.trim() === '₹0') {
-        node.innerText = '₹' + Number(revenue).toLocaleString('en-IN');
-      }
-    });
+    
 
   } catch(e) {
     console.error('Stats loading error:', e);
@@ -1800,6 +1763,57 @@ window.addEventListener('load', function() {
   });
 
   loadLiveDashboardStats();
+});
+</script>
+<script>
+// SAFE LIVE STATS LOADER (NON-DESTRUCTIVE)
+async function refreshAdminMetrics() {
+  try {
+    const [pRes, tRes, oRes] = await Promise.all([
+      fetch('/api/products').then(r => r.json()).catch(() => ({ data: [] })),
+      fetch('/api/travel-packages').then(r => r.json()).catch(() => ({ data: [] })),
+      fetch('/api/orders').then(r => r.json()).catch(() => ({ data: [] }))
+    ]);
+
+    const prods = Array.isArray(pRes) ? pRes : (pRes.data || []);
+    const travels = Array.isArray(tRes) ? tRes : (tRes.data || []);
+    const orders = Array.isArray(oRes) ? oRes : (oRes.data || oRes.orders || []);
+
+    // Target by specific ID or deepest leaf text nodes only
+    const updateLeafText = (oldVal, newVal) => {
+      document.querySelectorAll('h3, h4, h5, p, span, strong').forEach(el => {
+        if (el.children.length === 0 && el.innerText.trim().toLowerCase() === oldVal.toLowerCase()) {
+          el.innerText = newVal;
+        }
+      });
+    };
+
+    updateLeafText('0 Items', prods.length + ' Items');
+    updateLeafText('0 Packages', travels.length + ' Packages');
+    updateLeafText('0 Total', orders.length + ' Total');
+
+    let totalRev = 0;
+    orders.forEach(o => {
+      if (o.status !== 'Cancelled' && o.paymentStatus !== 'Failed') {
+        totalRev += Number(o.totalAmount || o.amount || 0);
+      }
+    });
+    updateLeafText('₹0', '₹' + Number(totalRev).toLocaleString('en-IN'));
+
+  } catch(e) {
+    console.warn("Metrics sync waiting:", e.message);
+  }
+}
+
+// Ensure login card is hidden cleanly on token match
+window.addEventListener("DOMContentLoaded", function() {
+  const token = localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken');
+  if (token) {
+    document.querySelectorAll('.auth-card, #adminAuthModal, .modal-backdrop').forEach(el => {
+      el.style.display = 'none';
+    });
+    refreshAdminMetrics();
+  }
 });
 </script>
 </body>
