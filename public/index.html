@@ -3,6 +3,26 @@
 <html lang="en">
 <head>
 <script>
+// GLOBAL RAZORPAY CACHED KEY ENGINE
+window.ACTIVE_RAZORPAY_KEY = "";
+async function initRazorpayKey() {
+  try {
+    const res = await fetch('/api/payment/key');
+    const data = await res.json();
+    if (data && data.key) {
+      window.ACTIVE_RAZORPAY_KEY = data.key;
+    }
+  } catch(e) {
+    console.warn("Razorpay key auto-sync fallback:", e);
+  }
+}
+initRazorpayKey();
+
+function getActiveRazorpayKeySync() {
+  return window.ACTIVE_RAZORPAY_KEY || window.RAZORPAY_KEY_ID || "rzp_test_default";
+}
+</script>
+<script>
 async function getActiveRazorpayKey() {
             try {
                 const res = await fetch('/api/payment/key');
@@ -3325,7 +3345,7 @@ window.addEventListener('popstate', function(e) {
 
                     if (gateway === 'razorpay') {
                         const options = {
-                            key: await getActiveRazorpayKey(),
+                            key: (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey()),
                             amount: orderData.order.amount,
                             currency: "INR",
                             name: "M J DIGITAL",
@@ -3949,7 +3969,7 @@ window.location.reload();
                     return;
                 }
                 const options = {
-                    key: await getActiveRazorpayKey(),
+                    key: (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey()),
                     amount: 3499900,
                     currency: 'INR',
                     name: 'M J DIGITAL',
@@ -3982,7 +4002,7 @@ window.location.reload();
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-window.openRazorpayModal = function() {
+window.openRazorpayModal = async function() {
     try {
         if (typeof Razorpay === 'undefined') {
             alert("Razorpay script load ho rahi hai. Kripya 2 second baad dobara koshish karein.");
@@ -3990,7 +4010,7 @@ window.openRazorpayModal = function() {
         }
 
         var options = {
-            key: await getActiveRazorpayKey(),
+            key: (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey()),
             amount: 3499900,
             currency: "INR",
             name: "M J DIGITAL",
@@ -4230,13 +4250,13 @@ function setTopupVal(val) {
     if (input) input.value = val;
 }
 
-function executeWalletTopup() {
+async function executeWalletTopup() {
     const amt = Number(document.getElementById('walletTopupAmountInput')?.value || 0);
     if (amt <= 0) return alert('Kripya valid amount daalein.');
 
     if (typeof Razorpay !== 'undefined') {
         const options = {
-            key: await getActiveRazorpayKey(),
+            key: (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey()),
             amount: amt * 100,
             currency: 'INR',
             name: 'M J DIGITAL WALLET',
@@ -4307,7 +4327,7 @@ function openInteractiveUtility(serviceKey, title, emoji) {
     if (utilityModalInstance) utilityModalInstance.show();
 }
 
-function handleUtilityPaymentSubmit(e) {
+async function handleUtilityPaymentSubmit(e) {
     e.preventDefault();
     const amt = Number(document.getElementById('utilAmount')?.value || 0);
     const target = document.getElementById('utilTargetNumber')?.value || '';
@@ -4328,7 +4348,7 @@ function handleUtilityPaymentSubmit(e) {
         // Direct Gateway Payment
         if (typeof Razorpay !== 'undefined') {
             const options = {
-                key: await getActiveRazorpayKey(),
+                key: (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey()),
                 amount: amt * 100,
                 currency: 'INR',
                 name: 'M J DIGITAL - ' + activeUtilityKey.toUpperCase(),
@@ -4572,13 +4592,13 @@ function fetchLiveBillDemo() {
     alert("✅ Bill Fetched Successfully via BBPS!\nConsumer: Mohsin J\nDue Amount: ₹1,420.00\nDue Date: 18-Oct-2026");
 }
 
-function executeFullPageWalletTopup() {
+async function executeFullPageWalletTopup() {
     const amt = Number(document.getElementById('fpWalletTopupInput')?.value || 0);
     if (amt <= 0) return alert('Kripya valid amount daalein.');
 
     if (typeof Razorpay !== 'undefined') {
         const options = {
-            key: await getActiveRazorpayKey(),
+            key: (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey()),
             amount: amt * 100,
             currency: 'INR',
             name: 'M J DIGITAL WALLET',
@@ -4695,7 +4715,7 @@ async function handleFullPageUtilitySubmit(e) {
     await recordUtilityOrder('Pending', 'Processing', tempTxn, 'Awaiting Gateway Callback');
 
     const options = {
-        key: await getActiveRazorpayKey(),
+        key: (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey()),
         amount: amt * 100,
         currency: 'INR',
         name: 'M J DIGITAL - UTILITY',
