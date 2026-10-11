@@ -1,11 +1,9 @@
 // ==========================================
 // 1. SESSION & AUTH CHECK (WITH 24H EXPIRY)
 // ==========================================
-
 function getAdminAuthHeaders() {
   const token = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken') || 'MJ_MASTER_SESSION_2026';
   return { 'Authorization': 'Bearer ' + token };
-} : {};
 }
 
 function verifyAdminSessionExpiry() {
