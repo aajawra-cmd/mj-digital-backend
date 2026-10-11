@@ -1,9 +1,12 @@
 // ==========================================
 // 1. SESSION & AUTH CHECK (WITH 24H EXPIRY)
 // ==========================================
+
 function getAdminAuthHeaders() {
-  const token = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken') || 'authenticated';
-  return token ? { 'Authorization': `Bearer ${token}` } : {};
+  const token = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken') || sessionStorage.getItem('mj_jwt_token') || '';
+  return token ? { 'Authorization': 'Bearer ' + token } : {};
+}
+` } : {};
 }
 
 function verifyAdminSessionExpiry() {
@@ -2689,3 +2692,63 @@ function openOrderReceipt(orderId) {
 }
 
 window.openOrderReceipt = openOrderReceipt;
+
+// ==========================================
+// SECURITY & 2FA SETTINGS HANDLERS
+// ==========================================
+function openChangeCredsModal() {
+  const m = document.getElementById('changeCredsModal');
+  if (m) {
+    m.classList.remove('hidden');
+    m.style.setProperty('display', 'flex', 'important');
+  }
+}
+
+function closeChangeCredsModal() {
+  const m = document.getElementById('changeCredsModal');
+  if (m) {
+    m.classList.add('hidden');
+    m.style.removeProperty('display');
+  }
+}
+
+async function handleSecurityCredentialsSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('secSaveBtn');
+  const origText = btn ? btn.innerText : 'Save Settings';
+  if (btn) { btn.disabled = true; btn.innerText = 'Saving...'; }
+
+  const currentPassword = document.getElementById('secCurrentPass')?.value || '';
+  const newUsername = document.getElementById('secNewUsername')?.value.trim() || '';
+  const newPassword = document.getElementById('secNewPass')?.value.trim() || '';
+  const twoFactorEnabled = Boolean(document.getElementById('sec2FaToggle')?.checked);
+
+  try {
+    const res = await fetch('/api/admin/change-credentials', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAdminAuthHeaders()
+      },
+      body: JSON.stringify({ currentPassword, newUsername, newPassword, twoFactorEnabled })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      alert('🎉 ' + data.message + '\nNaye ID aur password se dobara login karein!');
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.reload();
+    } else {
+      alert('❌ Error: ' + (data.message || 'Credentials update nahi huye.'));
+    }
+  } catch(err) {
+    alert('Server error: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = origText; }
+  }
+}
+
+window.openChangeCredsModal = openChangeCredsModal;
+window.closeChangeCredsModal = closeChangeCredsModal;
+window.handleSecurityCredentialsSubmit = handleSecurityCredentialsSubmit;

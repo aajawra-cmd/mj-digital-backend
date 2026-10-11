@@ -193,6 +193,16 @@ document.addEventListener("DOMContentLoaded", function() {
               </div>
             </div>
 
+            <!-- Change Credentials & Security Button -->
+            <button 
+              type="button" 
+              onclick="openChangeCredsModal()" 
+              class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition border border-slate-200"
+              title="Security & Password Settings"
+            >
+              <i class="fa-solid fa-shield-halved text-blue-600"></i>
+              <span>Change ID / Pass</span>
+            </button>
             <!-- Create New Button -->
             <div class="relative">
               <button 
@@ -1353,5 +1363,54 @@ window.addEventListener('load', function() {
 });
 </script>
 
+<!-- CHANGE ID, PASSWORD & 2FA SETTINGS MODAL -->
+    <div id="changeCredsModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl w-full max-w-md p-6 space-y-4 shadow-2xl border border-slate-100">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
+              <i class="fa-solid fa-key"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-sm text-slate-900">Admin Security Settings</h3>
+              <p class="text-[10px] text-slate-400">Update Master ID, Password & 2FA</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeChangeCredsModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+        </div>
+
+        <form onsubmit="handleSecurityCredentialsSubmit(event)" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Current Password *</label>
+            <input type="password" id="secCurrentPass" required placeholder="Enter current password" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">New Admin ID / Phone / Email</label>
+            <input type="text" id="secNewUsername" placeholder="e.g. 8306669999" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <span class="text-[10px] text-slate-400">Khaali chhod dein agar ID change nahi karni.</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">New Password</label>
+            <input type="password" id="secNewPass" placeholder="Enter new strong password (min 6 chars)" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <span class="text-[10px] text-slate-400">Khaali chhod dein agar password change nahi karna.</span>
+          </div>
+
+          <div class="p-3 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-slate-800">Two-Factor Authentication (2FA)</p>
+              <p class="text-[10px] text-slate-500">Login par 4-digit OTP verification maange</p>
+            </div>
+            <input type="checkbox" id="sec2FaToggle" checked class="w-4 h-4 accent-blue-600 rounded cursor-pointer">
+          </div>
+
+          <div class="pt-2 flex justify-end gap-2 border-t border-slate-100">
+            <button type="button" onclick="closeChangeCredsModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">Cancel</button>
+            <button type="submit" id="secSaveBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition">Save Settings</button>
+          </div>
+        </form>
+      </div>
+    </div>
 </body>
 </html>
