@@ -1652,28 +1652,7 @@ window.location.reload();
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4 p-4 shadow bg-white border">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-key text-primary me-2"></i>Security Settings (Change ID/Pass)</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <form onsubmit="handleUpdateCredentialsSubmit(event)">
-        <div class="mb-3">
-          <label class="small fw-bold mb-1">Current Password (Zaroori)</label>
-          <input type="password" id="currPassInput" class="form-control" required placeholder="Enter current password">
-        </div>
-        <div class="mb-3">
-          <label class="small fw-bold mb-1">New Admin ID / Username</label>
-          <input type="text" id="newUsernameInput" class="form-control" placeholder="Naya ID / Mobile daalein">
-        </div>
-        <div class="mb-3">
-          <label class="small fw-bold mb-1">New Password</label>
-          <input type="password" id="newPassInput" class="form-control" placeholder="Min 6 characters (Empty if no change)">
-        </div>
-        <div class="form-check form-switch mb-3">
-          <input class="form-check-input" type="checkbox" id="twoFaToggleInput" checked>
-          <label class="form-check-label small fw-bold" for="twoFaToggleInput">Enable 2FA OTP on every login</label>
-        </div>
-        <button type="submit" id="saveCredsBtn" class="btn btn-primary w-100 py-2 fw-bold">
-          Save New Credentials
+        <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-key text-primary me-2"></i>
         </button>
       </form>
     </div>
@@ -1814,6 +1793,358 @@ window.addEventListener("DOMContentLoaded", function() {
     });
     refreshAdminMetrics();
   }
+});
+</script>
+<!-- ================= COMPLETE LIVE ADMIN PANELS ================= -->
+<div id="dynamicAdminViewsContainer" style="padding: 24px;">
+
+  <!-- 1. PRODUCTS TABLE VIEW -->
+  <div id="panel-products" class="admin-panel-section" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="fw-bold mb-1 text-dark"><i class="fa-solid fa-boxes-stacked text-primary me-2"></i>E-Commerce Products</h4>
+        <p class="text-muted small mb-0">Manage catalog inventory, pricing, and stock levels</p>
+      </div>
+      <button class="btn btn-primary fw-bold px-3 py-2 rounded-3" onclick="openAddProductModal()">
+        <i class="fa-solid fa-plus me-1"></i> Add New Product
+      </button>
+    </div>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="adminProductsTable">
+          <thead class="table-light">
+            <tr>
+              <th>Image</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminProductsTbody">
+            <tr><td colspan="7" class="text-center py-4 text-muted">Loading live products...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. TRAVEL PACKAGES TABLE VIEW -->
+  <div id="panel-travels" class="admin-panel-section" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="fw-bold mb-1 text-dark"><i class="fa-solid fa-plane-departure text-warning me-2"></i>Travel Packages</h4>
+        <p class="text-muted small mb-0">Manage tour itineraries, destinations, and pricing tiers</p>
+      </div>
+      <button class="btn btn-warning text-dark fw-bold px-3 py-2 rounded-3" onclick="openAddTravelModal()">
+        <i class="fa-solid fa-plus me-1"></i> Add New Tour Package
+      </button>
+    </div>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="adminTravelsTable">
+          <thead class="table-light">
+            <tr>
+              <th>Image</th>
+              <th>Tour Title</th>
+              <th>Destination</th>
+              <th>Standard Price</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminTravelsTbody">
+            <tr><td colspan="7" class="text-center py-4 text-muted">Loading live travel packages...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. ORDERS & BOOKINGS VIEW -->
+  <div id="panel-orders" class="admin-panel-section" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div>
+        <h4 class="fw-bold mb-1 text-dark"><i class="fa-solid fa-receipt text-success me-2"></i>Orders & Bookings</h4>
+        <p class="text-muted small mb-0">Customer transactions, dispatch status, and receipts</p>
+      </div>
+    </div>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="adminOrdersTable">
+          <thead class="table-light">
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Item / Service</th>
+              <th>Amount</th>
+              <th>Payment</th>
+              <th>Order Status</th>
+              <th class="text-end">Update</th>
+            </tr>
+          </thead>
+          <tbody id="adminOrdersTbody">
+            <tr><td colspan="7" class="text-center py-4 text-muted">Loading live orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CLEAN SECURITY MODAL -->
+<div class="modal fade" id="changeCredentialsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 p-4 shadow bg-white">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-key text-primary me-2"></i>Change Admin ID & Password</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form onsubmit="handleUpdateCredentialsSubmit(event)">
+        <div class="mb-3">
+          <label class="small fw-bold mb-1">Current Password (Zaroori)</label>
+          <input type="password" id="currPassInput" class="form-control" required placeholder="Current password daalein">
+        </div>
+        <div class="mb-3">
+          <label class="small fw-bold mb-1">New Admin ID / Username</label>
+          <input type="text" id="newUsernameInput" class="form-control" placeholder="Naya ID daalein (Empty agar change nahi karna)">
+        </div>
+        <div class="mb-3">
+          <label class="small fw-bold mb-1">New Password</label>
+          <input type="password" id="newPassInput" class="form-control" placeholder="Min 6 characters">
+        </div>
+        <button type="submit" id="saveCredsBtn" class="btn btn-primary w-100 py-2.5 fw-bold">
+          Save New Credentials
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// CONTROLLER: TAB SWITCHER & LIVE DATA RENDERER
+function showSection(sectionKey, clickedEl) {
+  // Update sidebar active classes
+  document.querySelectorAll('.sidebar a, .sidebar li, [onclick*="showSection"]').forEach(el => el.classList.remove('active'));
+  if (clickedEl) clickedEl.classList.add('active');
+
+  // Identify overview element
+  const overviewEl = document.querySelector('.main-content > div:not(#dynamicAdminViewsContainer)') || 
+                     document.querySelector('.content-wrapper > div:not(#dynamicAdminViewsContainer)') ||
+                     document.querySelector('[class*="overview"]');
+
+  // Hide all dynamic panels
+  document.querySelectorAll('.admin-panel-section').forEach(p => p.style.display = 'none');
+
+  if (sectionKey === 'overview') {
+    if (overviewEl) overviewEl.style.display = 'block';
+  } else {
+    if (overviewEl) overviewEl.style.display = 'none';
+    const activePanel = document.getElementById('panel-' + sectionKey);
+    if (activePanel) activePanel.style.display = 'block';
+
+    if (sectionKey === 'products') renderAdminProducts();
+    if (sectionKey === 'travels') renderAdminTravels();
+    if (sectionKey === 'orders') renderAdminOrders();
+  }
+}
+
+// 1. RENDER LIVE PRODUCTS TABLE
+async function renderAdminProducts() {
+  const tbody = document.getElementById('adminProductsTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading live database products...</td></tr>';
+
+  try {
+    const res = await fetch('/api/products');
+    const json = await res.json();
+    const items = Array.isArray(json) ? json : (json.data || []);
+
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No products in database.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = items.map(p => {
+      const img = p.imageUrl || (p.images && p.images[0]) || 'https://placehold.co/50';
+      return `
+        <tr>
+          <td><img src="${img}" class="rounded-3 border" style="width: 45px; height: 45px; object-fit: cover;" onerror="this.src='https://placehold.co/45'"></td>
+          <td><strong>${p.title || p.name}</strong><br><small class="text-muted">${p.brand || 'M J'}</small></td>
+          <td><span class="badge bg-primary-subtle text-primary">${p.category || 'General'}</span></td>
+          <td><strong>₹${Number(p.discountPrice || p.price || 0).toLocaleString('en-IN')}</strong></td>
+          <td>${p.stock || 0}</td>
+          <td><span class="badge bg-success-subtle text-success">${p.status || 'Active'}</span></td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteProductItem('${p._id}')"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error loading products from server.</td></tr>';
+  }
+}
+
+// 2. RENDER LIVE TRAVELS TABLE
+async function renderAdminTravels() {
+  const tbody = document.getElementById('adminTravelsTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading live travel packages...</td></tr>';
+
+  try {
+    const res = await fetch('/api/travel-packages');
+    const json = await res.json();
+    const items = Array.isArray(json) ? json : (json.data || []);
+
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No travel packages in database.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = items.map(t => {
+      const img = (t.images && t.images[0]) || t.imageUrl || 'https://placehold.co/50';
+      const days = t.duration?.days || 1;
+      const nights = t.duration?.nights || 0;
+      return `
+        <tr>
+          <td><img src="${img}" class="rounded-3 border" style="width: 45px; height: 45px; object-fit: cover;" onerror="this.src='https://placehold.co/45'"></td>
+          <td><strong>${t.title}</strong></td>
+          <td><span class="badge bg-warning text-dark">${t.destination || 'India'}</span></td>
+          <td><strong>₹${Number(t.pricingTiers?.standard?.price || t.price || 0).toLocaleString('en-IN')}</strong></td>
+          <td>${days}D / ${nights}N</td>
+          <td><span class="badge bg-success-subtle text-success">${t.status || 'Active'}</span></td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteTravelItem('${t._id}')"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error loading packages from server.</td></tr>';
+  }
+}
+
+// 3. RENDER LIVE ORDERS TABLE
+async function renderAdminOrders() {
+  const tbody = document.getElementById('adminOrdersTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading live orders...</td></tr>';
+
+  try {
+    const res = await fetch('/api/orders');
+    const json = await res.json();
+    const items = Array.isArray(json) ? json : (json.data || json.orders || []);
+
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No orders in database.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = items.map(o => {
+      const shortId = String(o._id || o.id).slice(-6).toUpperCase();
+      return `
+        <tr>
+          <td><strong>#ORD-${shortId}</strong></td>
+          <td><strong>${o.customerName || 'Customer'}</strong><br><small class="text-muted">${o.customerPhone || ''}</small></td>
+          <td>${o.itemDetails?.title || 'Item'}</td>
+          <td><strong>₹${Number(o.totalAmount || 0).toLocaleString('en-IN')}</strong></td>
+          <td><span class="badge bg-success-subtle text-success">${o.paymentStatus || 'Paid'}</span></td>
+          <td><span class="badge bg-primary-subtle text-primary">${o.status || 'Processing'}</span></td>
+          <td class="text-end">
+            <select class="form-select form-select-sm d-inline-block" style="width: 120px;" onchange="updateOrderStatus('${o._id}', this.value)">
+              <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+              <option value="Confirmed" ${o.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+              <option value="In Transit" ${o.status === 'In Transit' ? 'selected' : ''}>In Transit</option>
+              <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+              <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+            </select>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error loading orders from server.</td></tr>';
+  }
+}
+
+async function deleteProductItem(id) {
+  if (!confirm('Kya aap is product ko delete karna chahte hain?')) return;
+  const token = localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken');
+  try {
+    const res = await fetch('/api/products/' + id, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.ok) {
+      alert('Product deleted successfully!');
+      renderAdminProducts();
+    } else {
+      alert('Delete failed.');
+    }
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function deleteTravelItem(id) {
+  if (!confirm('Kya aap is travel tour ko delete karna chahte hain?')) return;
+  const token = localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken');
+  try {
+    const res = await fetch('/api/travel-packages/' + id, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.ok) {
+      alert('Travel package deleted successfully!');
+      renderAdminTravels();
+    } else {
+      alert('Delete failed.');
+    }
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function updateOrderStatus(id, newStatus) {
+  const token = localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken');
+  try {
+    const res = await fetch('/api/orders/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ status: newStatus })
+    });
+    if (res.ok) {
+      alert('Status updated to: ' + newStatus);
+    }
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// BIND ALL SIDEBAR BUTTONS RELIABLY
+window.addEventListener('load', function() {
+  document.querySelectorAll('a, li, button').forEach(el => {
+    const txt = (el.innerText || '').toLowerCase().trim();
+    if (txt.includes('dashboard overview')) {
+      el.onclick = function(e) { e.preventDefault(); showSection('overview', this); };
+    } else if (txt.includes('products (e-com)')) {
+      el.onclick = function(e) { e.preventDefault(); showSection('products', this); };
+    } else if (txt.includes('travel packages')) {
+      el.onclick = function(e) { e.preventDefault(); showSection('travels', this); };
+    } else if (txt.includes('orders & bookings')) {
+      el.onclick = function(e) { e.preventDefault(); showSection('orders', this); };
+    }
+  });
+
+  // Bind top navbar Change ID / Pass button to clean modal
+  document.querySelectorAll('button, a').forEach(btn => {
+    if (btn.innerText && btn.innerText.includes('Change ID / Pass')) {
+      btn.onclick = function(e) {
+        e.preventDefault();
+        const modalEl = document.getElementById('changeCredentialsModal');
+        if (modalEl) new bootstrap.Modal(modalEl).show();
+      };
+    }
+  });
 });
 </script>
 </body>
