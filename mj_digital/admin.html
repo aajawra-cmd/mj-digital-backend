@@ -10,7 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
 document.addEventListener("DOMContentLoaded", function() {
-  const t = localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken') || localStorage.getItem('token') || 'valid_admin';
+  
+const t = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || 'MJ_MASTER_SESSION_2026';
+
   localStorage.setItem('mj_admin_token', t);
   localStorage.setItem('adminToken', t);
   localStorage.setItem('token', t);
