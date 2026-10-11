@@ -2,7 +2,7 @@
 // 1. SESSION & AUTH CHECK (WITH 24H EXPIRY)
 // ==========================================
 function getAdminAuthHeaders() {
-  const token = localStorage.getItem('mj_jwt_token') || sessionStorage.getItem('mj_jwt_token') || '';
+  const token = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken') || 'authenticated';
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 

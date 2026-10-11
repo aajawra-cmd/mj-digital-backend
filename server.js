@@ -33,6 +33,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve frontend static files
 app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'mj_digital')));
 
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -45,14 +46,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 // Admin Panel Route
+// ADMIN PANEL DIRECT ROUTE (POINTING TO ORIGINAL MJ_DIGITAL)
 app.get(['/admin', '/admin.html'], (req, res) => {
-  const rootAdmin = path.join(__dirname, 'admin.html');
-  const mjAdmin = path.join(__dirname, 'mj_digital', 'admin.html');
-  const pubAdmin = path.join(__dirname, 'public', 'admin.html');
-  if (fs.existsSync(rootAdmin)) return res.sendFile(rootAdmin);
-  if (fs.existsSync(mjAdmin)) return res.sendFile(mjAdmin);
-  if (fs.existsSync(pubAdmin)) return res.sendFile(pubAdmin);
-  res.status(404).send('Admin page not found');
+  const adminFile = path.join(__dirname, 'mj_digital', 'admin.html');
+  if (fs.existsSync(adminFile)) {
+    return res.sendFile(adminFile);
+  }
+  res.status(404).send('Admin file not found in mj_digital folder');
 });
 
 // ==========================================
