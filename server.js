@@ -2,30 +2,38 @@
 // DYNAMIC RAZORPAY CONFIGURATION ENGINE
 // ==========================================
 let razorpayInstance = null;
+async function getRazorpayClient() {
+  let keyId = process.env.RAZORPAY_KEY_ID || '';
+  let keySecret = process.env.RAZORPAY_KEY_SECRET || '';
 
-function getRazorpayClient() {
-  const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_default';
-  const keySecret = process.env.RAZORPAY_KEY_SECRET || 'secret_default';
-  
+  try {
+    const settings = await PlatformSettings.findOne();
+    if (settings && settings.gatewayKeyId) {
+      keyId = settings.gatewayKeyId;
+      if (settings.gatewayKeySecret) keySecret = settings.gatewayKeySecret;
+    }
+  } catch(e) {}
+
   if (!razorpayInstance || razorpayInstance.key_id !== keyId) {
     try {
       const Razorpay = require('razorpay');
-      razorpayInstance = new Razorpay({
-        key_id: keyId,
-        key_secret: keySecret
-      });
+      razorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
       razorpayInstance.key_id = keyId;
-    } catch(e) {
-      console.warn('Razorpay init notice:', e.message);
+    } catch(err) {
+      console.warn('Razorpay init notice:', err.message);
     }
   }
   return razorpayInstance;
 }
 
-// Route to safely expose PUBLIC Key ID to frontend checkout (NEVER SECRET)
-app.get('/api/payment/key', (req, res) => {
-  const keyId = process.env.RAZORPAY_KEY_ID || '';
+app.get('/api/payment/key', async (req, res) => {
+  let keyId = process.env.RAZORPAY_KEY_ID || '';
+  try {
+    const settings = await PlatformSettings.findOne();
+    if (settings && settings.gatewayKeyId) keyId = settings.gatewayKeyId;
+  } catch(e) {}
   res.json({ success: true, key: keyId });
+});
 });
 const express = require('express');
 const path = require('path');

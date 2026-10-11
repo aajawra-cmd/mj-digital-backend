@@ -2425,6 +2425,8 @@ async function savePlatformSettings() {
     address: document.getElementById('settingAddress')?.value.trim() || '',
     currency: document.getElementById('settingCurrency')?.value || 'INR',
     gateway: document.getElementById('settingGateway')?.value || 'razorpay',
+    gatewayKeyId: document.getElementById('settingGatewayKeyId')?.value.trim() || '',
+    gatewayKeySecret: document.getElementById('settingGatewayKeySecret')?.value.trim() || '',
     environment: document.getElementById('settingEnv')?.value || 'live',
     paymentMethods: {
       upi: Boolean(document.getElementById('pay_upi')?.checked),
@@ -2496,6 +2498,12 @@ async function loadPlatformSettings() {
     }
     if (data.environment && document.getElementById('settingEnv')) {
       document.getElementById('settingEnv').value = data.environment;
+    }
+    if (data.gatewayKeyId && document.getElementById('settingGatewayKeyId')) {
+      document.getElementById('settingGatewayKeyId').value = data.gatewayKeyId;
+    }
+    if (data.gatewayKeySecret && document.getElementById('settingGatewayKeySecret')) {
+      document.getElementById('settingGatewayKeySecret').value = data.gatewayKeySecret;
     }
 
     if (data.paymentMethods) {
