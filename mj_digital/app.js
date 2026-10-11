@@ -6,8 +6,6 @@ function getAdminAuthHeaders() {
   const token = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken') || sessionStorage.getItem('mj_jwt_token') || '';
   return token ? { 'Authorization': 'Bearer ' + token } : {};
 }
-` } : {};
-}
 
 function verifyAdminSessionExpiry() {
   const loginTime = localStorage.getItem('mj_admin_login_time');

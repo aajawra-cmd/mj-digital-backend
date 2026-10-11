@@ -1268,122 +1268,14 @@ function togglePasswordEye(inputId, iconEl) {
     </div>
     <script src="app.js"></script>
   
-    <!-- CHANGE ID / PASSWORD MODAL -->
-    <div id="changeCredentialsModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-2xl w-full max-w-md p-6 space-y-4 shadow-2xl relative">
-        <div class="flex justify-between items-center border-b pb-3">
-          <h3 class="font-bold text-base text-gray-800 flex items-center gap-2">
-            <i class="fa-solid fa-key text-blue-600"></i> Change Admin ID & Password
-          </h3>
-          <button type="button" onclick="document.getElementById('changeCredentialsModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
-        </div>
-        <form onsubmit="handleAdminChangeCredentials(event)" class="space-y-3">
-          <div>
-            <label class="block text-xs font-bold text-gray-700 mb-1">Current Password *</label>
-            <input type="password" id="adminCurrPass" required placeholder="Enter current password" class="w-full border rounded-xl p-2 text-xs focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-700 mb-1">New Admin ID / Phone / Email</label>
-            <input type="text" id="adminNewUsername" placeholder="e.g. 8306669999 (optional)" class="w-full border rounded-xl p-2 text-xs focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-700 mb-1">New Password</label>
-            <input type="password" id="adminNewPass" placeholder="Min 6 characters (optional)" class="w-full border rounded-xl p-2 text-xs focus:ring-2 focus:ring-blue-500">
-          </div>
-          <div class="flex items-center gap-2 pt-1">
-            <input type="checkbox" id="admin2FaToggle" checked class="w-4 h-4 accent-blue-600 rounded cursor-pointer">
-            <label for="admin2FaToggle" class="text-xs font-semibold text-gray-700 cursor-pointer">Enable 2FA OTP on every login</label>
-          </div>
-          <div class="pt-2 flex justify-end gap-2 border-t">
-            <button type="button" onclick="document.getElementById('changeCredentialsModal').classList.add('hidden')" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-gray-200">Cancel</button>
-            <button type="submit" id="saveCredsBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-md">Save Credentials</button>
-          </div>
-        </form>
-      </div>
-    </div>
+    
 
 
-<script>
-// Token Synchronization (Handles all token keys uniformly)
-(function syncAllAdminTokens() {
-  const t = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken') || sessionStorage.getItem('mj_jwt_token');
-  if (t) {
-    localStorage.setItem('mj_jwt_token', t);
-    localStorage.setItem('mj_admin_token', t);
-    localStorage.setItem('adminToken', t);
-    sessionStorage.setItem('mj_jwt_token', t);
-    localStorage.setItem('mj_admin_session', 'authenticated');
-    localStorage.setItem('mj_admin_login_time', Date.now());
 
-    // Hide Auth Screen
-    const authScr = document.getElementById('adminAuthScreen');
-    if (authScr) authScr.classList.add('hidden');
-  }
-})();
-
-// Password Change Handler
-async function handleAdminChangeCredentials(e) {
-  e.preventDefault();
-  const btn = document.getElementById('saveCredsBtn');
-  btn.disabled = true;
-  btn.innerText = 'Saving...';
-
-  const currentPassword = document.getElementById('adminCurrPass').value;
-  const newUsername = document.getElementById('adminNewUsername').value;
-  const newPassword = document.getElementById('adminNewPass').value;
-  const twoFactorEnabled = document.getElementById('admin2FaToggle').checked;
-  const token = localStorage.getItem('mj_jwt_token');
-
-  try {
-    const res = await fetch('/api/admin/change-credentials', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      },
-      body: JSON.stringify({ currentPassword, newUsername, newPassword, twoFactorEnabled })
-    });
-    const data = await res.json();
-    if (data.success) {
-      alert('🎉 ' + data.message + '\nNaye credentials se dobara login karein.');
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.reload();
-    } else {
-      alert('❌ Error: ' + (data.message || 'Update failed'));
-    }
-  } catch(err) {
-    alert('Server error: ' + err.message);
-  } finally {
-    btn.disabled = false;
-    btn.innerText = 'Save Credentials';
-  }
-}
-
-// Bind Change ID / Pass button in header
-window.addEventListener('load', function() {
-  // Bind top navbar button
-  document.querySelectorAll('button, a').forEach(b => {
-    if ((b.innerText || '').includes('Change ID / Pass')) {
-      b.onclick = function(e) {
-        e.preventDefault();
-        const m = document.getElementById('changeCredentialsModal');
-        if (m) m.classList.remove('hidden');
-      };
-    }
-  });
-
-  // Ensure initial data loads completely
-  if (typeof loadAdminOrders === 'function') loadAdminOrders();
-  if (typeof loadAdminProducts === 'function') loadAdminProducts();
-  if (typeof loadAdminTravelPackages === 'function') loadAdminTravelPackages();
-  if (typeof renderRevenueChart === 'function') renderRevenueChart();
-});
-</script>
 
 <!-- CHANGE ID, PASSWORD & 2FA SETTINGS MODAL -->
     <div id="changeCredsModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl w-full max-w-md p-6 space-y-4 shadow-2xl border border-slate-100">
+      <div class="bg-white rounded-3xl w-full max-w-md p-6 space-y-4 shadow-2xl border border-slate-100 relative">
         <div class="flex justify-between items-center border-b border-slate-100 pb-3">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
@@ -1400,7 +1292,10 @@ window.addEventListener('load', function() {
         <form onsubmit="handleSecurityCredentialsSubmit(event)" class="space-y-3.5">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Current Password *</label>
-            <input type="password" id="secCurrentPass" required placeholder="Enter current password" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="relative">
+              <input type="password" id="secCurrentPass" required placeholder="Enter current password" class="w-full border rounded-xl pl-3 pr-10 py-2 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <i class="fa-solid fa-eye absolute right-3.5 top-2.5 text-gray-400 hover:text-gray-700 cursor-pointer text-xs" onclick="togglePasswordEye('secCurrentPass', this)"></i>
+            </div>
           </div>
 
           <div>
@@ -1411,7 +1306,10 @@ window.addEventListener('load', function() {
 
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">New Password</label>
-            <input type="password" id="secNewPass" placeholder="Enter new strong password (min 6 chars)" class="w-full border rounded-xl px-3 py-2 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="relative">
+              <input type="password" id="secNewPass" placeholder="Enter new password (min 6 chars)" class="w-full border rounded-xl pl-3 pr-10 py-2 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <i class="fa-solid fa-eye absolute right-3.5 top-2.5 text-gray-400 hover:text-gray-700 cursor-pointer text-xs" onclick="togglePasswordEye('secNewPass', this)"></i>
+            </div>
             <span class="text-[10px] text-slate-400">Khaali chhod dein agar password change nahi karna.</span>
           </div>
 
