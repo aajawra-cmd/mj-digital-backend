@@ -1333,49 +1333,84 @@ async function loadParentCategoryDropdown() {
 
 async function loadCategoriesCatalog() {
   const tbody = document.getElementById('categoryTableBody') || document.getElementById('categoriesTableBody');
+  const parentSelect = document.getElementById('parentCategorySelect');
   const prodCatSelect = document.getElementById('prodCategory') || document.getElementById('prodCat');
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/categories');
+    const res = await fetch('/api/categories');
     const result = await res.json();
     const categories = Array.isArray(result) ? result : (result.data || []);
 
-    if (prodCatSelect) {
-      prodCatSelect.innerHTML = `<option value="">Select Category</option>` + 
-        categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    // 1. Populate Parent Category dropdown in Add Category Modal
+    if (parentSelect) {
+      const topLevel = categories.filter(c => !c.parent);
+      parentSelect.innerHTML = '<option value="">None (Top-Level Category)</option>' + 
+        topLevel.map(c => `<option value="${c._id}">📁 ${c.name} (${(c.type || 'ecommerce').toUpperCase()})</option>`).join('');
     }
 
+    // 2. Populate Product Modal Category with Hierarchical options (Electronics > Headphones)
+    if (prodCatSelect) {
+      const topLevel = categories.filter(c => !c.parent);
+      let catOptionsHtml = '<option value="" disabled selected>Select Category / Subcategory</option>';
+      
+      topLevel.forEach(parent => {
+        catOptionsHtml += `<optgroup label="📁 ${parent.name}">`;
+        catOptionsHtml += `<option value="${parent.name}">${parent.name} (Main)</option>`;
+        const children = categories.filter(c => c.parent && (c.parent._id === parent._id || c.parent === parent._id));
+        children.forEach(sub => {
+          catOptionsHtml += `<option value="${sub.name}">└── ${sub.name}</option>`;
+        });
+        catOptionsHtml += `</optgroup>`;
+      });
+      prodCatSelect.innerHTML = catOptionsHtml;
+    }
+
+    // 3. Render Table
     if (tbody) {
       if (categories.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-gray-400 text-xs">No categories added yet.</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400 text-xs">No categories created yet. Click "+ Add New Category".</td></tr>';
         return;
       }
 
-      tbody.innerHTML = categories.map(cat => `
-        <tr class="hover:bg-gray-50/50 transition border-b border-gray-100">
-          <td class="py-3 px-4 font-semibold text-gray-800 text-xs">${cat.name}</td>
-          <td class="py-3 px-4">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${cat.type === 'travel' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}">
-              ${(cat.type || 'ecommerce').toUpperCase()}
-            </span>
-          </td>
-          <td class="py-3 px-4 text-gray-500 text-xs">${cat.parent ? cat.parent.name : '— (Main)'}</td>
-          <td class="py-3 px-4 text-gray-500 text-xs">${cat.slug || '-'}</td>
-          <td class="py-3 px-4 text-center">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">
-              Active
-            </span>
-          </td>
-          <td class="py-3 px-4 text-right space-x-2">
-            <button onclick="deleteCategory('${cat._id}')" class="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition" title="Delete Category">
-              <i class="fa-solid fa-trash-can"></i>
-            </button>
-          </td>
-        </tr>
-      `).join('');
+      // Group parents and their children
+      const topLevel = categories.filter(c => !c.parent);
+      let rowsHtml = '';
+
+      topLevel.forEach(parent => {
+        rowsHtml += `
+          <tr class="bg-gray-50/70 font-semibold border-b border-gray-100 text-xs">
+            <td class="py-3 px-4 text-blue-700"><i class="fa-solid fa-folder me-2 text-blue-500"></i>${parent.name}</td>
+            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">${(parent.type || 'ecommerce').toUpperCase()}</span></td>
+            <td class="py-3 px-4 text-gray-400">— (Main Parent)</td>
+            <td class="py-3 px-4 text-gray-500 font-mono text-[11px]">${parent.slug || '-'}</td>
+            <td class="py-3 px-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700">Active</span></td>
+            <td class="py-3 px-4 text-right">
+              <button onclick="deleteCategory('${parent._id}')" class="text-rose-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50" title="Delete Category"><i class="fa-solid fa-trash-can"></i></button>
+            </td>
+          </tr>
+        `;
+
+        const children = categories.filter(c => c.parent && (c.parent._id === parent._id || c.parent === parent._id));
+        children.forEach(sub => {
+          rowsHtml += `
+            <tr class="hover:bg-gray-50 transition border-b border-gray-100 text-xs">
+              <td class="py-2.5 px-4 pl-9 text-gray-700"><i class="fa-solid fa-turn-up fa-rotate-90 text-gray-300 me-2"></i>${sub.name}</td>
+              <td class="py-2.5 px-4"><span class="px-2 py-0.5 rounded text-[9px] font-medium bg-gray-100 text-gray-600">${(sub.type || 'ecommerce').toUpperCase()}</span></td>
+              <td class="py-2.5 px-4 text-blue-600 font-medium text-xs">${parent.name}</td>
+              <td class="py-2.5 px-4 text-gray-400 font-mono text-[10px]">${sub.slug || '-'}</td>
+              <td class="py-2.5 px-4 text-center"><span class="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-600">Active</span></td>
+              <td class="py-2.5 px-4 text-right">
+                <button onclick="deleteCategory('${sub._id}')" class="text-rose-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50" title="Delete Subcategory"><i class="fa-solid fa-trash-can"></i></button>
+              </td>
+            </tr>
+          `;
+        });
+      });
+
+      tbody.innerHTML = rowsHtml;
     }
   } catch (err) {
-    console.error('Table load error:', err);
+    console.error('Category load error:', err);
   }
 }
 
@@ -1740,18 +1775,41 @@ async function loadAdminOrders() {
       const rawCat = String(raw.itemDetails?.category || raw.category || '').toLowerCase();
       const titleText = String(raw.itemDetails?.title || raw.title || '').toLowerCase();
       
-      let resolvedType = 'Product';
-      
-      if (rawType.includes('travel') || rawType.includes('tour') || rawType.includes('package') || titleText.includes('zeeland') || titleText.includes('bali') || titleText.includes('hongkong') || titleText.includes('goa')) {
+      let resolvedType = 'Electronics'; // baseline fallback
+
+      // 1. Travel Check First
+      if (rawType.includes('travel') || rawCat.includes('travel') || 
+          titleText.includes('tour') || titleText.includes('package') || 
+          titleText.includes('paradise') || titleText.includes('getaway') || 
+          titleText.includes('kashmir') || titleText.includes('bali') || 
+          titleText.includes('hongkong') || titleText.includes('goa') || 
+          titleText.includes('retreat') || titleText.includes('escape')) {
         resolvedType = 'Travel Package';
-      } else if (rawType.includes('mobile') || rawCat.includes('mobile') || titleText.includes('phone') || titleText.includes('iphone') || titleText.includes('pro')) {
-        resolvedType = 'Mobile';
-      } else if (rawType.includes('electronic') || rawCat.includes('electronic') || titleText.includes('gadget') || titleText.includes('laptop') || titleText.includes('headphone')) {
-        resolvedType = 'Electronics';
-      } else if (rawType.includes('fashion') || rawCat.includes('fashion') || titleText.includes('tshirt') || titleText.includes('shirt') || titleText.includes('dress')) {
-        resolvedType = 'Fashion';
-      } else if (rawType.includes('service') || rawCat.includes('service')) {
+      } 
+      // 2. Wallet & Financial Services
+      else if (titleText.includes('wallet') || rawType.includes('wallet') || titleText.includes('recharge') || titleText.includes('pay')) {
         resolvedType = 'Services';
+      }
+      // 3. Digital & IT Services
+      else if (rawType.includes('service') || rawCat.includes('service') || titleText.includes('development') || titleText.includes('registration') || titleText.includes('gst')) {
+        resolvedType = 'Services';
+      }
+      // 4. Mobiles Only
+      else if (rawType === 'mobile' || rawCat === 'mobile' || rawCat === 'mobiles' ||
+               titleText.includes('iphone') || titleText.includes('galaxy') || titleText.includes('smartphone') || titleText.includes('pro max') || titleText.includes('ultra')) {
+        resolvedType = 'Mobile';
+      }
+      // 5. Fashion
+      else if (rawType.includes('fashion') || rawCat.includes('fashion') || titleText.includes('shirt') || titleText.includes('apparel') || titleText.includes('cotton') || titleText.includes('wear')) {
+        resolvedType = 'Fashion';
+      }
+      // 6. Electronics & Appliances (Headphones, Mac, Fridge, TV)
+      else if (rawType.includes('elect') || rawCat.includes('elect') || 
+               titleText.includes('headphone') || titleText.includes('sony') || 
+               titleText.includes('macbook') || titleText.includes('laptop') || 
+               titleText.includes('fridge') || titleText.includes('watch') || 
+               titleText.includes('airpods') || titleText.includes('tv') || titleText.includes('audio')) {
+        resolvedType = 'Electronics';
       }
 
       return {
