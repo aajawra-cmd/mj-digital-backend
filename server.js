@@ -1,3 +1,32 @@
+// ==========================================
+// DYNAMIC RAZORPAY CONFIGURATION ENGINE
+// ==========================================
+let razorpayInstance = null;
+
+function getRazorpayClient() {
+  const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_default';
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || 'secret_default';
+  
+  if (!razorpayInstance || razorpayInstance.key_id !== keyId) {
+    try {
+      const Razorpay = require('razorpay');
+      razorpayInstance = new Razorpay({
+        key_id: keyId,
+        key_secret: keySecret
+      });
+      razorpayInstance.key_id = keyId;
+    } catch(e) {
+      console.warn('Razorpay init notice:', e.message);
+    }
+  }
+  return razorpayInstance;
+}
+
+// Route to safely expose PUBLIC Key ID to frontend checkout (NEVER SECRET)
+app.get('/api/payment/key', (req, res) => {
+  const keyId = process.env.RAZORPAY_KEY_ID || '';
+  res.json({ success: true, key: keyId });
+});
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
