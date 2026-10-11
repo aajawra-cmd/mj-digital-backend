@@ -52,6 +52,64 @@
 </script>
 </head>
   <body class="bg-gray-100 font-sans text-gray-800">
+<style id="adminUnlockForceStyle">
+  /* Jab token ho tab login overlay aur auth card completely gayab */
+  body.admin-authenticated .auth-card,
+  body.admin-authenticated .login-container,
+  body.admin-authenticated #loginOverlay,
+  body.admin-authenticated #authContainer,
+  body.admin-authenticated #loginSection,
+  body.admin-authenticated .modal-backdrop {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  /* Dashboard wrapper ko full show karna */
+  body.admin-authenticated #adminDashboard,
+  body.admin-authenticated #dashboardContainer,
+  body.admin-authenticated #mainDashboard,
+  body.admin-authenticated .dashboard-wrapper,
+  body.admin-authenticated .admin-panel {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+</style>
+
+<script>
+(function() {
+  function applyImmediateUnlock() {
+    const token = localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken') || localStorage.getItem('token');
+    if (token) {
+      document.body.classList.add('admin-authenticated');
+
+      // Har element ko check karke jisme "Admin Authentication" ya "Authenticate & Login" likha hai, use seedha hide karein
+      document.querySelectorAll('div, section, main').forEach(el => {
+        const text = el.innerText ? el.innerText.toLowerCase() : '';
+        if (text.includes('admin authentication') && text.includes('authenticate & login')) {
+          el.style.setProperty('display', 'none', 'important');
+          el.remove();
+        }
+      });
+
+      // Baaki sab dashboard containers ko visible karein
+      document.querySelectorAll('div, section, main').forEach(el => {
+        if (el.id && (el.id.toLowerCase().includes('dash') || el.id.toLowerCase().includes('panel') || el.id.toLowerCase().includes('content'))) {
+          el.style.setProperty('display', 'block', 'important');
+        }
+      });
+
+      if (typeof ensureSecurityNavButton === 'function') ensureSecurityNavButton();
+    }
+  }
+
+  // Turant run karein bina kisi delay ke
+  applyImmediateUnlock();
+  window.addEventListener('DOMContentLoaded', applyImmediateUnlock);
+  window.addEventListener('load', applyImmediateUnlock);
+})();
+</script>
 
     <!-- Admin Authentication Overlay Screen -->
     <div id="adminAuthScreen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
