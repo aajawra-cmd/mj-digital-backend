@@ -8,7 +8,49 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  </head>
+  <script>
+(function() {
+  function checkAndUnlockDashboard() {
+    const token = localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken') || localStorage.getItem('token');
+    if (token) {
+      localStorage.setItem('mj_admin_token', token);
+      localStorage.setItem('adminToken', token);
+      localStorage.setItem('token', token);
+
+      // Hide all login cards / overlays / modals
+      document.querySelectorAll('.auth-card, .login-card, #authOverlay, #adminLoginModal, #adminAuthModal, .modal-backdrop').forEach(el => {
+        el.style.setProperty('display', 'none', 'important');
+        el.classList.add('d-none');
+        el.remove();
+      });
+
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('overflow');
+
+      // Make dashboard wrapper visible
+      const mainDashboard = document.getElementById('adminApp') || 
+                            document.getElementById('dashboardWrapper') || 
+                            document.querySelector('.admin-layout') || 
+                            document.querySelector('.main-wrapper') || 
+                            document.querySelector('main');
+      if (mainDashboard) {
+        mainDashboard.style.setProperty('display', 'block', 'important');
+        mainDashboard.classList.remove('d-none');
+      }
+
+      if (typeof ensureSecurityNavButton === 'function') ensureSecurityNavButton();
+      if (typeof loadAllAdminData === 'function') loadAllAdminData();
+      if (typeof loadDashboardMetrics === 'function') loadDashboardMetrics();
+      if (typeof loadProductsTable === 'function') loadProductsTable();
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', checkAndUnlockDashboard);
+  window.addEventListener('load', checkAndUnlockDashboard);
+  checkAndUnlockDashboard();
+})();
+</script>
+</head>
   <body class="bg-gray-100 font-sans text-gray-800">
 
     <!-- Admin Authentication Overlay Screen -->
@@ -1573,12 +1615,15 @@ window.addEventListener("load", function() {
 
           if (verifyData.success) {
             localStorage.setItem("mj_admin_token", verifyData.token);
-            alert("✅ 2FA Verified! Entering Dashboard...");
-            // Hide login modal / overlay
-            const loginCard = btn.closest(".modal, .auth-card, [class*='modal'], [class*='auth']") || btn.parentElement;
-            if (loginCard) loginCard.style.display = "none";
-            document.querySelectorAll(".modal-backdrop").forEach(b => b.remove());
-            window.location.reload();
+localStorage.setItem("adminToken", verifyData.token);
+localStorage.setItem("token", verifyData.token);
+alert("✅ 2FA Verified! Entering Dashboard...");
+document.querySelectorAll('.auth-card, .modal, .modal-backdrop, [class*="auth"]').forEach(e => {
+  e.style.setProperty('display', 'none', 'important');
+  e.remove();
+});
+document.body.classList.remove('modal-open');
+window.location.reload();
           } else {
             alert(verifyData.message || "Invalid OTP!");
           }
