@@ -1376,37 +1376,7 @@
 </div>
 
 <!-- MODAL FOR CHANGING ID / PASSWORD -->
-<div class="modal fade" id="changeCredentialsModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4 p-4 shadow">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-key text-primary me-2"></i>Security Settings (Change ID/Pass)</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <form onsubmit="handleUpdateCredentialsSubmit(event)">
-        <div class="mb-3">
-          <label class="small fw-bold mb-1">Current Password (Zaroori)</label>
-          <input  type="password" id="realAdminPass" name="adminPass" id="currPassInput" class="form-control" required placeholder="Enter current password">
-        </div>
-        <div class="mb-3">
-          <label class="small fw-bold mb-1">New Admin ID / Username</label>
-          <input type="text" id="newUsernameInput" class="form-control" placeholder="Naya ID / Mobile daalein">
-        </div>
-        <div class="mb-3">
-          <label class="small fw-bold mb-1">New Password</label>
-          <input  type="password" id="realAdminPass" name="adminPass" id="newPassInput" class="form-control" placeholder="Min 6 characters (Empty if no change)">
-        </div>
-        <div class="form-check form-switch mb-3">
-          <input class="form-check-input" type="checkbox" id="twoFaToggleInput" checked>
-          <label class="form-check-label small fw-bold" for="twoFaToggleInput">Enable 2FA OTP on every login</label>
-        </div>
-        <button type="submit" id="saveCredsBtn" class="btn btn-primary w-100 py-2 fw-bold">
-          Save New Credentials
-        </button>
-      </form>
-    </div>
-  </div>
-</div>
+
 
 <script>
 let currentAdminIdPending2FA = '';
@@ -1698,6 +1668,138 @@ window.location.reload();
       }
     };
   }
+});
+</script>
+
+<div class="modal fade" id="changeCredentialsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 p-4 shadow bg-white border">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-key text-primary me-2"></i>Security Settings (Change ID/Pass)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form onsubmit="handleUpdateCredentialsSubmit(event)">
+        <div class="mb-3">
+          <label class="small fw-bold mb-1">Current Password (Zaroori)</label>
+          <input type="password" id="currPassInput" class="form-control" required placeholder="Enter current password">
+        </div>
+        <div class="mb-3">
+          <label class="small fw-bold mb-1">New Admin ID / Username</label>
+          <input type="text" id="newUsernameInput" class="form-control" placeholder="Naya ID / Mobile daalein">
+        </div>
+        <div class="mb-3">
+          <label class="small fw-bold mb-1">New Password</label>
+          <input type="password" id="newPassInput" class="form-control" placeholder="Min 6 characters (Empty if no change)">
+        </div>
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" id="twoFaToggleInput" checked>
+          <label class="form-check-label small fw-bold" for="twoFaToggleInput">Enable 2FA OTP on every login</label>
+        </div>
+        <button type="submit" id="saveCredsBtn" class="btn btn-primary w-100 py-2 fw-bold">
+          Save New Credentials
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// FULL LIVE ADMIN CONTROLLER & TAB SWITCHER
+async function switchAdminView(viewName, el) {
+  if (el) {
+    document.querySelectorAll('.sidebar .nav-link, .sidebar a, [onclick*="switchAdminView"]').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Hide all sections, show active
+  document.querySelectorAll('[id$="View"], [id$="Section"], [id$="Tab"], .admin-view-panel').forEach(sec => {
+    if (sec.id && !sec.id.includes('Modal')) {
+      sec.style.display = 'none';
+    }
+  });
+
+  const target = document.getElementById(viewName) || document.querySelector('.' + viewName);
+  if (target) {
+    target.style.display = 'block';
+  }
+
+  if (viewName.includes('product') || viewName === 'productsView') {
+    if (typeof loadProductsTable === 'function') loadProductsTable();
+  } else if (viewName.includes('travel') || viewName === 'travelView') {
+    if (typeof loadTravelPackagesTable === 'function') loadTravelPackagesTable();
+  } else if (viewName.includes('order') || viewName === 'ordersView') {
+    if (typeof loadOrdersTable === 'function') loadOrdersTable();
+  }
+}
+
+// Fetch live database statistics for cards
+async function loadLiveDashboardStats() {
+  const token = localStorage.getItem('mj_admin_token') || localStorage.getItem('adminToken');
+  const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+
+  try {
+    const [prodRes, travelRes, ordRes] = await Promise.all([
+      fetch('/api/products').then(r => r.json()).catch(() => ({ data: [] })),
+      fetch('/api/travel-packages').then(r => r.json()).catch(() => ({ data: [] })),
+      fetch('/api/orders').then(r => r.json()).catch(() => ({ data: [] }))
+    ]);
+
+    const prods = Array.isArray(prodRes) ? prodRes : (prodRes.data || []);
+    const travels = Array.isArray(travelRes) ? travelRes : (travelRes.data || []);
+    const orders = Array.isArray(ordRes) ? ordRes : (ordRes.data || ordRes.orders || []);
+
+    // Active Products Card
+    document.querySelectorAll('h2, h3, h4, div').forEach(node => {
+      if (node.innerText && node.innerText.includes('0 Items')) {
+        node.innerHTML = prods.length + ' <span style="font-size:18px;">Items</span>';
+      }
+      if (node.innerText && node.innerText.includes('0 Packages')) {
+        node.innerHTML = travels.length + ' <span style="font-size:18px;">Packages</span>';
+      }
+      if (node.innerText && node.innerText.includes('0 Total')) {
+        node.innerHTML = orders.length + ' <span style="font-size:18px;">Total</span>';
+      }
+    });
+
+    // Total Revenue calculation
+    let revenue = 0;
+    orders.forEach(o => {
+      if (o.status !== 'Cancelled' && o.paymentStatus !== 'Failed') {
+        revenue += Number(o.totalAmount || o.amount || 0);
+      }
+    });
+
+    document.querySelectorAll('h2, h3, h4, div').forEach(node => {
+      if (node.innerText && node.innerText.trim() === '₹0') {
+        node.innerText = '₹' + Number(revenue).toLocaleString('en-IN');
+      }
+    });
+
+  } catch(e) {
+    console.error('Stats loading error:', e);
+  }
+}
+
+// Auto hook sidebar items so they become clickable
+window.addEventListener('load', function() {
+  document.querySelectorAll('a, button, li').forEach(item => {
+    const t = (item.innerText || '').toLowerCase().trim();
+    if (t.includes('products (e-com)')) {
+      item.onclick = function() { switchAdminView('productsView', this); };
+      item.style.cursor = 'pointer';
+    } else if (t.includes('travel packages')) {
+      item.onclick = function() { switchAdminView('travelPackagesView', this); };
+      item.style.cursor = 'pointer';
+    } else if (t.includes('orders & bookings')) {
+      item.onclick = function() { switchAdminView('ordersView', this); };
+      item.style.cursor = 'pointer';
+    } else if (t.includes('dashboard overview')) {
+      item.onclick = function() { switchAdminView('dashboardOverview', this); };
+      item.style.cursor = 'pointer';
+    }
+  });
+
+  loadLiveDashboardStats();
 });
 </script>
 </body>
