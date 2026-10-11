@@ -22,6 +22,21 @@ document.addEventListener("DOMContentLoaded", function() {
   document.body.classList.remove('modal-open');
 });
 </script>
+<script>
+function togglePasswordEye(inputId, iconEl) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === "password") {
+    input.type = "text";
+    iconEl.classList.remove("fa-eye");
+    iconEl.classList.add("fa-eye-slash");
+  } else {
+    input.type = "password";
+    iconEl.classList.remove("fa-eye-slash");
+    iconEl.classList.add("fa-eye");
+  }
+}
+</script>
 </head>
   <body class="bg-gray-100 font-sans text-gray-800">
 
@@ -49,7 +64,10 @@ document.addEventListener("DOMContentLoaded", function() {
             <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
             <div class="relative">
               <i class="fa-solid fa-lock absolute left-3.5 top-3 text-gray-400 text-xs"></i>
-              <input type="password" id="authPasswordInput" required placeholder="admin" class="w-full border rounded-xl pl-9 pr-3 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <div class="relative">
+      <input type="password" id="authPasswordInput" required placeholder="admin" class="w-full border rounded-xl pl-9 pr-3 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" class="w-full border rounded-xl pl-9 pr-10 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <i class="fa-solid fa-eye absolute right-3.5 top-3 text-gray-400 hover:text-gray-700 cursor-pointer text-xs" onclick="togglePasswordEye('authPasswordInput', this)"></i>
+    </div>
             </div>
           </div>
 
