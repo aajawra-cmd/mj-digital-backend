@@ -2636,14 +2636,7 @@ async function handleAdminLogin(event) {
     if (btn) { btn.disabled = false; btn.innerText = origBtnText; }
   }
   return false;
-  } catch (err) {
-    if (errorEl) {
-      errorEl.innerText = 'Backend connection failed! Make sure Render server is responding.';
-      errorEl.classList.remove('hidden');
-    }
   }
-  return false;
-}
 
 function handleAdminLogout() {
   if (confirm('Admin session logout karein?')) {

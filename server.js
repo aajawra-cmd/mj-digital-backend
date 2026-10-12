@@ -1176,8 +1176,6 @@ app.post('/api/admin/login', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-});
-
 // 2. ADMIN LOGIN - STEP 2 (VERIFY 2FA OTP)
 app.post('/api/admin/verify-2fa', async (req, res) => {
   try {
