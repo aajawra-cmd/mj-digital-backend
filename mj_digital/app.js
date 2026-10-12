@@ -7,21 +7,24 @@ function getAdminAuthHeaders() {
 }
 
 function verifyAdminSessionExpiry() {
-  const loginTime = localStorage.getItem('mj_admin_login_time');
-  const token = localStorage.getItem('mj_jwt_token') || sessionStorage.getItem('mj_jwt_token');
+  const token = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || sessionStorage.getItem('mj_jwt_token');
   const sessionActive = localStorage.getItem('mj_admin_session') === 'authenticated';
-  const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
-  if (sessionActive && (!token || !loginTime || (Date.now() - Number(loginTime) > TWENTY_FOUR_HOURS))) {
-    localStorage.removeItem('mj_jwt_token');
-    sessionStorage.removeItem('mj_jwt_token');
-    localStorage.removeItem('mj_admin_session');
-    localStorage.removeItem('mj_admin_user');
-    localStorage.removeItem('mj_admin_login_time');
-    alert('⚠️ Admin session expire ho gaya hai. Kripya dobara login karein.');
+  if (!sessionActive || !token) {
     const authScreen = document.getElementById('adminAuthScreen');
-    if (authScreen) authScreen.classList.remove('hidden');
+    if (authScreen) {
+      authScreen.style.removeProperty('display');
+      authScreen.classList.remove('hidden');
+    }
     return false;
+  }
+
+  // Refresh login timestamp so active session never abruptly expires
+  localStorage.setItem('mj_admin_login_time', Date.now());
+  const authScreen = document.getElementById('adminAuthScreen');
+  if (authScreen) {
+    authScreen.style.setProperty('display', 'none', 'important');
+    authScreen.classList.add('hidden');
   }
   return true;
 }
