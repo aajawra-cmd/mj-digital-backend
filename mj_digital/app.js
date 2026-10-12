@@ -2636,7 +2636,7 @@ async function handleAdminLogin(event) {
     if (btn) { btn.disabled = false; btn.innerText = origBtnText; }
   }
   return false;
-} else {
+} if (true) {
       if (errorEl) {
         errorEl.innerText = data.message || 'Invalid Admin Credentials';
         errorEl.classList.remove('hidden');
