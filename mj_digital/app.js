@@ -293,7 +293,7 @@ function switchCmsTab(tabKey, element) {
 
 async function loadCmsPoliciesFromBackend() {
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/cms/policies');
+    const res = await fetch('/api/cms/policies');
     const result = await res.json();
     const list = Array.isArray(result) ? result : (result.data || []);
 
@@ -332,7 +332,7 @@ async function saveCmsContent() {
   }
 
   try {
-    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/cms/policies/${activeCmsTab}`, {
+    const res = await fetch(`/api/cms/policies/${activeCmsTab}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -367,7 +367,7 @@ async function renderRevenueChart() {
   if (!ctx || typeof Chart === 'undefined') return;
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/analytics/monthly-revenue');
+    const res = await fetch('/api/analytics/monthly-revenue');
     const json = await res.json();
     const data = (json && json.success) ? json.data : chartDatasets.monthly;
 
@@ -600,7 +600,7 @@ async function loadAdminProducts() {
   const tbody = document.getElementById('productsTableBody');
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products');
+    const res = await fetch('/api/products');
     const result = await res.json();
     const products = Array.isArray(result) ? result : (result.data || []);
     productsList = products;
@@ -830,8 +830,8 @@ async function handleProductSubmit(event) {
 
   const method = editingProductId ? 'PUT' : 'POST';
   const endpoint = editingProductId 
-    ? `https://mj-digital-backend-3.onrender.com/api/products/${editingProductId}` 
-    : 'https://mj-digital-backend-3.onrender.com/api/products';
+    ? `/api/products/${editingProductId}` 
+    : '/api/products';
 
   try {
     const authHeaders = getAdminAuthHeaders();
@@ -874,7 +874,7 @@ async function deleteProduct(productId) {
   if (!confirm('Kya aap sach mein ye product delete karna chahte hain?')) return;
 
   try {
-    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/products/${productId}`, {
+    const res = await fetch(`/api/products/${productId}`, {
       method: 'DELETE',
       headers: {
         ...getAdminAuthHeaders()
@@ -898,7 +898,7 @@ async function quickUpdateProduct(id, field, value) {
     const payload = {};
     payload[field] = Number(value);
 
-    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/products/${id}`, {
+    const res = await fetch(`/api/products/${id}`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
@@ -919,7 +919,7 @@ async function quickUpdateProduct(id, field, value) {
 
 async function updateProductStatus(id, status) {
   try {
-    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/products/${id}`, {
+    const res = await fetch(`/api/products/${id}`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
@@ -1053,7 +1053,7 @@ async function loadAdminTravelPackages() {
   const container = document.getElementById('travelList');
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+    const res = await fetch('/api/travel-packages');
     const result = await res.json();
     const packages = Array.isArray(result) ? result : (result.data || []);
     cachedTravelPackages = packages;
@@ -1147,7 +1147,7 @@ async function handleTravelSubmit(event) {
   }
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages', {
+    const res = await fetch('/api/travel-packages', {
       method: 'POST',
       headers: {
         ...getAdminAuthHeaders()
@@ -1173,7 +1173,7 @@ async function handleTravelSubmit(event) {
 async function deleteTravelPackage(id) {
   if (!confirm('Kya aap sach me is travel package ko delete karna chahte hain?')) return;
   try {
-    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}`, { 
+    const res = await fetch(`/api/travel-packages/${id}`, { 
       method: 'DELETE',
       headers: {
         ...getAdminAuthHeaders()
@@ -1193,7 +1193,7 @@ async function deleteTravelPackage(id) {
 
 async function updateTravelStatus(id, newStatus) {
   try {
-    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}/status`, {
+    const res = await fetch(`/api/travel-packages/${id}/status`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
@@ -1215,7 +1215,7 @@ async function updateTravelStatus(id, newStatus) {
 
 async function quickUpdateTravelPrice(id, newPrice) {
   try {
-    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}/quick-update`, {
+    const res = await fetch(`/api/travel-packages/${id}/quick-update`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
@@ -1277,7 +1277,7 @@ async function handleEditTravelSubmit(event) {
   };
 
   try {
-    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/travel-packages/${id}`, {
+    const res = await fetch(`/api/travel-packages/${id}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -1315,7 +1315,7 @@ window.closeEditTravelModal = () => closeModal('editTravelModal');
 // ==========================================
 async function loadParentCategoryDropdown() {
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/categories');
+    const res = await fetch('/api/categories');
     const result = await res.json();
     const select = document.getElementById('parentCategorySelect');
     if (!select) return;
@@ -1431,7 +1431,7 @@ async function handleCategorySubmit(event) {
   }
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/categories', {
+    const res = await fetch('/api/categories', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -1460,7 +1460,7 @@ async function deleteCategory(id) {
   if (!confirm('Kya aap sach mein is category ko delete karna chahte hain?')) return;
 
   try {
-    const res = await fetch(`https://mj-digital-backend-3.onrender.com/api/categories/${id}`, {
+    const res = await fetch(`/api/categories/${id}`, {
       method: 'DELETE',
       headers: {
         ...getAdminAuthHeaders()
@@ -1766,7 +1766,7 @@ async function loadAdminOrders() {
   const tbody = document.getElementById('ordersTableBody');
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/orders');
+    const res = await fetch('/api/orders');
     const result = await res.json();
     const rawOrders = Array.isArray(result) ? result : (result.data || result.orders || []);
 
@@ -2003,7 +2003,7 @@ document.addEventListener('change', async function(e) {
         cancelReason: newStatus === 'Cancelled' ? 'Cancelled by Admin' : ''
       };
 
-      let res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${rawId}/status`, {
+      let res = await fetch(`/api/orders/${rawId}/status`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
@@ -2013,7 +2013,7 @@ document.addEventListener('change', async function(e) {
       });
 
       if (!res.ok) {
-        res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${rawId}`, {
+        res = await fetch(`/api/orders/${rawId}`, {
           method: 'PUT',
           headers: { 
             'Content-Type': 'application/json',
@@ -2058,7 +2058,7 @@ window.changeActiveOrderStatus = async function(newStatus) {
       cancelReason: newStatus === 'Cancelled' ? 'Cancelled by Admin' : ''
     };
 
-    let res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${orderId}/status`, {
+    let res = await fetch(`/api/orders/${orderId}/status`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
@@ -2068,7 +2068,7 @@ window.changeActiveOrderStatus = async function(newStatus) {
     });
 
     if (!res.ok) {
-      res = await fetch(`https://mj-digital-backend-3.onrender.com/api/orders/${orderId}`, {
+      res = await fetch(`/api/orders/${orderId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -2169,7 +2169,7 @@ async function renderMediaGrid() {
   if (!container) return;
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/media');
+    const res = await fetch('/api/media');
     const result = await res.json();
     const mediaList = result.success ? result.data : [];
 
@@ -2229,7 +2229,7 @@ async function handleMediaUpload() {
   }
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/media', {
+    const res = await fetch('/api/media', {
       method: 'POST',
       headers: {
         ...getAdminAuthHeaders()
@@ -2265,7 +2265,7 @@ async function renderLogsTable(logsToRender = null) {
 
   try {
     if (!logsToRender) {
-      const res = await fetch('https://mj-digital-backend-3.onrender.com/api/audit-logs', {
+      const res = await fetch('/api/audit-logs', {
         headers: {
           ...getAdminAuthHeaders()
         }
@@ -2383,7 +2383,7 @@ function exportLogsCSV() {
 async function clearActivityLogs() {
   if (!confirm('Kya aap sabhi purane audit logs database se permanently clear karna chahte hain?')) return;
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/audit-logs', { 
+    const res = await fetch('/api/audit-logs', { 
       method: 'DELETE',
       headers: {
         ...getAdminAuthHeaders()
@@ -2442,7 +2442,7 @@ async function savePlatformSettings() {
   };
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/settings', {
+    const res = await fetch('/api/settings', {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -2471,7 +2471,7 @@ async function savePlatformSettings() {
 
 async function loadPlatformSettings() {
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/settings');
+    const res = await fetch('/api/settings');
     const result = await res.json();
     const data = (result && result.success && result.data) ? result.data : JSON.parse(localStorage.getItem('mj_platform_settings') || '{}');
 
@@ -2541,35 +2541,95 @@ async function handleAdminLogin(event) {
     event.stopPropagation();
   }
 
-  const emailInput = document.getElementById('authEmailInput');
-  const passInput = document.getElementById('authPasswordInput');
+  const emailInput = document.getElementById('authEmailInput') || document.querySelector('input[type="text"]');
+  const passInput = document.getElementById('authPasswordInput') || document.querySelector('input[type="password"]');
   const errorEl = document.getElementById('authErrorMsg');
 
-  const email = emailInput ? emailInput.value.trim() : '';
+  const username = emailInput ? emailInput.value.trim() : '';
   const password = passInput ? passInput.value.trim() : '';
 
   if (errorEl) errorEl.classList.add('hidden');
 
+  if (!username || !password) {
+    if (errorEl) {
+      errorEl.innerText = 'Kripya Username aur Password dono bharein.';
+      errorEl.classList.remove('hidden');
+    }
+    return false;
+  }
+
+  const btn = event?.target?.querySelector('button[type="submit"]') || document.querySelector('#adminAuthScreen button[type="submit"]');
+  const origBtnText = btn ? btn.innerText : 'Authenticate & Login';
+  if (btn) { btn.disabled = true; btn.innerText = 'Verifying...'; }
+
   try {
-    const response = await fetch('https://mj-digital-backend-3.onrender.com/api/auth/login', {
+    const response = await fetch('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ username, password })
     });
 
     const data = await response.json();
 
-    if (response.ok && data.success && data.token) {
-      localStorage.setItem('mj_jwt_token', data.token);
-      sessionStorage.setItem('mj_jwt_token', data.token);
+    if (!data.success) {
+      if (errorEl) {
+        errorEl.innerText = data.message || 'Invalid Admin Credentials';
+        errorEl.classList.remove('hidden');
+      }
+      return false;
+    }
+
+    if (data.requires2FA) {
+      const otp = prompt("🔐 2FA SECURITY OTP:\n\nAapke screen par OTP generate hua hai:\n" + (data.debugOtp || "1234") + "\n\nKripya 4-digit code yahan daalein:");
+      if (!otp) return false;
+
+      const verifyRes = await fetch("/api/admin/verify-2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminId: data.adminId, otp: otp.trim() })
+      });
+      const verifyData = await verifyRes.json();
+
+      if (verifyData.success) {
+        const token = verifyData.token;
+        localStorage.setItem('mj_jwt_token', token);
+        localStorage.setItem('mj_admin_token', token);
+        localStorage.setItem('adminToken', token);
+        sessionStorage.setItem('mj_jwt_token', token);
+        localStorage.setItem('mj_admin_session', 'authenticated');
+        localStorage.setItem('mj_admin_user', username);
+        localStorage.setItem('mj_admin_login_time', Date.now());
+
+        const authScreen = document.getElementById('adminAuthScreen');
+        if (authScreen) authScreen.classList.add('hidden');
+        window.location.reload();
+      } else {
+        alert(verifyData.message || 'Galat OTP code!');
+      }
+    } else {
+      const token = data.token;
+      localStorage.setItem('mj_jwt_token', token);
+      localStorage.setItem('mj_admin_token', token);
+      localStorage.setItem('adminToken', token);
+      sessionStorage.setItem('mj_jwt_token', token);
       localStorage.setItem('mj_admin_session', 'authenticated');
-      localStorage.setItem('mj_admin_user', email);
+      localStorage.setItem('mj_admin_user', username);
       localStorage.setItem('mj_admin_login_time', Date.now());
 
       const authScreen = document.getElementById('adminAuthScreen');
       if (authScreen) authScreen.classList.add('hidden');
-      return false;
-    } else {
+      window.location.reload();
+    }
+  } catch (err) {
+    if (errorEl) {
+      errorEl.innerText = 'Backend connection failed! Make sure Render server is responding.';
+      errorEl.classList.remove('hidden');
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = origBtnText; }
+  }
+  return false;
+} else {
       if (errorEl) {
         errorEl.innerText = data.message || 'Invalid Admin Credentials';
         errorEl.classList.remove('hidden');
@@ -2639,7 +2699,7 @@ setInterval(() => {
 
 async function fetchAndRenderSitePolicies() {
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/cms/policies');
+    const res = await fetch('/api/cms/policies');
     const result = await res.json();
 
     if (res.ok && result.success && Array.isArray(result.data)) {
