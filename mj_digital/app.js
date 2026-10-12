@@ -1775,36 +1775,43 @@ async function loadAdminOrders() {
       const rawCat = String(raw.itemDetails?.category || raw.category || '').toLowerCase();
       const titleText = String(raw.itemDetails?.title || raw.title || '').toLowerCase();
       
-      let resolvedType = 'Electronics'; // baseline fallback
+      let resolvedType = 'Electronics';
 
-      // 1. Travel Check First
       if (rawType.includes('travel') || rawCat.includes('travel') || 
           titleText.includes('tour') || titleText.includes('package') || 
           titleText.includes('paradise') || titleText.includes('getaway') || 
-          titleText.includes('kashmir') || titleText.includes('bali') || 
-          titleText.includes('hongkong') || titleText.includes('goa') || 
-          titleText.includes('retreat') || titleText.includes('escape')) {
+          titleText.includes('kashmir') || titleText.includes('bali')) {
         resolvedType = 'Travel Package';
+      } else if (titleText.includes('wallet') || rawType.includes('wallet')) {
+        resolvedType = 'Services';
+      } else if (rawType.includes('service') || rawCat.includes('service')) {
+        resolvedType = 'Services';
+      } else if (rawType === 'mobile' || rawCat === 'mobile' || titleText.includes('iphone') || titleText.includes('galaxy') || titleText.includes('smartphone')) {
+        resolvedType = 'Mobile';
+      } else if (rawType.includes('fashion') || rawCat.includes('fashion') || titleText.includes('shirt') || titleText.includes('tshirt')) {
+        resolvedType = 'Fashion';
+      } else {
+        resolvedType = 'Electronics';
       } 
       // 2. Wallet & Financial Services
-      else if (titleText.includes('wallet') || rawType.includes('wallet') || titleText.includes('recharge') || titleText.includes('pay')) {
+  if (titleText.includes('wallet') || rawType.includes('wallet') || titleText.includes('recharge') || titleText.includes('pay')) {
         resolvedType = 'Services';
       }
       // 3. Digital & IT Services
-      else if (rawType.includes('service') || rawCat.includes('service') || titleText.includes('development') || titleText.includes('registration') || titleText.includes('gst')) {
+  if (rawType.includes('service') || rawCat.includes('service') || titleText.includes('development') || titleText.includes('registration') || titleText.includes('gst')) {
         resolvedType = 'Services';
       }
       // 4. Mobiles Only
-      else if (rawType === 'mobile' || rawCat === 'mobile' || rawCat === 'mobiles' ||
+  if (rawType === 'mobile' || rawCat === 'mobile' || rawCat === 'mobiles' ||
                titleText.includes('iphone') || titleText.includes('galaxy') || titleText.includes('smartphone') || titleText.includes('pro max') || titleText.includes('ultra')) {
         resolvedType = 'Mobile';
       }
       // 5. Fashion
-      else if (rawType.includes('fashion') || rawCat.includes('fashion') || titleText.includes('shirt') || titleText.includes('apparel') || titleText.includes('cotton') || titleText.includes('wear')) {
+  if (rawType.includes('fashion') || rawCat.includes('fashion') || titleText.includes('shirt') || titleText.includes('apparel') || titleText.includes('cotton') || titleText.includes('wear')) {
         resolvedType = 'Fashion';
       }
       // 6. Electronics & Appliances (Headphones, Mac, Fridge, TV)
-      else if (rawType.includes('elect') || rawCat.includes('elect') || 
+  if (rawType.includes('elect') || rawCat.includes('elect') || 
                titleText.includes('headphone') || titleText.includes('sony') || 
                titleText.includes('macbook') || titleText.includes('laptop') || 
                titleText.includes('fridge') || titleText.includes('watch') || 
