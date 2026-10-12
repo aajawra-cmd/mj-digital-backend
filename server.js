@@ -34,7 +34,6 @@ app.get('/api/payment/key', async (req, res) => {
   } catch(e) {}
   res.json({ success: true, key: keyId });
 });
-});
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
