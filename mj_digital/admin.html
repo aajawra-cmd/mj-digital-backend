@@ -58,7 +58,7 @@ function togglePasswordEye(inputId, iconEl) {
             <label class="block text-xs font-bold text-gray-700 mb-1">Admin Email / Mobile</label>
             <div class="relative">
               <i class="fa-regular fa-envelope absolute left-3.5 top-3 text-gray-400 text-xs"></i>
-              <input type="text" id="authEmailInput" required value="admin@mjdigital.in" class="w-full border rounded-xl pl-9 pr-3 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="text" id="authEmailInput" required value="8306669999" class="w-full border rounded-xl pl-9 pr-3 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
           </div>
 
@@ -67,7 +67,7 @@ function togglePasswordEye(inputId, iconEl) {
             <div class="relative">
               <i class="fa-solid fa-lock absolute left-3.5 top-3 text-gray-400 text-xs"></i>
               <div class="relative">
-      <input type="password" id="authPasswordInput" required placeholder="admin" class="w-full border rounded-xl pl-9 pr-3 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" class="w-full border rounded-xl pl-9 pr-10 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="password" id="authPasswordInput" required placeholder="Enter password" class="w-full border rounded-xl pl-9 pr-3 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" class="w-full border rounded-xl pl-9 pr-10 py-2 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
       <i class="fa-solid fa-eye absolute right-3.5 top-3 text-gray-400 hover:text-gray-700 cursor-pointer text-xs" onclick="togglePasswordEye('authPasswordInput', this)"></i>
     </div>
             </div>
@@ -1349,5 +1349,104 @@ function togglePasswordEye(inputId, iconEl) {
         </form>
       </div>
     </div>
+<script>
+window.addEventListener("load", function() {
+  const form = document.querySelector("#adminAuthScreen form");
+  if (!form) return;
+
+  form.onsubmit = async function(e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+
+    const emailInput = document.getElementById("authEmailInput");
+    const passInput = document.getElementById("authPasswordInput");
+    const errorEl = document.getElementById("authErrorMsg");
+    const btn = form.querySelector("button[type='submit']");
+
+    const username = (emailInput ? emailInput.value : "").trim();
+    const password = (passInput ? passInput.value : "").trim();
+
+    if (!username || !password) {
+      if (errorEl) {
+        errorEl.innerText = "Username aur Password dono daalein.";
+        errorEl.classList.remove("hidden");
+      }
+      return false;
+    }
+
+    const origText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = "Verifying...";
+    if (errorEl) errorEl.classList.add("hidden");
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        if (errorEl) {
+          errorEl.innerText = data.message || "Invalid Admin Credentials";
+          errorEl.classList.remove("hidden");
+        }
+        return false;
+      }
+
+      if (data.requires2FA) {
+        const otp = prompt("🔐 2FA SECURITY OTP:
+
+Aapka OTP Code: " + (data.debugOtp || "1234") + "
+
+Kripya 4-digit code yahan daalein:");
+        if (!otp) return false;
+
+        const verifyRes = await fetch("/api/admin/verify-2fa", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ adminId: data.adminId, otp: otp.trim() })
+        });
+        const verifyData = await verifyRes.json();
+
+        if (verifyData.success) {
+          const t = verifyData.token;
+          localStorage.setItem("mj_jwt_token", t);
+          localStorage.setItem("mj_admin_token", t);
+          localStorage.setItem("adminToken", t);
+          sessionStorage.setItem("mj_jwt_token", t);
+          localStorage.setItem("mj_admin_session", "authenticated");
+
+          const authScr = document.getElementById("adminAuthScreen");
+          if (authScr) authScr.classList.add("hidden");
+          window.location.reload();
+        } else {
+          alert(verifyData.message || "Invalid OTP!");
+        }
+      } else {
+        const t = data.token;
+        localStorage.setItem("mj_jwt_token", t);
+        localStorage.setItem("mj_admin_token", t);
+        localStorage.setItem("adminToken", t);
+        sessionStorage.setItem("mj_jwt_token", t);
+        localStorage.setItem("mj_admin_session", "authenticated");
+
+        const authScr = document.getElementById("adminAuthScreen");
+        if (authScr) authScr.classList.add("hidden");
+        window.location.reload();
+      }
+    } catch(err) {
+      if (errorEl) {
+        errorEl.innerText = "Connection error: " + err.message;
+        errorEl.classList.remove("hidden");
+      }
+    } finally {
+      btn.disabled = false;
+      btn.innerText = origText;
+    }
+    return false;
+  };
+});
+</script>
 </body>
 </html>
