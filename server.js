@@ -26,13 +26,7 @@ async function getRazorpayClient() {
   return razorpayInstance;
 }
 
-app.get('/api/payment/key', async (req, res) => {
-  let keyId = process.env.RAZORPAY_KEY_ID || '';
-  try {
-    const settings = await PlatformSettings.findOne();
-    if (settings && settings.gatewayKeyId) keyId = settings.gatewayKeyId;
-  } catch(e) {}
-  res.json({ success: true, key: keyId });
+
 });
 const express = require('express');
 const path = require('path');
@@ -1085,6 +1079,14 @@ app.use((req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
+app.get('/api/payment/key', async (req, res) => {
+  let keyId = process.env.RAZORPAY_KEY_ID || '';
+  try {
+    const settings = await PlatformSettings.findOne();
+    if (settings && settings.gatewayKeyId) keyId = settings.gatewayKeyId;
+  } catch(e) {}
+  res.json({ success: true, key: keyId });
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
