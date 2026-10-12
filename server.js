@@ -26,8 +26,6 @@ async function getRazorpayClient() {
   return razorpayInstance;
 }
 
-
-});
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -1086,6 +1084,7 @@ app.get('/api/payment/key', async (req, res) => {
     if (settings && settings.gatewayKeyId) keyId = settings.gatewayKeyId;
   } catch(e) {}
   res.json({ success: true, key: keyId });
+});
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
