@@ -2636,13 +2636,6 @@ async function handleAdminLogin(event) {
     if (btn) { btn.disabled = false; btn.innerText = origBtnText; }
   }
   return false;
-} if (true) {
-      if (errorEl) {
-        errorEl.innerText = data.message || 'Invalid Admin Credentials';
-        errorEl.classList.remove('hidden');
-      }
-      return false;
-    }
   } catch (err) {
     if (errorEl) {
       errorEl.innerText = 'Backend connection failed! Make sure Render server is responding.';
