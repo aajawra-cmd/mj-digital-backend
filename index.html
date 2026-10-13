@@ -1641,6 +1641,9 @@ async function getActiveRazorpayKey() {
         let userOrders = [];
 
         let myCart = [];
+try {
+            myCart = JSON.parse(localStorage.getItem('mj_cart') || '[]');
+        } catch(e) { myCart = []; }
         let myWishlist = [];
         let catalogItemsCache = {};
         let currentGalleryMedia = [];
@@ -1902,10 +1905,23 @@ window.addEventListener('popstate', function(e) {
 
         let cachedAllProducts = (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined') ? [...PRODUCT_FALLBACK_ITEMS] : [];
 
-        async function fetchStoreItems(forceRefresh = false) {
-            if (!forceRefresh && cachedAllProducts && cachedAllProducts.length > 0) {
-                return cachedAllProducts;
+        async function fetchStoreItems(forceRefresh = true) {
+            try {
+                const res = await fetch('/api/products?_t=' + Date.now());
+                if (res.ok) {
+                    const data = await res.json();
+                    const items = Array.isArray(data) ? data : (data.data || []);
+                    if (items && items.length > 0) {
+                        items.forEach(it => { catalogItemsCache[it._id] = it; });
+                        cachedAllProducts = items;
+                        return items;
+                    }
+                }
+            } catch(err) {
+                console.warn('API fetch fallback to cache:', err.message);
             }
+            return cachedAllProducts || [];
+        }
             
             // Baseline fallback data instantly ready
             const baseFallback = (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined' && PRODUCT_FALLBACK_ITEMS.length > 0)
@@ -1997,7 +2013,7 @@ window.addEventListener('popstate', function(e) {
 
             let travels = [];
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                const res = await fetch('/api/travel-packages?_t=' + Date.now());
                 if (res.ok) {
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
@@ -2031,7 +2047,7 @@ window.addEventListener('popstate', function(e) {
 
             let travels = [];
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                const res = await fetch('/api/travel-packages?_t=' + Date.now());
                 if (res.ok) {
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
@@ -2090,7 +2106,7 @@ window.addEventListener('popstate', function(e) {
             grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading live items from database...</div>';
 
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products?category=' + encodeURIComponent(catKey));
+                const res = await fetch('/api/products?_t=' + Date.now() + '&?category=' + encodeURIComponent(catKey));
                 const json = await res.json();
                 let items = Array.isArray(json) ? json : (json.data || []);
                 
@@ -2217,7 +2233,7 @@ window.addEventListener('popstate', function(e) {
 
             // Background me live data fetch karo
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                const res = await fetch('/api/travel-packages?_t=' + Date.now());
                 if (res.ok) {
                     const result = await res.json();
                     const remoteData = Array.isArray(result) ? result : (result.data || []);
@@ -2883,8 +2899,11 @@ window.addEventListener('popstate', function(e) {
         function handleAddToCartClick(e, id, isTravel = false) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
             let item = catalogItemsCache[id];
-            if (!item && typeof travelMemory !== 'undefined') {
+            if (!item && typeof travelMemory !== 'undefined' && travelMemory.all) {
                 item = travelMemory.all.find(t => String(t._id) === String(id));
+            }
+            if (!item && cachedAllProducts) {
+                item = cachedAllProducts.find(p => String(p._id) === String(id));
             }
             if (!item) {
                 item = { _id: id, title: 'Selected Item', price: 95899, images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=300'] };
@@ -2896,34 +2915,43 @@ window.addEventListener('popstate', function(e) {
             const img = resolveMediaUrl(rawImg);
             const type = isTravel ? 'Travel' : 'Product';
 
-            const existing = myCart.find(c => String(c.id) === String(id));
-            if (existing) {
+            // Sync with localStorage
+            let storageCart = [];
+            try { storageCart = JSON.parse(localStorage.getItem('mj_cart') || '[]'); } catch(err) { storageCart = []; }
+
+            const existingInStorage = storageCart.find(c => String(c.id) === String(id));
+            if (existingInStorage) {
                 if (isTravel) {
-                    existing.adults = (existing.adults || 1) + 1;
-                    existing.qty = (existing.adults || 1) + (existing.children || 0);
+                    existingInStorage.adults = (existingInStorage.adults || 1) + 1;
+                    existingInStorage.qty = (existingInStorage.adults || 1) + (existingInStorage.children || 0);
                 } else {
-                    existing.qty += 1;
+                    existingInStorage.qty = (existingInStorage.qty || 1) + 1;
                 }
             } else {
                 if (isTravel) {
-                    myCart.push({ id, title, price, img, type, adults: 1, children: 0, qty: 1 });
+                    storageCart.push({ id, title, price, img, type: 'Travel', adults: 1, children: 0, qty: 1 });
                 } else {
-                    myCart.push({ id, title, price, img, type, qty: 1 });
+                    storageCart.push({ id, title, price, img, type: 'Product', qty: 1 });
                 }
             }
+            localStorage.setItem('mj_cart', JSON.stringify(storageCart));
+            myCart = storageCart;
+
             if (typeof updateCartBadge === 'function') updateCartBadge();
-            
+            if (typeof renderBag === 'function') renderBag();
+            if (typeof renderCartPage === 'function') renderCartPage();
+
             const targetBtn = e ? e.currentTarget : null;
             if (targetBtn) {
                 const origText = targetBtn.innerHTML;
-                targetBtn.innerHTML = `<i class="fa-solid fa-check me-1"></i> Added to Bag`;
+                targetBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Added to Bag';
                 targetBtn.classList.add('btn-success');
                 setTimeout(() => {
                     targetBtn.innerHTML = origText;
                     targetBtn.classList.remove('btn-success');
                 }, 1500);
             } else {
-                alert(`Added "${title}" to your Shopping Bag!`);
+                alert('Added "' + title + '" to your Shopping Bag!');
             }
         }
 
@@ -3697,7 +3725,7 @@ window.location.reload();
             if (isTravel) {
                 let travels = [];
                 try {
-                    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                    const res = await fetch('/api/travel-packages?_t=' + Date.now());
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
                 } catch(e) {
