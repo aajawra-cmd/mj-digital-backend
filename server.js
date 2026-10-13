@@ -1122,7 +1122,6 @@ app.get('/api/payment/key', async (req, res) => {
     res.json({ success: true, provider: 'razorpay', environment: 'live', key: process.env.RAZORPAY_KEY_ID || '' });
   }
 });
-});
 
 app.get('/api/catalog/lookup/:id', async (req, res) => {
   try {
