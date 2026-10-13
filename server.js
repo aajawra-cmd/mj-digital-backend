@@ -57,6 +57,12 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '50mb' }));
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Serve frontend static files
@@ -70,6 +76,14 @@ if (!fs.existsSync(uploadDir)) {
 app.use('/uploads', express.static(uploadDir));
 
 // Root route
+app.get(['/invoice.html', '/account/invoice.html'], (req, res) => {
+  const invPath = path.join(__dirname, 'invoice.html');
+  const mjInvPath = path.join(__dirname, 'mj_digital', 'invoice.html');
+  if (fs.existsSync(invPath)) return res.sendFile(invPath);
+  if (fs.existsSync(mjInvPath)) return res.sendFile(mjInvPath);
+  res.status(404).send('Invoice template not found');
+});
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -1100,6 +1114,25 @@ app.get('/api/payment/key', async (req, res) => {
     res.json({ success: true, provider: 'razorpay', environment: 'live', key: process.env.RAZORPAY_KEY_ID || '' });
   }
 });
+});
+
+app.get('/api/catalog/lookup/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    let item = await Product.findById(id).catch(() => null);
+    if (!item) item = await TravelPackage.findById(id).catch(() => null);
+    if (!item) {
+      // Lookup by title regex
+      item = await Product.findOne({ title: new RegExp(id, 'i') }).catch(() => null);
+    }
+    if (!item) {
+      item = await TravelPackage.findOne({ title: new RegExp(id, 'i') }).catch(() => null);
+    }
+    if (!item) return res.status(404).json({ success: false, message: 'Item not found in catalog' });
+    res.json({ success: true, data: item });
+  } catch(e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {

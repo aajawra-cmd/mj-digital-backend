@@ -2947,3 +2947,36 @@ async function handleSecurityCredentialsSubmit(e) {
 window.openChangeCredsModal = openChangeCredsModal;
 window.closeChangeCredsModal = closeChangeCredsModal;
 window.handleSecurityCredentialsSubmit = handleSecurityCredentialsSubmit;
+
+
+async function handleBuyAgain(itemId, titleFallback) {
+  try {
+    let resolvedItem = null;
+    const res = await fetch('/api/catalog/lookup/' + encodeURIComponent(itemId || titleFallback));
+    const result = await res.json();
+    if (result.success && result.data) {
+      resolvedItem = result.data;
+    }
+
+    if (!resolvedItem) {
+      alert((titleFallback || 'Item') + ' abhi available nahi hai ya update ho raha hai.');
+      return;
+    }
+
+    let cart = JSON.parse(localStorage.getItem('mj_cart') || '[]');
+    cart.push({
+      id: resolvedItem._id,
+      title: resolvedItem.title,
+      price: resolvedItem.price || resolvedItem.pricingTiers?.standard?.price || 0,
+      image: resolvedItem.imageUrl || (resolvedItem.images && resolvedItem.images[0]) || '',
+      quantity: 1,
+      type: resolvedItem.destination ? 'travel' : 'ecommerce'
+    });
+    localStorage.setItem('mj_cart', JSON.stringify(cart));
+    if (typeof updateCartBadge === 'function') updateCartBadge();
+    window.location.href = '/bag';
+  } catch(err) {
+    alert('Buy Again process error: ' + err.message);
+  }
+}
+window.handleBuyAgain = handleBuyAgain;
