@@ -603,7 +603,7 @@ async function loadAdminProducts() {
   const tbody = document.getElementById('productsTableBody');
 
   try {
-    const res = await fetch('/api/products');
+    const res = await fetch('/api/products?t=' + Date.now());
     const result = await res.json();
     const products = Array.isArray(result) ? result : (result.data || []);
     productsList = products;
@@ -1056,7 +1056,7 @@ async function loadAdminTravelPackages() {
   const container = document.getElementById('travelList');
 
   try {
-    const res = await fetch('/api/travel-packages');
+    const res = await fetch('/api/travel-packages?t=' + Date.now());
     const result = await res.json();
     const packages = Array.isArray(result) ? result : (result.data || []);
     cachedTravelPackages = packages;
@@ -2980,3 +2980,72 @@ async function handleBuyAgain(itemId, titleFallback) {
   }
 }
 window.handleBuyAgain = handleBuyAgain;
+
+// SAFE SHOPPING BAG RENDERER
+function renderCartItems() {
+  const container = document.getElementById('cartItemsList') || document.getElementById('bagItemsContainer') || document.querySelector('.bag-items');
+  const countEls = document.querySelectorAll('.cart-count, #cartBadge, #bagCountBadge');
+  
+  let cart = [];
+  try {
+    cart = JSON.parse(localStorage.getItem('mj_cart') || '[]');
+  } catch(e) { cart = []; }
+
+  countEls.forEach(el => { if (el) el.innerText = cart.length; });
+
+  if (!container) return;
+
+  if (cart.length === 0) {
+    container.innerHTML = '<div class="p-8 text-center text-gray-500 font-medium">Aapka Shopping Bag khali hai.</div>';
+    const subtotalEl = document.getElementById('bagSubtotal') || document.getElementById('cartSubtotal');
+    const totalEl = document.getElementById('bagTotal') || document.getElementById('cartTotal');
+    if (subtotalEl) subtotalEl.innerText = '₹0';
+    if (totalEl) totalEl.innerText = '₹0';
+    return;
+  }
+
+  let total = 0;
+  let html = '';
+
+  cart.forEach((item, index) => {
+    const title = item.title || item.name || 'Selected Item';
+    const price = Number(item.price || item.discountPrice || 0);
+    const qty = Number(item.quantity || item.qty || 1);
+    const img = item.image || item.imageUrl || (item.images && item.images[0]) || 'https://placehold.co/100x100?text=Item';
+    const itemTotal = price * qty;
+    total += itemTotal;
+
+    html += `
+      <div class="flex items-center justify-between p-4 mb-3 bg-white border border-gray-200 rounded-xl shadow-sm">
+        <div class="flex items-center gap-4">
+          <img src="${img}" class="w-16 h-16 object-cover rounded-lg border border-gray-100" onerror="this.src='https://placehold.co/100x100?text=Item'">
+          <div>
+            <h4 class="font-bold text-gray-900 text-sm md:text-base">${title}</h4>
+            <p class="text-xs text-blue-600 font-semibold">${item.type === 'travel' ? 'Travel Package' : 'Product'}</p>
+            <p class="text-sm font-bold text-gray-700 mt-1">₹${price.toLocaleString('en-IN')} × ${qty} = ₹${itemTotal.toLocaleString('en-IN')}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="removeFromCart(${index})" class="text-red-500 hover:text-red-700 p-2 text-sm font-semibold">
+            <i class="fa-solid fa-trash"></i> Remove
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+  const subtotalEl = document.getElementById('bagSubtotal') || document.getElementById('cartSubtotal');
+  const totalEl = document.getElementById('bagTotal') || document.getElementById('cartTotal');
+  if (subtotalEl) subtotalEl.innerText = '₹' + total.toLocaleString('en-IN');
+  if (totalEl) totalEl.innerText = '₹' + total.toLocaleString('en-IN');
+}
+window.renderCartItems = renderCartItems;
+
+function removeFromCart(idx) {
+  let cart = JSON.parse(localStorage.getItem('mj_cart') || '[]');
+  cart.splice(idx, 1);
+  localStorage.setItem('mj_cart', JSON.stringify(cart));
+  renderCartItems();
+}
+window.removeFromCart = removeFromCart;

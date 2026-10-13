@@ -47,6 +47,14 @@ const Category = require('./models/Category');
 const JWT_SECRET = process.env.JWT_SECRET || 'MJ_DIGITAL_SECRET_KEY_2026';
 
 const app = express();
+// INVOICE SERVE ROUTE FIX
+app.get(['/invoice', '/invoice.html', '/account/invoice', '/account/invoice.html'], (req, res) => {
+  const rootInv = path.join(__dirname, 'invoice.html');
+  const mjInv = path.join(__dirname, 'mj_digital', 'invoice.html');
+  if (fs.existsSync(rootInv)) return res.sendFile(rootInv);
+  if (fs.existsSync(mjInv)) return res.sendFile(mjInv);
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // ==========================================
 // 1. MIDDLEWARES & STATIC FOLDERS
