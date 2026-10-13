@@ -833,8 +833,8 @@ async function handleProductSubmit(event) {
 
   const method = editingProductId ? 'PUT' : 'POST';
   const endpoint = editingProductId 
-    ? `/api/products/${editingProductId}` 
-    : '/api/products';
+    ? `/api/products?_t=1791901338531/${editingProductId}` 
+    : '/api/products?_t=1791901338531';
 
   try {
     const authHeaders = getAdminAuthHeaders();
@@ -877,7 +877,7 @@ async function deleteProduct(productId) {
   if (!confirm('Kya aap sach mein ye product delete karna chahte hain?')) return;
 
   try {
-    const res = await fetch(`/api/products/${productId}`, {
+    const res = await fetch(`/api/products?_t=1791901338531/${productId}`, {
       method: 'DELETE',
       headers: {
         ...getAdminAuthHeaders()
@@ -901,7 +901,7 @@ async function quickUpdateProduct(id, field, value) {
     const payload = {};
     payload[field] = Number(value);
 
-    const res = await fetch(`/api/products/${id}`, {
+    const res = await fetch(`/api/products?_t=1791901338531/${id}`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
@@ -922,7 +922,7 @@ async function quickUpdateProduct(id, field, value) {
 
 async function updateProductStatus(id, status) {
   try {
-    const res = await fetch(`/api/products/${id}`, {
+    const res = await fetch(`/api/products?_t=1791901338531/${id}`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
@@ -1150,7 +1150,7 @@ async function handleTravelSubmit(event) {
   }
 
   try {
-    const res = await fetch('/api/travel-packages', {
+    const res = await fetch('/api/travel-packages?_t=1791901338532', {
       method: 'POST',
       headers: {
         ...getAdminAuthHeaders()
@@ -1176,7 +1176,7 @@ async function handleTravelSubmit(event) {
 async function deleteTravelPackage(id) {
   if (!confirm('Kya aap sach me is travel package ko delete karna chahte hain?')) return;
   try {
-    const res = await fetch(`/api/travel-packages/${id}`, { 
+    const res = await fetch(`/api/travel-packages?_t=1791901338532/${id}`, { 
       method: 'DELETE',
       headers: {
         ...getAdminAuthHeaders()
@@ -1196,7 +1196,7 @@ async function deleteTravelPackage(id) {
 
 async function updateTravelStatus(id, newStatus) {
   try {
-    const res = await fetch(`/api/travel-packages/${id}/status`, {
+    const res = await fetch(`/api/travel-packages?_t=1791901338532/${id}/status`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
@@ -1218,7 +1218,7 @@ async function updateTravelStatus(id, newStatus) {
 
 async function quickUpdateTravelPrice(id, newPrice) {
   try {
-    const res = await fetch(`/api/travel-packages/${id}/quick-update`, {
+    const res = await fetch(`/api/travel-packages?_t=1791901338532/${id}/quick-update`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',
@@ -1280,7 +1280,7 @@ async function handleEditTravelSubmit(event) {
   };
 
   try {
-    const res = await fetch(`/api/travel-packages/${id}`, {
+    const res = await fetch(`/api/travel-packages?_t=1791901338532/${id}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -3049,3 +3049,76 @@ function removeFromCart(idx) {
   renderCartItems();
 }
 window.removeFromCart = removeFromCart;
+
+function renderBag() {
+  const bagList = document.getElementById('bagItemsContainer') || document.getElementById('cartItemsList') || document.querySelector('.bag-items-list');
+  const countBadges = document.querySelectorAll('.cart-count, #cartBadge, #bagCountBadge, #headerCartCount');
+  
+  let cart = [];
+  try {
+    cart = JSON.parse(localStorage.getItem('mj_cart') || '[]');
+  } catch(e) { cart = []; }
+
+  if (countBadges) {
+    countBadges.forEach(b => { if (b) b.innerText = cart.length; });
+  }
+
+  if (!bagList) return;
+
+  if (cart.length === 0) {
+    bagList.innerHTML = '<div class="p-8 text-center text-gray-500 font-semibold text-base">Aapka Shopping Bag khali hai.</div>';
+    const subtotalEl = document.getElementById('bagSubtotal');
+    const totalEl = document.getElementById('bagTotal');
+    if (subtotalEl) subtotalEl.innerText = '₹0';
+    if (totalEl) totalEl.innerText = '₹0';
+    return;
+  }
+
+  let total = 0;
+  let html = '';
+
+  cart.forEach((item, index) => {
+    const title = item.title || item.name || 'Selected Item';
+    const price = Number(item.price || item.discountPrice || item.standardPrice || 0);
+    const qty = Number(item.quantity || item.qty || 1);
+    const itemTotal = price * qty;
+    total += itemTotal;
+
+    const img = item.image || item.imageUrl || (item.images && item.images[0]) || 'https://placehold.co/120x120?text=MJ+Digital';
+    const isTour = item.destination || item.type === 'travel' || item.days;
+
+    html += `
+      <div class="flex items-center justify-between p-4 mb-3 bg-white rounded-2xl border border-gray-100 shadow-sm transition hover:shadow-md">
+        <div class="flex items-center gap-4">
+          <img src="${img}" class="w-16 h-16 object-cover rounded-xl border border-gray-100" onerror="this.src='https://placehold.co/120x120?text=Item'">
+          <div>
+            <h4 class="font-bold text-gray-900 text-sm md:text-base leading-tight">${title}</h4>
+            <span class="inline-block px-2 py-0.5 mt-1 text-[11px] font-semibold rounded-md ${isTour ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}">
+              ${isTour ? 'Travel Package' : 'Product'}
+            </span>
+            <p class="text-sm font-bold text-gray-800 mt-1">₹${price.toLocaleString('en-IN')} × ${qty} = <span class="text-blue-600 font-extrabold">₹${itemTotal.toLocaleString('en-IN')}</span></p>
+          </div>
+        </div>
+        <button onclick="removeFromBagItem(${index})" class="text-red-500 hover:text-red-700 p-2 font-medium text-xs flex items-center gap-1 transition">
+          <i class="fa-solid fa-trash"></i> Remove
+        </button>
+      </div>
+    `;
+  });
+
+  bagList.innerHTML = html;
+  const subtotalEl = document.getElementById('bagSubtotal');
+  const totalEl = document.getElementById('bagTotal');
+  if (subtotalEl) subtotalEl.innerText = '₹' + total.toLocaleString('en-IN');
+  if (totalEl) totalEl.innerText = '₹' + total.toLocaleString('en-IN');
+}
+window.renderBag = renderBag;
+window.renderCartItems = renderBag;
+
+function removeFromBagItem(idx) {
+  let cart = JSON.parse(localStorage.getItem('mj_cart') || '[]');
+  cart.splice(idx, 1);
+  localStorage.setItem('mj_cart', JSON.stringify(cart));
+  renderBag();
+}
+window.removeFromBagItem = removeFromBagItem;

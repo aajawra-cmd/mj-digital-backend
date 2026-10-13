@@ -4761,5 +4761,12 @@ document.addEventListener("DOMContentLoaded", function() {
     switchUtilityTab('mobile');
 });
 </script>
+<script id="renderBagAutoHook">
+  document.addEventListener("DOMContentLoaded", function() {
+    if (typeof renderBag === "function") {
+      renderBag();
+    }
+  });
+</script>
 </body>
 </html>
