@@ -1646,15 +1646,23 @@ async function getActiveRazorpayKey() {
         } catch(e) { myCart = []; }
 
         let myWishlist = [];
+        try {
+            myWishlist = JSON.parse(localStorage.getItem('mj_wishlist') || '[]');
+        } catch(e) { myWishlist = []; }
+
         let catalogItemsCache = {};
         let cachedAllProducts = [];
         let currentFilteredCatalogList = [];
+        let currentGalleryMedia = [];
+        let currentSelectedProductForPricing = null;
+        let currentVariantSelectionMap = {};
 
+        // DYNAMIC FILTER MEMORY FOR EACH CATEGORY
         let categoryMemory = {
-            mobile: { all: [], filtered: [], activeBrand: 'All', query: '' },
-            electronics: { all: [], filtered: [], activeBrand: 'All', query: '' },
-            fashion: { all: [], filtered: [], activeBrand: 'All', query: '' },
-            services: { all: [], filtered: [], activeBrand: 'All', query: '' }
+            mobile: { all: [], filtered: [], activeBrand: 'All', query: '', sort: 'default' },
+            electronics: { all: [], filtered: [], activeBrand: 'All', query: '', sort: 'default' },
+            fashion: { all: [], filtered: [], activeBrand: 'All', query: '', sort: 'default' },
+            services: { all: [], filtered: [], activeBrand: 'All', query: '', sort: 'default' }
         };
 
         let travelMemory = {
@@ -1662,9 +1670,11 @@ async function getActiveRazorpayKey() {
             filtered: [],
             activeRegion: 'All',
             activeDestination: 'All',
-            query: ''
+            query: '',
+            sort: 'default'
         };
 
+        // 1. BULLETPROOF MEDIA RESOLVER (Handles Relative, Render uploads & External URLs)
         function resolveMediaUrl(url) {
             if (!url || typeof url !== 'string' || url.trim() === '') {
                 return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500';
@@ -1674,9 +1684,12 @@ async function getActiveRazorpayKey() {
                 return clean;
             }
             if (clean.startsWith('/uploads/')) {
-                return clean;
+                return 'https://mj-digital-backend-3.onrender.com' + clean;
             }
-            return '/uploads/' + clean;
+            if (clean.startsWith('uploads/')) {
+                return 'https://mj-digital-backend-3.onrender.com/' + clean;
+            }
+            return 'https://mj-digital-backend-3.onrender.com/uploads/' + clean;
         }
 
         function cleanStuckBackdrops() {
@@ -1720,33 +1733,35 @@ async function getActiveRazorpayKey() {
             }
 
             document.querySelectorAll('.nav-btn, .nav-link').forEach(btn => btn.classList.remove('active'));
-            if (navEl) {
-                navEl.classList.add('active');
-            }
+            if (navEl) navEl.classList.add('active');
 
             if (pageId === 'page-home') {
                 loadHomeTrending();
             } else if (pageId === 'page-mobile') {
-                loadMobiles();
+                loadCategory('mobile', 'mobileGrid', 'mobileBrandChips');
             } else if (pageId === 'page-electronics') {
-                loadElectronics();
+                loadCategory('electronics', 'electronicsProductsGrid', 'electronicsBrandChips');
             } else if (pageId === 'page-fashion') {
-                loadFashion();
+                loadCategory('fashion', 'fashionProductsGrid', 'fashionBrandChips');
             } else if (pageId === 'page-services') {
-                loadServices();
+                loadCategory('services', 'servicesProductsGrid', 'servicesBrandChips');
             } else if (pageId === 'page-travels') {
                 filterTravels('All');
+            } else if (pageId === 'page-all-catalog') {
+                loadAllCatalog();
             } else if (pageId === 'page-cart') {
                 renderCartPage();
+            } else if (pageId === 'page-wishlist') {
+                renderWishlistPage();
             } else if (pageId === 'page-profile') {
                 loadOrdersTable();
             }
         }
 
         // ==========================================
-        // 1. LIVE BACKEND CATALOG DATA FETCHERS
+        // 2. REAL-TIME DATABASE FETCH (PURE DYNAMIC - NO HARDCODING)
         // ==========================================
-        async function fetchStoreItems() {
+        async function fetchStoreItems(force = false) {
             try {
                 const res = await fetch('/api/products?_t=' + Date.now());
                 if (res.ok) {
@@ -1758,7 +1773,9 @@ async function getActiveRazorpayKey() {
                         return items;
                     }
                 }
-            } catch(e) { console.warn("Products API Error:", e.message); }
+            } catch(e) {
+                console.warn("Products API Error:", e.message);
+            }
             return cachedAllProducts || [];
         }
 
@@ -1774,23 +1791,29 @@ async function getActiveRazorpayKey() {
                         return list;
                     }
                 }
-            } catch(e) { console.warn("Travel API Error:", e.message); }
+            } catch(e) {
+                console.warn("Travel API Error:", e.message);
+            }
             return travelMemory.all || [];
         }
 
+        // ==========================================
+        // 3. PRODUCT & TRAVEL CARD BUILDERS
+        // ==========================================
         function createProductCardHTML(item) {
             const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
             const safeImg = resolveMediaUrl(rawImg);
             const currentPrice = Number(item.discountPrice ? item.discountPrice : (item.price || 0)).toLocaleString('en-IN');
             const originalMrp = (item.discountPrice && item.discountPrice < item.price) ? Number(item.price).toLocaleString('en-IN') : null;
             const title = item.title || item.name || 'Product';
+            const isWish = myWishlist.some(w => String(w.id) === String(item._id));
 
             return `
                 <div class="col-md-4 col-sm-6">
                     <div class="card-custom p-4 text-center h-100 d-flex flex-column justify-content-between">
                         <div onclick="openItemDetailsPage('${item._id}', false)" style="cursor: pointer;">
                             <div class="bg-light rounded-4 p-3 mb-3 d-flex align-items-center justify-content-center" style="height: 180px;">
-                                <img src="${safeImg}" alt="${title}" class="img-fluid" style="max-height: 150px; object-fit: contain;" onerror="this.src='https://placehold.co/150'">
+                                <img src="${safeImg}" alt="${title}" class="img-fluid" style="max-height: 150px; object-fit: contain;" onerror="this.src='https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300'">
                             </div>
                             <span class="badge bg-primary-subtle text-primary mb-2 text-uppercase">${item.category || 'General'}</span>
                             <h6 class="fw-bold fs-5 text-dark line-clamp-1">${title}</h6>
@@ -1807,6 +1830,9 @@ async function getActiveRazorpayKey() {
                                 <button type="button" onclick="openItemDetailsPage('${item._id}', false)" class="btn-action-icon" title="View Full Page">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
+                                <button type="button" onclick="handleWishlistClick(event, '${item._id}', false)" class="btn-action-icon ${isWish ? 'wishlist-active' : ''}" title="Add to Wishlist">
+                                    <i class="${isWish ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1820,6 +1846,7 @@ async function getActiveRazorpayKey() {
             const price = t.pricingTiers?.standard?.price || t.price || 45000;
             const days = t.duration?.days || 1;
             const nights = t.duration?.nights || 0;
+            const isWish = myWishlist.some(w => String(w.id) === String(t._id));
 
             return `
                 <div class="col-md-6 col-lg-4">
@@ -1845,6 +1872,9 @@ async function getActiveRazorpayKey() {
                                     <button type="button" onclick="openItemDetailsPage('${t._id}', true)" class="btn-action-icon" style="width: 38px; height: 38px;">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
+                                    <button type="button" onclick="handleWishlistClick(event, '${t._id}', true)" class="btn-action-icon ${isWish ? 'wishlist-active' : ''}" style="width: 38px; height: 38px;">
+                                        <i class="${isWish ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1853,6 +1883,205 @@ async function getActiveRazorpayKey() {
             `;
         }
 
+        // ==========================================
+        // 4. CATEGORY ENGINE: DYNAMIC BRAND CHIPS, SEARCH & SORTING
+        // ==========================================
+        async function loadCategory(catKey, gridId, chipsContainerId) {
+            const grid = document.getElementById(gridId);
+            const chipsCont = document.getElementById(chipsContainerId);
+            if (!grid) return;
+
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading live items...</div>';
+
+            const allProds = await fetchStoreItems();
+            const catItems = allProds.filter(p => {
+                const c = String(p.category || '').toLowerCase();
+                if (catKey === 'mobile') return c.includes('mobile') || c.includes('phone');
+                if (catKey === 'electronics') return c.includes('electronic') || c.includes('laptop') || c.includes('gadget');
+                if (catKey === 'fashion') return c.includes('fashion') || c.includes('cloth') || c.includes('shirt');
+                if (catKey === 'services') return c.includes('service') || c.includes('it');
+                return c.includes(catKey);
+            });
+
+            categoryMemory[catKey].all = catItems;
+            categoryMemory[catKey].filtered = catItems;
+            categoryMemory[catKey].activeBrand = 'All';
+
+            if (chipsCont) {
+                const brands = ['All', ...new Set(catItems.map(p => (p.brand && p.brand.trim()) || '').filter(Boolean))];
+                chipsCont.innerHTML = brands.map(b => `
+                    <button type="button" onclick="filterCategoryByBrand('${catKey}', '${b}', this, '${gridId}')" class="brand-chip-btn ${b === 'All' ? 'active' : ''}">${b}</button>
+                `).join('');
+            }
+
+            renderCategoryGrid(gridId, catItems);
+        }
+
+        function filterCategoryByBrand(catKey, brand, btnEl, gridId) {
+            categoryMemory[catKey].activeBrand = brand;
+            if (btnEl && btnEl.parentElement) {
+                btnEl.parentElement.querySelectorAll('.brand-chip-btn').forEach(b => b.classList.remove('active'));
+                btnEl.classList.add('active');
+            }
+            applyCategoryFilters(catKey, gridId);
+        }
+
+        function filterCategoryBySearch(catKey, queryVal, gridId) {
+            categoryMemory[catKey].query = String(queryVal || '').trim().toLowerCase();
+            applyCategoryFilters(catKey, gridId);
+        }
+
+        function sortCategoryProducts(catKey, sortOrder, gridId) {
+            categoryMemory[catKey].sort = sortOrder;
+            applyCategoryFilters(catKey, gridId);
+        }
+
+        function applyCategoryFilters(catKey, gridId) {
+            let list = [...categoryMemory[catKey].all];
+
+            if (categoryMemory[catKey].activeBrand && categoryMemory[catKey].activeBrand !== 'All') {
+                list = list.filter(p => String(p.brand || '').toLowerCase().trim() === categoryMemory[catKey].activeBrand.toLowerCase().trim());
+            }
+
+            if (categoryMemory[catKey].query) {
+                list = list.filter(p => {
+                    const title = String(p.title || p.name || '').toLowerCase();
+                    const brand = String(p.brand || '').toLowerCase();
+                    return title.includes(categoryMemory[catKey].query) || brand.includes(categoryMemory[catKey].query);
+                });
+            }
+
+            if (categoryMemory[catKey].sort === 'low-high') {
+                list.sort((a, b) => Number(a.discountPrice || a.price || 0) - Number(b.discountPrice || b.price || 0));
+            } else if (categoryMemory[catKey].sort === 'high-low') {
+                list.sort((a, b) => Number(b.discountPrice || b.price || 0) - Number(a.discountPrice || a.price || 0));
+            }
+
+            categoryMemory[catKey].filtered = list;
+            renderCategoryGrid(gridId, list);
+        }
+
+        function renderCategoryGrid(gridId, items) {
+            const grid = document.getElementById(gridId);
+            if (!grid) return;
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-box-open fs-2 mb-2 d-block opacity-50"></i>No products found matching filters.</div>';
+                return;
+            }
+            grid.innerHTML = items.map(p => createProductCardHTML(p)).join('');
+        }
+
+        // ==========================================
+        // 5. TRAVEL ENGINE: ALL, INTERNATIONAL, INDIA & DYNAMIC DESTINATIONS
+        // ==========================================
+        async function filterTravels(regionType = 'All', btnEl = null) {
+            travelMemory.activeRegion = regionType;
+            travelMemory.activeDestination = 'All';
+
+            const tSearch = document.getElementById('travelSearchInput');
+            if (tSearch) tSearch.value = '';
+
+            document.querySelectorAll('.travel-tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnEl) {
+                btnEl.classList.add('active');
+            } else if (regionType === 'All') {
+                document.getElementById('btn-all-travel')?.classList.add('active');
+            } else if (regionType === 'International') {
+                document.getElementById('btn-intl')?.classList.add('active');
+            } else if (regionType === 'India') {
+                document.getElementById('btn-india')?.classList.add('active');
+            }
+
+            await fetchTravelPackages();
+            applyTravelFilters();
+        }
+
+        function filterTravelByDestination(destinationName, btnEl) {
+            travelMemory.activeDestination = destinationName;
+            if (btnEl && btnEl.parentElement) {
+                btnEl.parentElement.querySelectorAll('.brand-chip-btn').forEach(b => b.classList.remove('active'));
+                btnEl.classList.add('active');
+            }
+            applyTravelFilters();
+        }
+
+        function filterTravelsBySearch(val) {
+            travelMemory.query = String(val || '').trim().toLowerCase();
+            applyTravelFilters();
+        }
+
+        function sortTravelPackages(sortOrder) {
+            travelMemory.sort = sortOrder;
+            applyTravelFilters();
+        }
+
+        function applyTravelFilters() {
+            let list = [...travelMemory.all];
+            const indiaKeywords = ['india', 'kerala', 'goa', 'kashmir', 'srinagar', 'gulmarg', 'manali', 'rajasthan', 'himachal', 'delhi', 'shimla', 'jaipur'];
+
+            if (travelMemory.activeRegion === 'India') {
+                list = list.filter(t => {
+                    const dest = String(t.destination || '').toLowerCase();
+                    const title = String(t.title || '').toLowerCase();
+                    return indiaKeywords.some(k => dest.includes(k) || title.includes(k));
+                });
+            } else if (travelMemory.activeRegion === 'International') {
+                list = list.filter(t => {
+                    const dest = String(t.destination || '').toLowerCase();
+                    const title = String(t.title || '').toLowerCase();
+                    return !indiaKeywords.some(k => dest.includes(k) || title.includes(k));
+                });
+            }
+
+            if (travelMemory.activeDestination && travelMemory.activeDestination !== 'All') {
+                list = list.filter(t => String(t.destination || '').toLowerCase() === travelMemory.activeDestination.toLowerCase());
+            }
+
+            if (travelMemory.query) {
+                list = list.filter(t => {
+                    const title = String(t.title || '').toLowerCase();
+                    const dest = String(t.destination || '').toLowerCase();
+                    return title.includes(travelMemory.query) || dest.includes(travelMemory.query);
+                });
+            }
+
+            if (travelMemory.sort === 'low-high') {
+                list.sort((a, b) => Number(a.pricingTiers?.standard?.price || a.price || 0) - Number(b.pricingTiers?.standard?.price || b.price || 0));
+            } else if (travelMemory.sort === 'high-low') {
+                list.sort((a, b) => Number(b.pricingTiers?.standard?.price || b.price || 0) - Number(a.pricingTiers?.standard?.price || a.price || 0));
+            }
+
+            travelMemory.filtered = list;
+
+            // Render Destination Chips Dynamically from MongoDB Packages
+            const chipContainer = document.getElementById('travelDestinationChips');
+            if (chipContainer) {
+                const currentPool = travelMemory.all.filter(t => {
+                    const dest = String(t.destination || '').toLowerCase();
+                    const title = String(t.title || '').toLowerCase();
+                    const isIndia = indiaKeywords.some(k => dest.includes(k) || title.includes(k));
+                    if (travelMemory.activeRegion === 'India') return isIndia;
+                    if (travelMemory.activeRegion === 'International') return !isIndia;
+                    return true;
+                });
+                const dests = ['All', ...new Set(currentPool.map(p => (p.destination && p.destination.trim()) || '').filter(Boolean))];
+                chipContainer.innerHTML = dests.map(d => `
+                    <button type="button" onclick="filterTravelByDestination('${d}', this)" class="brand-chip-btn ${d === travelMemory.activeDestination ? 'active' : ''}">${d}</button>
+                `).join('');
+            }
+
+            const grid = document.getElementById('travelGrid');
+            if (!grid) return;
+            if (list.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-plane-slash fs-2 mb-2 d-block opacity-50"></i>No travel packages found matching criteria.</div>';
+                return;
+            }
+            grid.innerHTML = list.map(t => createTravelCardHTML(t)).join('');
+        }
+
+        // ==========================================
+        // 6. HOME TRENDING & ALL CATALOG
+        // ==========================================
         async function loadHomeTrending() {
             const grid = document.getElementById('homeTrendingGrid');
             if (!grid) return;
@@ -1870,56 +2099,179 @@ async function getActiveRazorpayKey() {
                 grid.innerHTML = '<div class="col-12 text-center text-muted py-4">No trending items available.</div>';
                 return;
             }
-
             grid.innerHTML = mixed.map(it => it.isTravel ? createTravelCardHTML(it) : createProductCardHTML(it)).join('');
         }
 
-        async function filterTravels(region = 'All') {
-            const grid = document.getElementById('travelGrid');
+        async function loadAllCatalog() {
+            const grid = document.getElementById('allCatalogGrid');
             if (!grid) return;
-            grid.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading travel packages...</div>';
-
-            const travels = await fetchTravelPackages();
-            if (travels.length === 0) {
-                grid.innerHTML = '<div class="col-12 text-center text-muted py-4">No packages found.</div>';
-                return;
-            }
-            grid.innerHTML = travels.map(t => createTravelCardHTML(t)).join('');
-        }
-
-        async function loadCategoryItems(catKey, gridId) {
-            const grid = document.getElementById(gridId);
-            if (!grid) return;
-            grid.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading items...</div>';
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading catalog...</div>';
 
             const products = await fetchStoreItems();
-            const filtered = products.filter(p => String(p.category || '').toLowerCase().includes(catKey.toLowerCase()));
+            const travels = await fetchTravelPackages();
 
-            if (filtered.length === 0) {
-                grid.innerHTML = '<div class="col-12 text-center text-muted py-4">No items in this category yet.</div>';
-                return;
-            }
-            grid.innerHTML = filtered.map(p => createProductCardHTML(p)).join('');
+            currentFilteredCatalogList = [
+                ...products.map(p => ({ ...p, isTravel: false })),
+                ...travels.map(t => ({ ...t, isTravel: true }))
+            ];
+            renderSortedCatalogGrid(currentFilteredCatalogList);
         }
 
-        function loadMobiles() { loadCategoryItems('mobile', 'mobileGrid'); }
-        function loadElectronics() { loadCategoryItems('electronic', 'electronicsProductsGrid'); }
-        function loadFashion() { loadCategoryItems('fashion', 'fashionProductsGrid'); }
-        function loadServices() { loadCategoryItems('service', 'servicesProductsGrid'); }
+        function handleCatalogSortChange(sortType) {
+            let list = [...currentFilteredCatalogList];
+            const getPrice = (i) => i.isTravel ? Number(i.pricingTiers?.standard?.price || i.price || 0) : Number(i.discountPrice || i.price || 0);
+            if (sortType === 'low-high') list.sort((a, b) => getPrice(a) - getPrice(b));
+            if (sortType === 'high-low') list.sort((a, b) => getPrice(b) - getPrice(a));
+            renderSortedCatalogGrid(list);
+        }
+
+        function renderSortedCatalogGrid(list) {
+            const grid = document.getElementById('allCatalogGrid');
+            if (!grid) return;
+            if (list.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5">No catalog items available.</div>';
+                return;
+            }
+            grid.innerHTML = list.map(it => it.isTravel ? createTravelCardHTML(it) : createProductCardHTML(it)).join('');
+        }
 
         // ==========================================
-        // 2. SHOPPING BAG & CART ENGINE (LOCALSTORAGE SYNC)
+        // 7. FULL ITEM DETAILS VIEW (RESPONSIVE GALLERY & 2-WAY VARIANTS)
+        // ==========================================
+        function openItemDetailsPage(id, isTravel = false) {
+            const item = catalogItemsCache[id] || (travelMemory.all && travelMemory.all.find(t => String(t._id) === String(id))) || (cachedAllProducts && cachedAllProducts.find(p => String(p._id) === String(id)));
+            if (!item) return;
+
+            currentSelectedProductForPricing = item;
+            currentVariantSelectionMap = {};
+
+            document.getElementById('pageDetailTitle').innerText = item.title || item.name || 'Details';
+            document.getElementById('pageDetailDesc').innerText = item.description || item.itinerary || 'Verified authenticity guarantee.';
+            document.getElementById('pageDetailUnit').innerText = isTravel ? 'Per Person' : 'M.R.P. Inclusive of all taxes';
+            document.getElementById('pageDetailBuyText').innerText = isTravel ? 'Book Now' : 'Buy Now';
+
+            // Gallery Setup
+            let allMedia = [];
+            if (Array.isArray(item.images) && item.images.length > 0) allMedia = item.images;
+            else if (item.imageUrl) allMedia = [item.imageUrl];
+            else allMedia = ['https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500'];
+
+            currentGalleryMedia = allMedia.map(u => ({ type: (u.endsWith('.mp4') || u.endsWith('.webm')) ? 'video' : 'image', url: u }));
+
+            const thumbStrip = document.getElementById('pageDetailThumbnails');
+            if (thumbStrip) {
+                thumbStrip.innerHTML = currentGalleryMedia.map((m, idx) => `
+                    <div class="v-thumb-item ${idx === 0 ? 'active' : ''}" onclick="selectGalleryMedia(${idx})">
+                        ${m.type === 'video' ? '<div class="w-100 h-100 bg-dark text-white d-flex align-items-center justify-content-center"><i class="fa-solid fa-play"></i></div>' : '<img src="' + resolveMediaUrl(m.url) + '" class="w-100 h-100 object-fit-cover">'}
+                    </div>
+                `).join('');
+            }
+            renderMediaView(0);
+
+            // Variants Setup
+            renderCategoryVariantsDynamic(item, isTravel);
+
+            document.getElementById('pageDetailBuyBtn').onclick = () => {
+                handleAddToCartClick(null, id, isTravel);
+                checkoutFromCart();
+            };
+            document.getElementById('pageDetailAddBagBtn').onclick = (e) => handleAddToCartClick(e, id, isTravel);
+
+            navigateTo('page-item-details');
+        }
+
+        function selectGalleryMedia(index) {
+            document.querySelectorAll('.v-thumb-item').forEach((it, idx) => it.classList.toggle('active', idx === index));
+            renderMediaView(index);
+        }
+
+        function renderMediaView(index) {
+            const media = currentGalleryMedia[index] || currentGalleryMedia[0];
+            const box = document.getElementById('pageDetailMediaBox');
+            if (box && media) {
+                const safe = resolveMediaUrl(media.url);
+                if (media.type === 'video') {
+                    box.innerHTML = `<video controls autoplay muted playsinline class="rounded-3" style="max-height: 380px; width: 100%;"><source src="${safe}" type="video/mp4"></video>`;
+                } else {
+                    box.innerHTML = `<img src="${safe}" class="img-fluid rounded-3" style="max-height: 380px; object-fit: contain;">`;
+                }
+            }
+        }
+
+        function renderCategoryVariantsDynamic(item, isTravel = false) {
+            const container = document.getElementById('pageDetailVariantsContainer');
+            if (!container) return;
+
+            if (isTravel || item.pricingTiers) {
+                const s = item.pricingTiers?.standard?.price || item.price || 0;
+                const d = item.pricingTiers?.deluxe?.price || 0;
+                const l = item.pricingTiers?.luxury?.price || 0;
+                const tiers = [];
+                if (s > 0) tiers.push({ name: 'Standard Tier', price: s });
+                if (d > 0) tiers.push({ name: 'Deluxe Tier', price: d });
+                if (l > 0) tiers.push({ name: 'Luxury / VIP Tier', price: l });
+
+                if (tiers.length > 0) {
+                    container.innerHTML = `
+                        <div class="mb-3">
+                            <label class="small fw-bold text-dark d-block mb-1.5">Select Travel Tier:</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                ${tiers.map((t, idx) => `
+                                    <button type="button" class="variant-pill ${idx === 0 ? 'active' : ''}" onclick="onTravelTierSelect('${t.name}', ${t.price})">
+                                        ${t.name} (₹${Number(t.price).toLocaleString('en-IN')})
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    applyDiscountPriceDisplay(tiers[0].price, 0);
+                    return;
+                }
+            }
+
+            const basePrice = Number(item.price || 0);
+            const discountP = Number(item.discountPrice || 0);
+            const finalP = (discountP > 0 && discountP < basePrice) ? discountP : basePrice;
+            applyDiscountPriceDisplay(finalP, discountP > 0 ? basePrice : 0);
+            container.innerHTML = '';
+        }
+
+        function onTravelTierSelect(tierName, tierPrice) {
+            document.querySelectorAll('#pageDetailVariantsContainer .variant-pill').forEach(b => b.classList.toggle('active', b.innerText.includes(tierName)));
+            applyDiscountPriceDisplay(tierPrice, 0);
+        }
+
+        function applyDiscountPriceDisplay(finalPrice, originalMrp) {
+            const priceEl = document.getElementById('pageDetailPrice');
+            const origBox = document.getElementById('pageDetailOriginalPriceBox');
+            const origPriceEl = document.getElementById('pageDetailOriginalPrice');
+            const discountBadge = document.getElementById('pageDetailDiscountPercent');
+
+            if (!priceEl) return;
+            priceEl.innerText = '₹' + Number(finalPrice || 0).toLocaleString('en-IN');
+
+            if (originalMrp > finalPrice) {
+                const diff = originalMrp - finalPrice;
+                const pct = Math.round((diff / originalMrp) * 100);
+                if (origBox) origBox.style.display = 'inline-flex';
+                if (origPriceEl) origPriceEl.innerText = '₹' + Number(originalMrp).toLocaleString('en-IN');
+                if (discountBadge) discountBadge.innerText = pct + '% OFF';
+            } else {
+                if (origBox) origBox.style.display = 'none';
+            }
+        }
+
+        // ==========================================
+        // 8. SHOPPING BAG & CHECKOUT (FULL PERSISTENCE)
         // ==========================================
         function handleAddToCartClick(e, id, isTravel = false) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
 
-            let item = catalogItemsCache[id];
-            if (!item) {
-                item = { _id: id, title: 'Selected Item', price: 1000, images: ['https://placehold.co/150'] };
-            }
+            let item = catalogItemsCache[id] || (travelMemory.all && travelMemory.all.find(t => String(t._id) === String(id))) || (cachedAllProducts && cachedAllProducts.find(p => String(p._id) === String(id)));
+            if (!item) item = { _id: id, title: 'Item', price: 999 };
 
-            const title = item.title || item.name || 'Item';
-            const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.discountPrice ? item.discountPrice : (item.price || 1000));
+            const title = item.title || item.name || 'Selected Item';
+            const price = isTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.discountPrice ? item.discountPrice : (item.price || 999));
             const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
             const img = resolveMediaUrl(rawImg);
             const type = isTravel ? 'Travel' : 'Product';
@@ -1938,7 +2290,15 @@ async function getActiveRazorpayKey() {
             myCart = cart;
 
             updateCartBadge();
-            alert('Added "' + title + '" to Shopping Bag!');
+            const targetBtn = e ? e.currentTarget : null;
+            if (targetBtn) {
+                const orig = targetBtn.innerHTML;
+                targetBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Added to Bag';
+                targetBtn.classList.add('btn-success');
+                setTimeout(() => { targetBtn.innerHTML = orig; targetBtn.classList.remove('btn-success'); }, 1400);
+            } else {
+                alert('Added "' + title + '" to your Shopping Bag!');
+            }
         }
 
         function updateCartBadge() {
@@ -1957,7 +2317,7 @@ async function getActiveRazorpayKey() {
             if (!list) return;
 
             let cart = [];
-            try { cart = JSON.parse(localStorage.getItem('mj_cart') || '[]'); } catch(e) { cart = []; }
+            try { cart = JSON.parse(localStorage.getItem('mj_cart') || '[]'); } catch(e) {}
             myCart = cart;
 
             if (cart.length === 0) {
@@ -1992,21 +2352,37 @@ async function getActiveRazorpayKey() {
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-3">
-                            <span class="fw-bold px-2">Qty: ${item.qty || 1}</span>
+                            <div class="d-flex align-items-center border rounded-pill bg-light p-1">
+                                <button type="button" class="btn btn-sm btn-light rounded-circle p-0" style="width: 24px; height: 24px;" onclick="changeCartQty(${idx}, -1)">-</button>
+                                <span class="fw-bold px-2 text-dark" style="min-width: 30px; text-align: center;">${item.qty || 1}</span>
+                                <button type="button" class="btn btn-sm btn-light rounded-circle p-0" style="width: 24px; height: 24px;" onclick="changeCartQty(${idx}, 1)">+</button>
+                            </div>
                             <span class="fw-bold text-primary fs-6">₹${Number(itemTotal).toLocaleString('en-IN')}</span>
-                            <button type="button" class="btn btn-outline-danger btn-sm rounded-circle" onclick="removeCartItemIndex(${idx})">✕</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm rounded-circle" onclick="removeCartItemIdx(${idx})">✕</button>
                         </div>
                     </div>
                 `;
             }).join('');
 
-            const totalFormatted = '₹' + total.toLocaleString('en-IN');
-            if (subtotalEl) subtotalEl.innerText = totalFormatted;
-            if (totalEl) totalEl.innerText = totalFormatted;
+            const formatted = '₹' + total.toLocaleString('en-IN');
+            if (subtotalEl) subtotalEl.innerText = formatted;
+            if (totalEl) totalEl.innerText = formatted;
             if (summaryEl) summaryEl.innerText = cart.length + ' Items in cart';
         }
 
-        function removeCartItemIndex(idx) {
+        function changeCartQty(idx, change) {
+            let cart = [];
+            try { cart = JSON.parse(localStorage.getItem('mj_cart') || '[]'); } catch(e) {}
+            if (!cart[idx]) return;
+            cart[idx].qty = (cart[idx].qty || 1) + change;
+            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            localStorage.setItem('mj_cart', JSON.stringify(cart));
+            myCart = cart;
+            updateCartBadge();
+            renderCartPage();
+        }
+
+        function removeCartItemIdx(idx) {
             let cart = [];
             try { cart = JSON.parse(localStorage.getItem('mj_cart') || '[]'); } catch(e) {}
             cart.splice(idx, 1);
@@ -2019,7 +2395,7 @@ async function getActiveRazorpayKey() {
         function checkoutFromCart() {
             let cart = [];
             try { cart = JSON.parse(localStorage.getItem('mj_cart') || '[]'); } catch(e) {}
-            if (cart.length === 0) return alert('Your cart is empty!');
+            if (cart.length === 0) return alert('Shopping Bag khali hai!');
 
             let total = 0;
             const summaryList = document.getElementById('fpCheckoutItemsSummary');
@@ -2038,33 +2414,81 @@ async function getActiveRazorpayKey() {
             navigateTo('page-checkout');
         }
 
-        function openItemDetailsPage(id, isTravel = false) {
+        // ==========================================
+        // 9. WISHLIST & ACCOUNT CONTROLLERS
+        // ==========================================
+        function handleWishlistClick(e, id, isTravel = false) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
             const item = catalogItemsCache[id];
             if (!item) return;
 
-            document.getElementById('pageDetailTitle').innerText = item.title || 'Product Details';
-            document.getElementById('pageDetailPrice').innerText = '₹' + Number(item.discountPrice || item.price || 0).toLocaleString('en-IN');
-            document.getElementById('pageDetailDesc').innerText = item.description || 'Verified product details.';
-
-            const rawImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || '');
-            const box = document.getElementById('pageDetailMediaBox');
-            if (box) {
-                box.innerHTML = `<img src="${resolveMediaUrl(rawImg)}" class="img-fluid rounded-3" style="max-height: 380px; object-fit: contain;">`;
+            const idx = myWishlist.findIndex(w => String(w.id) === String(id));
+            if (idx > -1) {
+                myWishlist.splice(idx, 1);
+            } else {
+                myWishlist.push({ id, title: item.title, price: item.price, img: (item.images && item.images[0]) || item.imageUrl, isTravel });
             }
-
-            document.getElementById('pageDetailAddBagBtn').onclick = (e) => handleAddToCartClick(e, id, isTravel);
-            document.getElementById('pageDetailBuyBtn').onclick = () => {
-                handleAddToCartClick(null, id, isTravel);
-                checkoutFromCart();
-            };
-
-            navigateTo('page-item-details');
+            localStorage.setItem('mj_wishlist', JSON.stringify(myWishlist));
+            updateWishlistBadge();
+            if (e && e.currentTarget) {
+                e.currentTarget.classList.toggle('wishlist-active', idx === -1);
+            }
         }
 
-        function handleFullPageCheckoutSubmit(e) {
-            e.preventDefault();
-            alert('Opening Payment Gateway...');
-            launchRazorpayDirect();
+        function updateWishlistBadge() {
+            const el = document.getElementById('wishCount');
+            if (el) el.innerText = myWishlist.length;
+        }
+
+        function renderWishlistPage() {
+            const grid = document.getElementById('wishlistProductsGrid');
+            if (!grid) return;
+            if (myWishlist.length === 0) {
+                grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-regular fa-heart fs-1 d-block mb-3"></i>Your wishlist is currently empty.</div>';
+                return;
+            }
+            grid.innerHTML = myWishlist.map(w => `
+                <div class="col-md-4 col-sm-6">
+                    <div class="card-custom p-3 text-center h-100 d-flex flex-column justify-content-between">
+                        <img src="${resolveMediaUrl(w.img)}" class="img-fluid rounded-3 mb-3" style="height: 140px; object-fit: contain;">
+                        <h6 class="fw-bold">${w.title}</h6>
+                        <p class="text-primary fw-bold">₹${Number(w.price).toLocaleString('en-IN')}</p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-brand btn-sm w-100" onclick="handleAddToCartClick(null, '${w.id}', ${w.isTravel})">Move to Bag</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Orders Table loader
+        async function loadOrdersTable() {
+            const container = document.getElementById('amazonOrdersContainer');
+            if (!container) return;
+            try {
+                const res = await fetch('/api/orders?_t=' + Date.now());
+                if (res.ok) {
+                    const data = await res.json();
+                    const list = Array.isArray(data) ? data : (data.data || []);
+                    if (list.length === 0) {
+                        container.innerHTML = '<div class="text-center text-muted py-5">No orders found.</div>';
+                        return;
+                    }
+                    container.innerHTML = list.map(o => `
+                        <div class="card border rounded-3 p-3 mb-3 bg-white">
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                <div><strong>Order #${String(o._id).slice(-6).toUpperCase()}</strong> <span class="badge bg-primary-subtle text-primary ms-2">${o.status || 'Processing'}</span></div>
+                                <span class="fw-bold text-primary fs-5">₹${Number(o.totalAmount || 0).toLocaleString('en-IN')}</span>
+                            </div>
+                            <p class="mb-1 text-dark fw-semibold">${o.itemDetails?.title || 'Ordered Items'}</p>
+                            <small class="text-muted">${new Date(o.createdAt).toLocaleDateString('en-IN')}</small>
+                            <div class="d-flex gap-2 mt-2">
+                                <a href="/invoice.html?id=${o._id}" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill px-3">Download Invoice</a>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
         }
 
         function checkAuthAndNavigate() {
@@ -2073,6 +2497,7 @@ async function getActiveRazorpayKey() {
 
         document.addEventListener("DOMContentLoaded", function() {
             updateCartBadge();
+            updateWishlistBadge();
             loadHomeTrending();
         });
 </script>
