@@ -1078,12 +1078,28 @@ app.use((req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.get('/api/payment/key', async (req, res) => {
-  let keyId = process.env.RAZORPAY_KEY_ID || '';
   try {
-    const settings = await PlatformSettings.findOne();
-    if (settings && settings.gatewayKeyId) keyId = settings.gatewayKeyId;
-  } catch(e) {}
-  res.json({ success: true, key: keyId });
+    const settings = await PlatformSetting.findOne({ singletonKey: 'MJ_MAIN_SETTINGS' });
+    const provider = settings?.gateway || 'razorpay';
+    const env = (settings?.environment === 'sandbox' || settings?.environment === 'test') ? 'test' : 'live';
+
+    let activeKey = '';
+    if (settings?.gatewayKeys?.[provider]?.[env]?.keyId) {
+      activeKey = settings.gatewayKeys[provider][env].keyId;
+    } else {
+      activeKey = process.env.RAZORPAY_KEY_ID || '';
+    }
+
+    res.json({
+      success: true,
+      provider: provider,
+      environment: env,
+      key: activeKey
+    });
+  } catch(e) {
+    res.json({ success: true, provider: 'razorpay', environment: 'live', key: process.env.RAZORPAY_KEY_ID || '' });
+  }
+});
 });
 
 app.listen(PORT, '0.0.0.0', () => {

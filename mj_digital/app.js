@@ -2421,6 +2421,65 @@ window.clearActivityLogs = clearActivityLogs;
 // ==========================================
 // 12. PLATFORM SETTINGS (MONGODB LIVE SYNC)
 // ==========================================
+// ==========================================
+// MULTI-GATEWAY VAULT STATE
+// ==========================================
+let gatewayVault = {
+  razorpay: { test: { keyId: '', keySecret: '' }, live: { keyId: '', keySecret: '' } },
+  cashfree: { test: { keyId: '', keySecret: '' }, live: { keyId: '', keySecret: '' } },
+  phonepe:  { test: { keyId: '', keySecret: '' }, live: { keyId: '', keySecret: '' } },
+  stripe:   { test: { keyId: '', keySecret: '' }, live: { keyId: '', keySecret: '' } },
+  paytm:    { test: { keyId: '', keySecret: '' }, live: { keyId: '', keySecret: '' } }
+};
+
+let currentProvider = 'razorpay';
+let currentEnv = 'live';
+
+function getProviderLabels(provider) {
+  if (provider === 'cashfree') return { id: 'Cashfree App ID', secret: 'Cashfree Secret Key' };
+  if (provider === 'phonepe')  return { id: 'PhonePe Merchant ID', secret: 'PhonePe Salt Key / Secret' };
+  if (provider === 'stripe')   return { id: 'Stripe Publishable Key (pk_...)', secret: 'Stripe Secret Key (sk_...)' };
+  if (provider === 'paytm')    return { id: 'Paytm Merchant ID (MID)', secret: 'Paytm Merchant Key' };
+  return { id: 'Razorpay Key ID (rzp_...)', secret: 'Razorpay Key Secret' };
+}
+
+function onGatewaySelectionChanged() {
+  // Save current values to temporary in-memory vault before switching
+  const prevId = document.getElementById('settingGatewayKeyId')?.value.trim() || '';
+  const prevSec = document.getElementById('settingGatewayKeySecret')?.value.trim() || '';
+  if (!gatewayVault[currentProvider]) gatewayVault[currentProvider] = { test: {}, live: {} };
+  if (!gatewayVault[currentProvider][currentEnv]) gatewayVault[currentProvider][currentEnv] = {};
+  gatewayVault[currentProvider][currentEnv] = { keyId: prevId, keySecret: prevSec };
+
+  // Update current selections
+  const newProvider = document.getElementById('settingGateway')?.value || 'razorpay';
+  const rawEnv = document.getElementById('settingEnv')?.value || 'live';
+  const newEnv = (rawEnv === 'sandbox' || rawEnv === 'test') ? 'test' : 'live';
+
+  currentProvider = newProvider;
+  currentEnv = newEnv;
+
+  // Update Input labels & placeholders dynamically
+  const labels = getProviderLabels(newProvider);
+  const lblId = document.getElementById('lblGatewayKeyId');
+  const lblSec = document.getElementById('lblGatewayKeySecret');
+  const inpId = document.getElementById('settingGatewayKeyId');
+  const inpSec = document.getElementById('settingGatewayKeySecret');
+
+  if (lblId) lblId.innerHTML = '<i class="fa-solid fa-key text-blue-500 me-1"></i> ' + labels.id + ' (' + newEnv.toUpperCase() + ')';
+  if (lblSec) lblSec.innerHTML = '<i class="fa-solid fa-lock text-emerald-500 me-1"></i> ' + labels.secret + ' (' + newEnv.toUpperCase() + ')';
+  
+  if (inpId) inpId.placeholder = 'Enter ' + labels.id;
+  if (inpSec) inpSec.placeholder = 'Enter ' + labels.secret;
+
+  // Load new selection values from vault
+  const activeKeys = gatewayVault[newProvider]?.[newEnv] || { keyId: '', keySecret: '' };
+  if (inpId) inpId.value = activeKeys.keyId || '';
+  if (inpSec) inpSec.value = activeKeys.keySecret || '';
+}
+
+window.onGatewaySelectionChanged = onGatewaySelectionChanged;
+
 async function savePlatformSettings() {
   const saveBtn = document.querySelector('button[onclick="savePlatformSettings()"]');
   if (saveBtn) {
@@ -2428,28 +2487,39 @@ async function savePlatformSettings() {
     saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> Saving...`;
   }
 
-  const settingsData = {
-    storeName: document.getElementById('settingStoreName')?.value.trim() || 'M J DIGITAL',
-    email: document.getElementById('settingEmail')?.value.trim() || 'support@mjdigital.in',
-    phone: document.getElementById('settingPhone')?.value.trim() || '+91 830 666 9999',
-    address: document.getElementById('settingAddress')?.value.trim() || '',
-    currency: document.getElementById('settingCurrency')?.value || 'INR',
-    gateway: document.getElementById('settingGateway')?.value || 'razorpay',
-    gatewayKeyId: document.getElementById('settingGatewayKeyId')?.value.trim() || '',
-    gatewayKeySecret: document.getElementById('settingGatewayKeySecret')?.value.trim() || '',
-    environment: document.getElementById('settingEnv')?.value || 'live',
-    paymentMethods: {
-      upi: Boolean(document.getElementById('pay_upi')?.checked),
-      cards: Boolean(document.getElementById('pay_cards')?.checked),
-      netbanking: Boolean(document.getElementById('pay_netbanking')?.checked),
-      wallets: Boolean(document.getElementById('pay_wallets')?.checked),
-      rewards: Boolean(document.getElementById('pay_rewards')?.checked),
-      cod: Boolean(document.getElementById('pay_cod')?.checked)
-    },
-    orderEmailNotification: Boolean(document.getElementById('toggleOrderEmail')?.checked),
-    bookingSmsNotification: Boolean(document.getElementById('toggleBookingSms')?.checked),
-    maintenanceMode: Boolean(document.getElementById('toggleMaintenance')?.checked)
-  };
+  
+    // Commit current active inputs into vault before saving
+    if (!gatewayVault[currentProvider]) gatewayVault[currentProvider] = { test: {}, live: {} };
+    gatewayVault[currentProvider][currentEnv] = {
+      keyId: document.getElementById('settingGatewayKeyId')?.value.trim() || '',
+      keySecret: document.getElementById('settingGatewayKeySecret')?.value.trim() || ''
+    };
+
+    const rawEnv = document.getElementById('settingEnv')?.value || 'live';
+    const cleanEnv = (rawEnv === 'sandbox' || rawEnv === 'test') ? 'test' : 'live';
+
+    const settingsData = {
+      storeName: document.getElementById('settingStoreName')?.value.trim() || 'M J DIGITAL',
+      email: document.getElementById('settingEmail')?.value.trim() || 'support@mjdigital.in',
+      phone: document.getElementById('settingPhone')?.value.trim() || '+91 830 666 9999',
+      address: document.getElementById('settingAddress')?.value.trim() || '',
+      currency: document.getElementById('settingCurrency')?.value || 'INR',
+      gateway: currentProvider,
+      environment: rawEnv,
+      gatewayKeys: gatewayVault,
+      paymentMethods: {
+        upi: Boolean(document.getElementById('pay_upi')?.checked),
+        cards: Boolean(document.getElementById('pay_cards')?.checked),
+        netbanking: Boolean(document.getElementById('pay_netbanking')?.checked),
+        wallets: Boolean(document.getElementById('pay_wallets')?.checked),
+        rewards: Boolean(document.getElementById('pay_rewards')?.checked),
+        cod: Boolean(document.getElementById('pay_cod')?.checked)
+      },
+      orderEmailNotification: Boolean(document.getElementById('toggleOrderEmail')?.checked),
+      bookingSmsNotification: Boolean(document.getElementById('toggleBookingSms')?.checked),
+      maintenanceMode: Boolean(document.getElementById('toggleMaintenance')?.checked)
+    };
+
 
   try {
     const res = await fetch('/api/settings', {
@@ -2509,12 +2579,18 @@ async function loadPlatformSettings() {
     if (data.environment && document.getElementById('settingEnv')) {
       document.getElementById('settingEnv').value = data.environment;
     }
-    if (data.gatewayKeyId && document.getElementById('settingGatewayKeyId')) {
-      document.getElementById('settingGatewayKeyId').value = data.gatewayKeyId;
+    
+    if (data.gatewayKeys) {
+      gatewayVault = Object.assign(gatewayVault, data.gatewayKeys);
     }
-    if (data.gatewayKeySecret && document.getElementById('settingGatewayKeySecret')) {
-      document.getElementById('settingGatewayKeySecret').value = data.gatewayKeySecret;
+    currentProvider = data.gateway || 'razorpay';
+    const loadedEnv = (data.environment === 'sandbox' || data.environment === 'test') ? 'test' : 'live';
+    currentEnv = loadedEnv;
+
+    if (typeof onGatewaySelectionChanged === 'function') {
+      onGatewaySelectionChanged();
     }
+
 
     if (data.paymentMethods) {
       if (document.getElementById('pay_upi')) document.getElementById('pay_upi').checked = !!data.paymentMethods.upi;
