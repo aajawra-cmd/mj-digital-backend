@@ -486,12 +486,22 @@ app.get(['/api/products', '/api/items'], async (req, res) => {
   try {
     const filter = {};
     if (req.query.category && req.query.category !== 'all') {
-      const cleanCat = req.query.category.trim(); 
-      filter.category = new RegExp(`^${cleanCat}$`, 'i');
+      const cleanCat = req.query.category.trim().toLowerCase();
+      if (cleanCat.includes('mobile') || cleanCat.includes('phone')) {
+        filter.category = new RegExp('mobile|phone|smartphone', 'i');
+      } else if (cleanCat.includes('electronic') || cleanCat.includes('laptop')) {
+        filter.category = new RegExp('electronic|laptop|gadget|audio|computer|accessory', 'i');
+      } else if (cleanCat.includes('fashion') || cleanCat.includes('cloth')) {
+        filter.category = new RegExp('fashion|cloth|apparel|shirt|wear|shoe', 'i');
+      } else if (cleanCat.includes('service')) {
+        filter.category = new RegExp('service|it|software|legal|consult', 'i');
+      } else {
+        filter.category = new RegExp(cleanCat, 'i');
+      }
     }
 
     if (req.query.brand && req.query.brand !== 'all') {
-      filter.brand = new RegExp(`^${req.query.brand.trim()}$`, 'i');
+      filter.brand = new RegExp(req.query.brand.trim(), 'i');
     }
 
     const products = await Product.find(filter).sort({ createdAt: -1 });

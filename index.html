@@ -2097,17 +2097,30 @@ window.addEventListener('popstate', function(e) {
             grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading live items from database...</div>';
 
             try {
-                const res = await fetch('/api/products?_t=' + Date.now() + '&category=' + encodeURIComponent(catKey));
+                // Fetch all live products from database so no item is missed due to spelling/plural category names
+                const res = await fetch('/api/products?_t=' + Date.now());
                 const json = await res.json();
-                let items = Array.isArray(json) ? json : (json.data || []);
-                
-                // Fallback filter if API returned all
-                if (items.length > 0 && !items.every(i => String(i.category || '').toLowerCase().includes(catKey.toLowerCase()))) {
-                    items = items.filter(i => String(i.category || '').toLowerCase().includes(catKey.toLowerCase()));
-                }
+                let allItems = Array.isArray(json) ? json : (json.data || []);
+
+                allItems.forEach(it => { catalogItemsCache[it._id] = it; });
+                cachedAllProducts = allItems;
+
+                const matchCategory = (item) => {
+                    const c = String(item.category || '').toLowerCase();
+                    const t = String(item.title || item.name || '').toLowerCase();
+                    if (catKey === 'mobile') return c.includes('mobile') || c.includes('phone') || t.includes('iphone') || t.includes('samsung') || t.includes('phone');
+                    if (catKey === 'electronics') return c.includes('electronic') || c.includes('laptop') || c.includes('audio') || c.includes('gadget') || t.includes('macbook') || t.includes('headphone') || t.includes('sony');
+                    if (catKey === 'fashion') return c.includes('fashion') || c.includes('cloth') || c.includes('shirt') || c.includes('wear') || t.includes('shirt');
+                    if (catKey === 'services') return c.includes('service') || c.includes('it') || c.includes('web') || c.includes('legal');
+                    return c.includes(catKey.toLowerCase());
+                };
+
+                let items = allItems.filter(matchCategory);
 
                 categoryMemory[catKey].all = items;
                 categoryMemory[catKey].filtered = items;
+                categoryMemory[catKey].activeBrand = 'All';
+                categoryMemory[catKey].query = '';
 
                 if (items.length === 0) {
                     grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-box-open fs-2 mb-2 d-block opacity-50"></i>No ' + catKey + ' items in database yet. Add items via <a href="/admin.html" class="fw-bold text-primary">Admin Panel</a>.</div>';
@@ -2115,7 +2128,6 @@ window.addEventListener('popstate', function(e) {
                     return;
                 }
 
-                items.forEach(it => { catalogItemsCache[it._id] = it; });
                 renderCategoryGrid(gridId, items, 'No products found');
 
                 if (chipsCont) {
@@ -3428,22 +3440,11 @@ window.addEventListener('popstate', function(e) {
                             name: "M J DIGITAL",
                             description: "Purchase Order",
                             order_id: orderData.order.id,
-                            config: {
-                                display: {
-                                    blocks: {
-                                        utib: {
-                                            name: "UPI & Popular Methods",
-                                            instruments: [
-                                                { method: "upi" },
-                                                { method: "card" },
-                                                { method: "netbanking" },
-                                                { method: "wallet" }
-                                            ]
-                                        }
-                                    },
-                                    sequence: ["block.utib"],
-                                    preferences: { show_default_blocks: true }
-                                }
+                            method: {
+                                upi: true,
+                                card: true,
+                                netbanking: true,
+                                wallet: true
                             },
                             prefill: {
                                 name: name,
