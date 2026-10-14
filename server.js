@@ -1102,6 +1102,71 @@ app.delete('/api/audit-logs', async (req, res) => {
 });
 
 // ==========================================
+// DYNAMIC SEO ROUTES: ROBOTS.TXT & SITEMAP.XML
+// ==========================================
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain');
+  res.send([
+    'User-agent: *',
+    'Allow: /',
+    'Allow: /travels',
+    'Allow: /mobiles',
+    'Allow: /electronics',
+    'Allow: /fashion',
+    'Allow: /services',
+    'Allow: /pay/utility',
+    'Disallow: /admin',
+    'Disallow: /admin.html',
+    'Disallow: /invoice.html',
+    'Disallow: /account/invoice.html',
+    'Disallow: /api/',
+    '',
+    'Sitemap: https://www.mjdigital.co.in/sitemap.xml'
+  ].join('\n'));
+});
+
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const baseUrl = 'https://www.mjdigital.co.in';
+    const staticPages = [
+      { url: '/', priority: '1.0', changefreq: 'daily' },
+      { url: '/travels', priority: '0.9', changefreq: 'daily' },
+      { url: '/mobiles', priority: '0.9', changefreq: 'daily' },
+      { url: '/electronics', priority: '0.8', changefreq: 'daily' },
+      { url: '/fashion', priority: '0.8', changefreq: 'weekly' },
+      { url: '/services', priority: '0.8', changefreq: 'weekly' },
+      { url: '/pay/utility', priority: '0.7', changefreq: 'weekly' }
+    ];
+
+    const products = await Product.find({ status: { $ne: 'Inactive' } }).select('_id updatedAt').lean().catch(() => []);
+    const packages = await TravelPackage.find({ status: { $ne: 'Inactive' } }).select('_id updatedAt').lean().catch(() => []);
+
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+    staticPages.forEach(p => {
+      xml += `  <url>\n    <loc>${baseUrl}${p.url}</loc>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>\n`;
+    });
+
+    products.forEach(prod => {
+      const lastMod = prod.updatedAt ? new Date(prod.updatedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      xml += `  <url>\n    <loc>${baseUrl}/view/item?id=${prod._id}</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    });
+
+    packages.forEach(pkg => {
+      const lastMod = pkg.updatedAt ? new Date(pkg.updatedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      xml += `  <url>\n    <loc>${baseUrl}/view/item?id=${pkg._id}&amp;type=travel</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    });
+
+    xml += '</urlset>';
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+  } catch (err) {
+    res.status(500).send('Error generating sitemap');
+  }
+});
+
+// ==========================================
 // 8. SPA WILDCARD ROUTING (EXPRESS 5 COMPATIBLE)
 // ==========================================
 app.use((req, res, next) => {
