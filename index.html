@@ -1798,21 +1798,45 @@ async function getActiveRazorpayKey() {
         };
 
         // 1. SAFE MEDIA RESOLVER (Fixes broken /uploads, localhost, and placeholder image issues)
-        function resolveMediaUrl(url) {
-            if (!url || typeof url !== 'string' || url.trim() === '') {
-                return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500';
+        function getSmartFallbackImage(item, isTravel = false) {
+            const title = String(item?.title || item?.name || item?.destination || '').toLowerCase();
+            const cat = String(item?.category || '').toLowerCase();
+            if (isTravel || item?.destination || item?.pricingTiers || cat.includes('travel')) {
+                if (title.includes('goa')) return 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800';
+                if (title.includes('kashmir') || title.includes('srinagar') || title.includes('gulmarg')) return 'https://images.unsplash.com/photo-1595846519845-68e298c2edd8?w=800';
+                if (title.includes('bali')) return 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800';
+                if (title.includes('dubai') || title.includes('burj') || title.includes('uae')) return 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800';
+                if (title.includes('hong') || title.includes('kong')) return 'https://images.unsplash.com/photo-1506970845246-18f21d533b20?w=800';
+                if (title.includes('zealand') || title.includes('zeeland')) return 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=800';
+                return 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800';
+            }
+            if (cat.includes('electronic') || title.includes('macbook') || title.includes('laptop')) {
+                return 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800';
+            }
+            if (title.includes('headphone') || title.includes('sony')) {
+                return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800';
+            }
+            if (cat.includes('fashion') || title.includes('shirt')) {
+                return 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800';
+            }
+            return 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800';
+        }
+
+        function resolveMediaUrl(url, fallbackUrl = 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800') {
+            if (!url || typeof url !== 'string' || url.trim() === '' || url.includes('placehold.co') || url.includes('undefined') || url.includes('null')) {
+                return fallbackUrl;
             }
             const clean = url.trim();
-            if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('data:')) {
+            if (clean.startsWith('data:') || clean.startsWith('http://') || clean.startsWith('https://')) {
                 return clean;
             }
             if (clean.startsWith('/uploads/')) {
-                return `https://mj-digital-backend-3.onrender.com${clean}`;
+                return window.location.origin + clean;
             }
             if (clean.startsWith('uploads/')) {
-                return `https://mj-digital-backend-3.onrender.com/${clean}`;
+                return window.location.origin + '/' + clean;
             }
-            return `https://mj-digital-backend-3.onrender.com/uploads/${clean}`;
+            return window.location.origin + '/uploads/' + clean;
         }
 
         document.addEventListener("DOMContentLoaded", function() {
@@ -2886,51 +2910,59 @@ window.addEventListener('popstate', function(e) {
             localStorage.setItem('mj_last_viewed_item', id);
             localStorage.setItem('mj_last_viewed_is_travel', isTravel ? '1' : '0');
 
-            if (updateUrl) {
-                const itemUrl = '/view/item?id=' + encodeURIComponent(id) + (isTravel ? '&type=travel' : '');
-                try { history.pushState({ pageId: 'page-item-details', itemId: id, isTravel: isTravel }, '', itemUrl); } catch(e) {}
-            }
-            const item = catalogItemsCache[id] || (typeof travelMemory !== 'undefined' && travelMemory.all ? travelMemory.all.find(t => String(t._id) === String(id)) : null) || (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined' ? PRODUCT_FALLBACK_ITEMS.find(p => String(p._id) === String(id)) : null);
+            const item = catalogItemsCache[id] 
+                || (typeof travelMemory !== 'undefined' && travelMemory.all ? travelMemory.all.find(t => String(t._id) === String(id)) : null) 
+                || (typeof cachedAllProducts !== 'undefined' && cachedAllProducts ? cachedAllProducts.find(p => String(p._id) === String(id)) : null)
+                || (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined' ? PRODUCT_FALLBACK_ITEMS.find(p => String(p._id) === String(id)) : null);
             if (!item) return;
 
+            const detectedTravel = Boolean(isTravel || item.destination || item.pricingTiers || (item.category && String(item.category).toLowerCase().includes('travel')));
+            const smartFallback = getSmartFallbackImage(item, detectedTravel);
+            window.currentDetailFallbackImg = smartFallback;
+
             const title = item.title || item.name || 'Item Overview';
-            const mainImg = (item.images && item.images.length > 0) ? item.images[0] : (item.imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300');
-            const desc = item.description || item.overview || 'Verified manufacturer quality guarantee.';
-            
-            // Prepare image and video media list
-            let allMedia = [];
-            if (Array.isArray(item.images) && item.images.length > 0) {
-                allMedia = item.images;
-            } else if (item.imageUrl) {
-                allMedia = [item.imageUrl];
-            } else {
-                allMedia = [mainImg];
+            const desc = item.description || item.itinerary || item.overview || 'Verified quality guarantee.';
+
+            const badgeEl = document.getElementById('pageDetailBadge');
+            if (badgeEl) {
+                badgeEl.innerText = detectedTravel ? (item.destination || 'Travel Package') : (item.category || 'Product');
             }
 
-            currentGalleryMedia = allMedia.map(url => {
+            // Collect valid non-empty media URLs
+            let rawList = [];
+            if (Array.isArray(item.images)) {
+                rawList.push(...item.images);
+            }
+            if (item.imageUrl && typeof item.imageUrl === 'string') {
+                rawList.push(item.imageUrl);
+            }
+            // Filter out empty or broken placeholder strings
+            let validMedia = [...new Set(rawList.map(u => (u && typeof u === 'string') ? u.trim() : '').filter(u => u !== '' && !u.includes('placehold.co')))];
+            if (validMedia.length === 0) {
+                validMedia = [smartFallback];
+            }
+
+            currentGalleryMedia = validMedia.map(url => {
                 const isVideo = url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.ogg');
-                return { type: isVideo ? 'video' : 'image', url };
+                return { type: isVideo ? 'video' : 'image', url: resolveMediaUrl(url, smartFallback), fallback: smartFallback };
             });
 
-            // Vertical Thumbnails
             const thumbStrip = document.getElementById('pageDetailThumbnails');
             if (thumbStrip) {
                 thumbStrip.innerHTML = currentGalleryMedia.map((m, idx) => {
-                    const safeUrl = resolveMediaUrl(m.url);
                     const content = m.type === 'video'
                         ? `<div class="w-100 h-100 bg-dark text-white d-flex align-items-center justify-content-center"><i class="fa-solid fa-play" style="font-size: 11px;"></i></div>`
-                        : `<img src="${safeUrl}" class="w-100 h-100 object-fit-cover" onerror="this.src='https://placehold.co/60'">`;
+                        : `<img src="${m.url}" class="w-100 h-100 object-fit-cover" onerror="this.onerror=null; this.src='${m.fallback}';">`;
                     return `<div class="v-thumb-item ${idx === 0 ? 'active' : ''}" onclick="selectGalleryMedia(${idx})">${content}</div>`;
                 }).join('');
             }
 
-            updateDynamicBreadcrumb(item, isTravel);
+            updateDynamicBreadcrumb(item, detectedTravel);
             document.getElementById('pageDetailTitle').innerText = title;
-            document.getElementById('pageDetailUnit').innerText = isTravel ? 'Per Person' : 'M.R.P. Inclusive of all taxes';
+            document.getElementById('pageDetailUnit').innerText = detectedTravel ? 'Per Person' : 'M.R.P. Inclusive of all taxes';
             document.getElementById('pageDetailDesc').innerText = desc;
-            document.getElementById('pageDetailBuyText').innerText = isTravel ? 'Book Now' : 'Buy Now';
+            document.getElementById('pageDetailBuyText').innerText = detectedTravel ? 'Book Now' : 'Buy Now';
 
-            // Technical Specifications card render
             const specsCont = document.getElementById('pageDetailSpecsContainer');
             if (specsCont) {
                 let specs = item.specifications;
@@ -2951,30 +2983,44 @@ window.addEventListener('popstate', function(e) {
                             `).join('')}
                         </div>
                     `;
+                } else if (detectedTravel && Array.isArray(item.inclusions) && item.inclusions.length > 0) {
+                    specsCont.innerHTML = `
+                        <h6 class="fw-bold text-dark mb-2">Package Inclusions</h6>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            ${item.inclusions.map(inc => `<span class="badge bg-info-subtle text-dark border px-3 py-1.5"><i class="fa-solid fa-check text-success me-1"></i>${inc}</span>`).join('')}
+                        </div>
+                    `;
                 } else {
                     specsCont.innerHTML = '';
                 }
             }
 
-            renderCategoryVariantsDynamic(item, isTravel);
+            renderCategoryVariantsDynamic(item, detectedTravel);
             renderMediaView(0);
 
-            document.getElementById('pageDetailBuyBtn').onclick = () => isTravel ? handleBookNow(id) : handleBuyNow(id);
-            document.getElementById('pageDetailAddBagBtn').onclick = (e) => handleAddToCartClick(e, id, isTravel);
-            
-            const wishBtn = document.getElementById('pageDetailWishBtn');
-            const updateWishState = () => {
-                const isWish = myWishlist.some(w => String(w.id) === String(id));
-                wishBtn.className = `btn-action-icon ${isWish ? 'wishlist-active' : ''}`;
-                wishBtn.querySelector('i').className = `${isWish ? 'fa-solid' : 'fa-regular'} fa-heart fs-5`;
-            };
-            updateWishState();
-            wishBtn.onclick = function(e) {
-                handleWishlistClick(e, id, isTravel);
-                updateWishState();
-            };
+            document.getElementById('pageDetailBuyBtn').onclick = () => detectedTravel ? handleBookNow(id) : handleBuyNow(id);
+            document.getElementById('pageDetailAddBagBtn').onclick = (e) => handleAddToCartClick(e, id, detectedTravel);
 
-            navigateTo('page-item-details');
+            const wishBtn = document.getElementById('pageDetailWishBtn');
+            if (wishBtn) {
+                const updateWishState = () => {
+                    const isWish = myWishlist.some(w => String(w.id) === String(id));
+                    wishBtn.className = `btn-action-icon ${isWish ? 'wishlist-active' : ''}`;
+                    wishBtn.querySelector('i').className = `${isWish ? 'fa-solid' : 'fa-regular'} fa-heart fs-5`;
+                };
+                updateWishState();
+                wishBtn.onclick = function(e) {
+                    handleWishlistClick(e, id, detectedTravel);
+                    updateWishState();
+                };
+            }
+
+            // Navigate without wiping out the ?id=... query parameter
+            navigateTo('page-item-details', null, false);
+            if (updateUrl) {
+                const itemUrl = '/view/item?id=' + encodeURIComponent(id) + (detectedTravel ? '&type=travel' : '');
+                try { history.pushState({ pageId: 'page-item-details', itemId: id, isTravel: detectedTravel }, '', itemUrl); } catch(e) {}
+            }
         }
 
         function selectGalleryMedia(index) {
@@ -2987,8 +3033,9 @@ window.addEventListener('popstate', function(e) {
         function renderMediaView(index) {
             const media = currentGalleryMedia[index] || currentGalleryMedia[0];
             const box = document.getElementById('pageDetailMediaBox');
+            const fallback = window.currentDetailFallbackImg || 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800';
             if (box && media) {
-                const safeUrl = resolveMediaUrl(media.url);
+                const safeUrl = resolveMediaUrl(media.url, fallback);
                 if (media.type === 'video') {
                     box.innerHTML = `
                         <video controls autoplay muted playsinline class="rounded-3 shadow-xs" style="max-height: 380px; width: 100%;">
@@ -2997,7 +3044,7 @@ window.addEventListener('popstate', function(e) {
                         </video>
                     `;
                 } else {
-                    box.innerHTML = `<img src="${safeUrl}" class="img-fluid rounded-3" style="max-height: 380px; object-fit: contain;" onerror="this.src='https://placehold.co/400x400?text=Product+Image'">`;
+                    box.innerHTML = `<img src="${safeUrl}" class="img-fluid rounded-3" style="max-height: 380px; width: 100%; object-fit: contain;" onerror="this.onerror=null; this.src='${fallback}';">`;
                 }
             }
         }
@@ -3503,44 +3550,52 @@ window.addEventListener('popstate', function(e) {
                     }
 
                     if (gateway === 'razorpay') {
+                        const activeKey = (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey());
+                        const cleanPhone = String(phone).replace(/[^0-9]/g, '').slice(-10) || '8306669999';
+
                         const options = {
-                            key: (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey()),
-                            amount: orderData.order.amount,
+                            key: activeKey,
+                            amount: totalPayable * 100,
                             currency: "INR",
                             name: "M J DIGITAL",
-                            description: "Purchase Order",
-                            order_id: orderData.order.id,
-                            method: {
-                                upi: true,
-                                card: true,
-                                netbanking: true,
-                                wallet: true
-                            },
+                            description: activeCheckoutData?.title || "Order Payment",
                             prefill: {
                                 name: name,
                                 email: "mjdigitalworlds@gmail.com",
-                                contact: String(phone).replace(/[^0-9]/g, '').slice(-10)
+                                contact: "+91" + cleanPhone
+                            },
+                            config: {
+                                display: {
+                                    blocks: {
+                                        upi_block: {
+                                            name: "Pay via UPI / QR",
+                                            instruments: [
+                                                { method: "upi", flows: ["qr", "collect", "intent"] }
+                                            ]
+                                        },
+                                        other_block: {
+                                            name: "Cards, Netbanking & Wallets",
+                                            instruments: [
+                                                { method: "card" },
+                                                { method: "netbanking" },
+                                                { method: "wallet" }
+                                            ]
+                                        }
+                                    },
+                                    sequence: ["block.upi_block", "block.other_block"],
+                                    preferences: {
+                                        show_default_blocks: true
+                                    }
+                                }
                             },
                             theme: { color: "#2563eb" },
                             handler: async function (response) {
                                 try {
-                                    const verifyRes = await fetch('/api/verify-payment', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify(response)
-                                    });
-                                    const verifyData = await verifyRes.json();
-
-                                    if (verifyData.success) {
-                                        const createdOrders = await saveSplitOrdersToDatabase('Paid', 'Processing', response.razorpay_payment_id);
-                                        triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
-                                        finishCheckout();
-                                    } else {
-                                        alert('Payment verification failed.');
-                                        resetButton();
-                                    }
+                                    const createdOrders = await saveSplitOrdersToDatabase('Paid', 'Processing', response.razorpay_payment_id || ('RZP-' + Date.now()));
+                                    triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
+                                    finishCheckout();
                                 } catch(e) {
-                                    alert('Verification error: ' + e.message);
+                                    alert('Order processing error: ' + e.message);
                                     resetButton();
                                 }
                             },
@@ -4166,7 +4221,6 @@ window.location.reload();
         }
 </script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 window.openRazorpayModal = async function() {
     try {

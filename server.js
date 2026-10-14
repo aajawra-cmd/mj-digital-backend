@@ -156,6 +156,19 @@ const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 }
 });
+function fileToPersistentUrl(file) {
+  try {
+    if (file && file.path && fs.existsSync(file.path)) {
+      const mime = file.mimetype || 'image/jpeg';
+      // If image is under 8MB, store as persistent data URI so Render restarts never lose it
+      if (mime.startsWith('image/') && file.size <= 8 * 1024 * 1024) {
+        const b64 = fs.readFileSync(file.path).toString('base64');
+        return 'data:' + mime + ';base64,' + b64;
+      }
+    }
+  } catch (e) {}
+  return 'https://mj-digital-backend-3.onrender.com/uploads/' + file.filename;
+}
 
 // ==========================================
 // 3. DATABASE CONNECTION
@@ -443,7 +456,7 @@ app.post(['/api/products', '/api/items'], verifyAdminToken, upload.any(), async 
 
     if (req.files && req.files.length > 0) {
       req.files.forEach(file => {
-        imageList.push(`https://mj-digital-backend-3.onrender.com/uploads/${file.filename}`);
+        imageList.push(fileToPersistentUrl(file));
       });
     }
 
@@ -561,7 +574,7 @@ app.put(['/api/products/:id', '/api/items/:id'], verifyAdminToken, upload.any(),
 
     let newlyUploadedFiles = [];
     if (req.files && req.files.length > 0) {
-      newlyUploadedFiles = req.files.map(f => `https://mj-digital-backend-3.onrender.com/uploads/${f.filename}`);
+      newlyUploadedFiles = req.files.map(f => fileToPersistentUrl(f));
     }
 
     if (body.imageUrl && String(body.imageUrl).trim() !== '') {
@@ -667,7 +680,7 @@ app.post('/api/travel-packages', verifyAdminToken, upload.array('images', 5), as
 
     if (req.files && req.files.length > 0) {
       req.files.forEach(file => {
-        imageList.push(`https://mj-digital-backend-3.onrender.com/uploads/${file.filename}`);
+        imageList.push(fileToPersistentUrl(file));
       });
     }
 
@@ -1051,7 +1064,7 @@ app.post('/api/media', upload.single('mediaFile'), async (req, res) => {
   try {
     let fileUrl = '';
     if (req.file) {
-      fileUrl = 'https://mj-digital-backend-3.onrender.com/uploads/' + req.file.filename;
+      fileUrl = fileToPersistentUrl(req.file);
     } else if (req.body.url) {
       fileUrl = req.body.url;
     }
