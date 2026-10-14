@@ -2071,7 +2071,7 @@ function routeCurrentPath() {
     if (path.includes('item') || path.includes('view')) {
         Promise.all([
             fetchStoreItems(true),
-            fetch('/api/travel-packages?_t=1791983900961?_t=' + Date.now()).then(r => r.json()).catch(() => ({}))
+            fetch('/api/travel-packages?_t=' + Date.now()).then(r => r.json()).catch(() => ({}))
         ]).then(([prods, travRes]) => {
             const travs = Array.isArray(travRes) ? travRes : (travRes.data || []);
             travs.forEach(t => { catalogItemsCache[t._id] = t; });
@@ -2314,7 +2314,7 @@ window.addEventListener('popstate', function(e) {
                 // Fetch all live products from database so no item is missed due to spelling/plural category names
                 const res = await fetch('/api/products?_t=' + Date.now());
                 const json = await res.json();
-                let allItems = Array.isArray(json) ? json : (json.data || []);
+                let allItems = (Array.isArray(json) ? json : (json.data || [])).filter(it => String(it.status || 'Active').trim().toLowerCase() !== 'inactive');
 
                 allItems.forEach(it => { catalogItemsCache[it._id] = it; });
                 cachedAllProducts = allItems;
@@ -4075,7 +4075,7 @@ window.addEventListener('popstate', function(e) {
             if (isTravel) {
                 let travels = [];
                 try {
-                    const res = await fetch('/api/travel-packages?_t=1791983900961');
+                    const res = await fetch('/api/travel-packages?_t=' + Date.now());
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
                 } catch(e) {
@@ -4161,8 +4161,7 @@ window.addEventListener('popstate', function(e) {
                 if (res.ok) {
                     if (cancelModal) cancelModal.hide();
                     alert('Order cancelled successfully.');
-                    if (typeof loadOrdersTable === 'function') loadOrdersTable();
-window.location.reload();
+                    if (typeof loadOrdersTable === 'function') await loadOrdersTable();
                 } else {
                     alert('Cancellation failed on server.');
                 }
@@ -4178,7 +4177,7 @@ window.location.reload();
 
         async function loadMainSitePolicies() {
             try {
-                const res = await fetch('/api/cms/policies?_t=1791983900964');
+                const res = await fetch('/api/cms/policies');
                 if (!res.ok) return;
                 const result = await res.json();
                 const policies = Array.isArray(result) ? result : (result.data || []);
@@ -4199,7 +4198,7 @@ window.location.reload();
 
         async function syncLiveStoreSettings() {
             try {
-                const res = await fetch('/api/settings?_t=1791983900963');
+                const res = await fetch('/api/settings');
                 const result = await res.json();
                 if (!res.ok || !result.success || !result.data) return;
                 const s = result.data;
