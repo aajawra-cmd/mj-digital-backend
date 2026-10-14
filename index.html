@@ -258,7 +258,23 @@ async function getActiveRazorpayKey() {
         .payment-radio-card { border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; cursor: pointer; background: #ffffff; transition: all 0.2s ease; }
         .payment-radio-card:hover { border-color: var(--primary); background: #f8fafc; }
         .payment-radio-card input:checked + div strong { color: var(--primary); }
-    </style>
+    /* Fix Modal Zoom & Vertical Centering */
+      .modal-dialog-centered {
+        display: flex !important;
+        align-items: center !important;
+        min-height: calc(100% - 1rem) !important;
+      }
+      .modal-content {
+        margin: auto !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35) !important;
+      }
+      @media (max-width: 768px) {
+        .modal-dialog {
+          margin: 0.5rem !important;
+          max-width: 100% !important;
+        }
+      }
+</style>
 
     <style>
         .utility-card-item:hover {
