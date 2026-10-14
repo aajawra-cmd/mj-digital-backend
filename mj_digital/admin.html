@@ -1479,5 +1479,302 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 </script>
+<script id="mjLiveAdminDashboardEngine">
+(function() {
+  window.MJ_ADMIN_CACHE = {
+    orders: [],
+    products: [],
+    packages: [],
+    period: 'all'
+  };
+
+  // 1. UNIVERSAL RELIABLE DELETE FUNCTION FOR PRODUCTS & TRAVEL PACKAGES
+  window.deleteProduct = async function(id, btnEl) {
+    if (!id) return;
+    if (!confirm('Are you sure you want to permanently delete this product?')) return;
+    try {
+      const res = await fetch('/api/products/' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer valid_admin' }
+      });
+      const data = await res.json().catch(() => ({ success: res.ok }));
+      if (res.ok || data.success) {
+        if (btnEl && btnEl.closest('tr')) btnEl.closest('tr').remove();
+        if (typeof fetchProducts === 'function') fetchProducts();
+        if (typeof loadProducts === 'function') loadProducts();
+        if (typeof syncLiveAdminDashboard === 'function') syncLiveAdminDashboard();
+      } else {
+        alert('Delete failed: ' + (data.message || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error deleting product: ' + err.message);
+    }
+  };
+  window.handleDeleteProduct = window.deleteProduct;
+  window.removeProduct = window.deleteProduct;
+
+  window.deleteTravelPackage = async function(id, btnEl) {
+    if (!id) return;
+    if (!confirm('Are you sure you want to permanently delete this travel package?')) return;
+    try {
+      const res = await fetch('/api/travel-packages/' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer valid_admin' }
+      });
+      const data = await res.json().catch(() => ({ success: res.ok }));
+      if (res.ok || data.success) {
+        if (btnEl && btnEl.closest('tr')) btnEl.closest('tr').remove();
+        if (btnEl && btnEl.closest('.card')) btnEl.closest('.card').remove();
+        if (typeof fetchTravelPackages === 'function') fetchTravelPackages();
+        if (typeof loadTravelPackages === 'function') loadTravelPackages();
+        if (typeof syncLiveAdminDashboard === 'function') syncLiveAdminDashboard();
+      } else {
+        alert('Delete failed: ' + (data.message || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error deleting package: ' + err.message);
+    }
+  };
+  window.handleDeleteTravel = window.deleteTravelPackage;
+  window.removeTravelPackage = window.deleteTravelPackage;
+
+  // 2. DETECT IF AN ORDER IS TRAVEL OR E-COMMERCE
+  function isTravelOrder(ord) {
+    const oType = String(ord.orderType || ord.type || '').toLowerCase();
+    const title = String(ord.itemDetails?.title || ord.title || (ord.items && ord.items[0]?.title) || '').toLowerCase();
+    const cat = String(ord.itemDetails?.category || ord.category || (ord.items && ord.items[0]?.category) || '').toLowerCase();
+    return oType.includes('travel') || oType.includes('tour') || cat.includes('travel') || cat.includes('tour') ||
+           title.includes('tour') || title.includes('package') || title.includes('kashmir') || title.includes('bali') ||
+           title.includes('goa') || title.includes('dubai') || title.includes('zealand') || title.includes('zeeland') || title.includes('hong kong');
+  }
+
+  // 3. FILTER ORDERS BY SELECTED DASHBOARD PERIOD
+  function filterOrdersByPeriod(orders, periodValue) {
+    const now = new Date();
+    const p = String(periodValue || 'all').toLowerCase();
+
+    return orders.filter(o => {
+      if (String(o.status || '').toLowerCase() === 'cancelled') return false;
+      const d = new Date(o.createdAt || o.date || now);
+      if (isNaN(d.getTime())) return true;
+
+      if (p.includes('today') || p.includes('24')) {
+        return d.toDateString() === now.toDateString();
+      }
+      if (p.includes('week') || p.includes('7')) {
+        const diffDays = (now - d) / (1000 * 60 * 60 * 24);
+        return diffDays <= 7;
+      }
+      if (p.includes('month') && !p.includes('year') && !p.includes('all')) {
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }
+      if (p.includes('year') || p.includes('12') || p.includes('annual')) {
+        return d.getFullYear() === now.getFullYear();
+      }
+      return true; // All Time / Default
+    });
+  }
+
+  // 4. UPDATE DOM METRICS: TOTAL REVENUE, % VS LAST MONTH, PRODUCTS, TRAVELS, ORDERS
+  function updateDashboardCards(orders, products, packages, selectedPeriod) {
+    const validAllOrders = orders.filter(o => String(o.status || '').toLowerCase() !== 'cancelled');
+    const periodOrders = filterOrdersByPeriod(orders, selectedPeriod);
+
+    // Total Revenue for selected filter
+    const periodRevenue = periodOrders.reduce((sum, o) => sum + Number(o.totalAmount || o.amount || 0), 0);
+
+    // Calculate current month vs last month % growth
+    const now = new Date();
+    const curMonth = now.getMonth();
+    const curYear = now.getFullYear();
+    const prevMonth = curMonth === 0 ? 11 : curMonth - 1;
+    const prevYear = curMonth === 0 ? curYear - 1 : curYear;
+
+    let curMonthRev = 0;
+    let lastMonthRev = 0;
+
+    validAllOrders.forEach(o => {
+      const d = new Date(o.createdAt || now);
+      const amt = Number(o.totalAmount || o.amount || 0);
+      if (d.getMonth() === curMonth && d.getFullYear() === curYear) {
+        curMonthRev += amt;
+      } else if (d.getMonth() === prevMonth && d.getFullYear() === prevYear) {
+        lastMonthRev += amt;
+      }
+    });
+
+    let growthPercent = 0;
+    if (lastMonthRev > 0) {
+      growthPercent = Math.round(((curMonthRev - lastMonthRev) / lastMonthRev) * 100);
+    } else if (curMonthRev > 0) {
+      growthPercent = 100;
+    }
+
+    const sign = growthPercent >= 0 ? '+' : '';
+    const growthText = sign + growthPercent + '% vs last month';
+
+    // Find and update Revenue Heading & Growth Badge in DOM
+    document.querySelectorAll('h2, h3, .stat-value, [id*="rev" i], [id*="Revenue"]').forEach(el => {
+      const txt = (el.innerText || '').trim();
+      if (txt.startsWith('₹') && (el.parentElement?.innerText || '').toUpperCase().includes('TOTAL REVENUE')) {
+        el.innerText = '₹' + Number(periodRevenue).toLocaleString('en-IN');
+      }
+    });
+
+    // Update any element containing "vs last month"
+    document.querySelectorAll('span, small, div, p').forEach(el => {
+      if (el.children.length <= 1 && (el.innerText || '').toLowerCase().includes('vs last month')) {
+        el.innerHTML = '<i class="fa-solid ' + (growthPercent >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down') + ' me-1"></i>' + growthText;
+        el.style.color = growthPercent >= 0 ? '#16a34a' : '#dc2626';
+      }
+    });
+
+    // Update Active Products & Categories count
+    const uniqueCats = new Set(products.map(p => String(p.category || 'General').trim().toLowerCase())).size;
+    document.querySelectorAll('h2, h3, .stat-value').forEach(el => {
+      const parentTxt = (el.parentElement?.innerText || '').toUpperCase();
+      if (parentTxt.includes('ACTIVE PRODUCTS')) {
+        el.innerText = products.length + ' Items';
+      } else if (parentTxt.includes('TRAVEL PACKAGES') && !parentTxt.includes('REVENUE')) {
+        el.innerText = packages.length + ' Packages';
+      } else if (parentTxt.includes('ORDERS & BOOKINGS')) {
+        el.innerText = periodOrders.length + ' Total';
+      }
+    });
+
+    document.querySelectorAll('span, small, a').forEach(el => {
+      const txt = (el.innerText || '').trim();
+      if (/^d+s+Categories$/i.test(txt)) {
+        el.innerText = uniqueCats + ' Categories';
+      }
+      if (/^d+s+Destinations$/i.test(txt)) {
+        const uniqueDests = new Set(packages.map(t => String(t.destination || '').trim().toLowerCase()).filter(Boolean)).size;
+        el.innerText = (uniqueDests || packages.length) + ' Destinations';
+      }
+    });
+  }
+
+  // 5. UPDATE REVENUE OVERVIEW CHART (E-COMMERCE VS TRAVEL)
+  function updateRevenueChart(orders, selectedPeriod) {
+    const p = String(selectedPeriod || 'all').toLowerCase();
+    const validOrders = filterOrdersByPeriod(orders, selectedPeriod);
+
+    let labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let ecomData = new Array(12).fill(0);
+    let travelData = new Array(12).fill(0);
+
+    if (p.includes('week') && !p.includes('month')) {
+      labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      ecomData = new Array(7).fill(0);
+      travelData = new Array(7).fill(0);
+      validOrders.forEach(o => {
+        const d = new Date(o.createdAt || Date.now());
+        const idx = d.getDay();
+        const amt = Number(o.totalAmount || o.amount || 0);
+        if (isTravelOrder(o)) travelData[idx] += amt;
+        else ecomData[idx] += amt;
+      });
+    } else {
+      validOrders.forEach(o => {
+        const d = new Date(o.createdAt || Date.now());
+        const m = isNaN(d.getMonth()) ? new Date().getMonth() : d.getMonth();
+        const amt = Number(o.totalAmount || o.amount || 0);
+        if (isTravelOrder(o)) travelData[m] += amt;
+        else ecomData[m] += amt;
+      });
+    }
+
+    // Update Chart.js instance if present
+    if (typeof Chart !== 'undefined') {
+      const canvases = document.querySelectorAll('canvas');
+      canvases.forEach(cv => {
+        const chartInst = Chart.getChart ? Chart.getChart(cv) : (cv.__chartjs || window.revenueChart || window.myChart);
+        if (chartInst && chartInst.data && Array.isArray(chartInst.data.datasets)) {
+          chartInst.data.labels = labels;
+          if (chartInst.data.datasets[0]) {
+            chartInst.data.datasets[0].label = 'Products (₹)';
+            chartInst.data.datasets[0].data = ecomData;
+          }
+          if (chartInst.data.datasets[1]) {
+            chartInst.data.datasets[1].label = 'Travel Packages (₹)';
+            chartInst.data.datasets[1].data = travelData;
+          }
+          chartInst.update();
+        }
+      });
+    }
+  }
+
+  // 6. MAIN SYNC FUNCTION
+  window.syncLiveAdminDashboard = async function(customPeriod) {
+    try {
+      const [ordRes, prodRes, pkgRes] = await Promise.all([
+        fetch('/api/orders?_t=' + Date.now()).then(r => r.json()).catch(() => ({})),
+        fetch('/api/products?_t=' + Date.now()).then(r => r.json()).catch(() => ({})),
+        fetch('/api/travel-packages?_t=' + Date.now()).then(r => r.json()).catch(() => ({}))
+      ]);
+
+      const orders = Array.isArray(ordRes) ? ordRes : (ordRes.data || ordRes.orders || []);
+      const products = Array.isArray(prodRes) ? prodRes : (prodRes.data || []);
+      const packages = Array.isArray(pkgRes) ? pkgRes : (pkgRes.data || []);
+
+      window.MJ_ADMIN_CACHE.orders = orders;
+      window.MJ_ADMIN_CACHE.products = products;
+      window.MJ_ADMIN_CACHE.packages = packages;
+
+      if (customPeriod !== undefined) {
+        window.MJ_ADMIN_CACHE.period = customPeriod;
+      }
+
+      updateDashboardCards(orders, products, packages, window.MJ_ADMIN_CACHE.period);
+      updateRevenueChart(orders, window.MJ_ADMIN_CACHE.period);
+    } catch (e) {
+      console.warn('Dashboard live sync warning:', e.message);
+    }
+  };
+
+  // 7. BIND DASHBOARD PERIOD FILTER DROPDOWN ("This Month (Weekly)", etc.)
+  function bindDashboardFilterSelect() {
+    document.querySelectorAll('select').forEach(sel => {
+      const optText = (sel.innerText || '').toLowerCase();
+      if (optText.includes('month') || optText.includes('week') || optText.includes('today') || optText.includes('year')) {
+        if (!sel.dataset.mjBound) {
+          sel.dataset.mjBound = '1';
+          // Add "All Time" option if not present so admin can view total ₹38L+ or filter by period
+          if (!optText.includes('all time')) {
+            const allOpt = document.createElement('option');
+            allOpt.value = 'all';
+            allOpt.text = 'All Time (Overall)';
+            sel.insertBefore(allOpt, sel.firstChild);
+            sel.value = 'all';
+          }
+          sel.addEventListener('change', function() {
+            const val = this.options[this.selectedIndex]?.text || this.value;
+            window.MJ_ADMIN_CACHE.period = val;
+            updateDashboardCards(
+              window.MJ_ADMIN_CACHE.orders,
+              window.MJ_ADMIN_CACHE.products,
+              window.MJ_ADMIN_CACHE.packages,
+              val
+            );
+            updateRevenueChart(window.MJ_ADMIN_CACHE.orders, val);
+          });
+        }
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+      bindDashboardFilterSelect();
+      window.syncLiveAdminDashboard('all');
+    }, 600);
+    setInterval(() => {
+      bindDashboardFilterSelect();
+      window.syncLiveAdminDashboard();
+    }, 15000);
+  });
+})();
+</script>
 </body>
 </html>
