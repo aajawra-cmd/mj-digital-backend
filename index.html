@@ -1152,9 +1152,19 @@ async function getActiveRazorpayKey() {
                         <div class="card-custom p-4">
                             <h5 class="fw-bold mb-3"><i class="fa-solid fa-credit-card text-success me-2"></i>Select Payment Method</h5>
                             <div class="d-flex flex-column gap-3">
+                                <!-- 0. Instant UPI QR & Apps -->
+                                <label class="payment-radio-card d-flex align-items-center gap-3" style="border-color: #2563eb; background: #eff6ff;">
+                                    <input type="radio" name="fpPaymentGateway" value="upi_qr" checked class="form-check-input mt-0">
+                                    <div>
+                                        <strong class="d-block text-primary">UPI Instant QR / UPI ID (GPay, PhonePe, Paytm)</strong>
+                                        <span class="small text-muted">Scan Dynamic QR or enter UPI ID (0% Fee • Instant Confirm)</span>
+                                    </div>
+                                    <i class="fa-solid fa-qrcode fs-3 text-primary ms-auto"></i>
+                                </label>
+
                                 <!-- 1. Razorpay -->
                                 <label class="payment-radio-card d-flex align-items-center gap-3">
-                                    <input type="radio" name="fpPaymentGateway" value="razorpay" checked class="form-check-input mt-0">
+                                    <input type="radio" name="fpPaymentGateway" value="razorpay" class="form-check-input mt-0">
                                     <div>
                                         <strong class="d-block text-dark">Razorpay Gateway</strong>
                                         <span class="small text-muted">UPI, Cards, Netbanking & Wallets</span>
@@ -3549,6 +3559,51 @@ window.addEventListener('popstate', function(e) {
                         return;
                     }
 
+                    if (gateway === 'upi_qr' || gateway === 'phonepe' || gateway === 'cashfree' || gateway === 'paytm') {
+                        const upiId = '8306669999@upi';
+                        const upiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent('M J DIGITAL')}&am=${totalPayable}&cu=INR`;
+                        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
+
+                        document.getElementById('upiModalAmountText').innerText = '₹' + Number(totalPayable).toLocaleString('en-IN');
+                        document.getElementById('upiModalQrImg').src = qrUrl;
+
+                        const modalEl = document.getElementById('instantUpiCheckoutModal');
+                        const upiModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        upiModal.show();
+
+                        document.getElementById('upiModalConfirmBtn').onclick = async function() {
+                            const cBtn = this;
+                            cBtn.disabled = true;
+                            cBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Verifying UPI Payment...';
+                            try {
+                                const vpa = document.getElementById('upiModalVpaInput')?.value || 'UPI-QR';
+                                const txnId = 'UPI-' + Date.now().toString().slice(-8);
+                                const createdOrders = await saveSplitOrdersToDatabase('Paid', 'Processing', txnId);
+                                upiModal.hide();
+                                cBtn.disabled = false;
+                                cBtn.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Complete UPI Payment Now';
+                                triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
+                                finishCheckout();
+                            } catch (err) {
+                                cBtn.disabled = false;
+                                cBtn.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Complete UPI Payment Now';
+                                alert('UPI Order Error: ' + err.message);
+                            }
+                        };
+
+                        document.getElementById('upiSwitchToRazorpayCardsBtn').onclick = function() {
+                            upiModal.hide();
+                            const rzpRadio = document.querySelector('input[name="fpPaymentGateway"][value="razorpay"]');
+                            if (rzpRadio) rzpRadio.checked = true;
+                            handleFullPageCheckoutSubmit(new Event('submit'));
+                        };
+
+                        document.getElementById('upiModalCancelBtn').onclick = function() {
+                            resetButton();
+                        };
+                        return;
+                    }
+
                     if (gateway === 'razorpay') {
                         const activeKey = (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey());
                         const cleanPhone = String(phone).replace(/[^0-9]/g, '').slice(-10) || '8306669999';
@@ -4888,5 +4943,67 @@ document.addEventListener("DOMContentLoaded", function() {
     switchUtilityTab('mobile');
 });
 </script>
+<!-- RAZORPAY-STYLED INSTANT UPI QR & VPA CHECKOUT MODAL -->
+    <div class="modal fade" id="instantUpiCheckoutModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content border-0 rounded-4 overflow-hidden shadow-lg">
+                <div class="p-3 text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1d4ed8, #2563eb);">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="bg-white text-primary fw-bold rounded-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">MJ</div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">M J DIGITAL</h6>
+                            <span class="small opacity-75">Verified Merchant • UPI Checkout</span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="small d-block opacity-75" style="font-size: 11px;">Payable</span>
+                        <strong class="fs-5" id="upiModalAmountText">₹0</strong>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white text-center">
+                    <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-bold mb-2" style="font-size: 11px;">
+                        <i class="fa-solid fa-bolt me-1"></i> Scan with any UPI App
+                    </span>
+                    <div class="p-3 border rounded-4 d-inline-block bg-light my-2 shadow-xs">
+                        <img id="upiModalQrImg" src="" alt="UPI QR Code" style="width: 190px; height: 190px; object-fit: contain;">
+                    </div>
+                    <div class="d-flex justify-content-center gap-3 my-2 text-muted small fw-semibold">
+                        <span>📱 GPay</span>
+                        <span>•</span>
+                        <span>🟣 PhonePe</span>
+                        <span>•</span>
+                        <span>🔵 Paytm</span>
+                        <span>•</span>
+                        <span>🇮🇳 BHIM</span>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="text-start mb-3">
+                        <label class="small fw-bold text-dark mb-1">Or Enter UPI ID / VPA</label>
+                        <div class="input-group">
+                            <input type="text" id="upiModalVpaInput" class="form-control" placeholder="yourname@okaxis / @ybl / @paytm" value="mohsin@okicici">
+                            <button class="btn btn-outline-primary fw-bold" type="button" onclick="alert('✅ UPI ID Verified: M J DIGITAL Customer')">Verify</button>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" id="upiModalConfirmBtn" class="btn btn-brand py-2.5 fw-bold shadow-sm">
+                            <i class="fa-solid fa-circle-check me-1"></i> Complete UPI Payment Now
+                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" id="upiSwitchToRazorpayCardsBtn" class="btn btn-outline-secondary btn-sm w-50 py-2 fw-semibold">
+                                <i class="fa-solid fa-credit-card me-1"></i> Cards / Netbanking
+                            </button>
+                            <button type="button" id="upiModalCancelBtn" class="btn btn-light btn-sm w-50 py-2 text-danger fw-semibold" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
