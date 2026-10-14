@@ -1394,11 +1394,7 @@ window.addEventListener("load", function() {
       }
 
       if (data.requires2FA) {
-        const otp = prompt("🔐 2FA SECURITY OTP:
-
-Aapka OTP Code: " + (data.debugOtp || "1234") + "
-
-Kripya 4-digit code yahan daalein:");
+        const otp = prompt("🔒 2FA SECURITY OTP:\n\nAapka OTP Code: " + (data.debugOtp || "1234") + "\n\nKripya 4-digit code yahan daalein:");
         if (!otp) return false;
 
         const verifyRes = await fetch("/api/admin/verify-2fa", {
