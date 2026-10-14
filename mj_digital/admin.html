@@ -1776,5 +1776,35 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 })();
 </script>
+<script id="mjAdminTravelStatusSync">
+  // Automatically sync the top-left Active/Inactive badge on Travel Package cards whenever dropdown changes
+  function syncTravelCardBadges() {
+    document.querySelectorAll('select').forEach(sel => {
+      const val = (sel.value || '').trim();
+      if (val === 'Active' || val === 'Inactive') {
+        const card = sel.closest('.card, .col-md-4, .p-4, [class*="card"]');
+        if (card) {
+          const badge = card.querySelector('.badge');
+          if (badge && (badge.innerText.trim() === 'Active' || badge.innerText.trim() === 'Inactive')) {
+            badge.innerText = val;
+            if (val === 'Inactive') {
+              badge.style.background = '#fee2e2';
+              badge.style.color = '#dc2626';
+            } else {
+              badge.style.background = '#dcfce7';
+              badge.style.color = '#16a34a';
+            }
+          }
+        }
+      }
+    });
+  }
+  document.addEventListener('change', function(e) {
+    if (e.target && e.target.tagName === 'SELECT') {
+      setTimeout(syncTravelCardBadges, 100);
+    }
+  });
+  setInterval(syncTravelCardBadges, 1500);
+</script>
 </body>
 </html>
