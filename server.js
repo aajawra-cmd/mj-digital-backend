@@ -1241,6 +1241,36 @@ app.get('/api/catalog/lookup/:id', async (req, res) => {
   }
 });
 
+// ROBUST DELETE ENDPOINTS
+app.delete(['/api/products/:id', '/api/items/:id', '/api/products/delete/:id'], async (req, res) => {
+  try {
+    const id = req.params.id;
+    let deleted = await Product.findByIdAndDelete(id).catch(() => null);
+    if (!deleted) {
+      deleted = await Product.findOneAndDelete({ _id: id }).catch(() => null);
+    }
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Product database me nahi mila' });
+    }
+    res.json({ success: true, message: 'Product deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.delete(['/api/travel-packages/:id', '/api/travel/delete/:id'], async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleted = await TravelPackage.findByIdAndDelete(id).catch(() => null);
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Travel package database me nahi mila' });
+    }
+    res.json({ success: true, message: 'Travel package deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
