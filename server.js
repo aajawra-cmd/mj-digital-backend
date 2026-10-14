@@ -3,26 +3,34 @@
 // ==========================================
 let razorpayInstance = null;
 async function getRazorpayClient() {
-  let keyId = process.env.RAZORPAY_KEY_ID || '';
-  let keySecret = process.env.RAZORPAY_KEY_SECRET || '';
+  let keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_TmdZOFE7j1h68c';
+  let keySecret = process.env.RAZORPAY_KEY_SECRET || 'hi0cJuGYThQVGLC7ViA4eqCa';
 
   try {
-    const settings = await PlatformSettings.findOne();
-    if (settings && settings.gatewayKeyId) {
-      keyId = settings.gatewayKeyId;
-      if (settings.gatewayKeySecret) keySecret = settings.gatewayKeySecret;
+    const PlatformSettingModel = mongoose.models.PlatformSetting;
+    if (PlatformSettingModel) {
+      const settings = await PlatformSettingModel.findOne({ singletonKey: 'MJ_MAIN_SETTINGS' });
+      if (settings) {
+        const provider = settings.gateway || 'razorpay';
+        const env = (settings.environment === 'sandbox' || settings.environment === 'test') ? 'test' : 'live';
+        if (settings.gatewayKeys?.[provider]?.[env]?.keyId) {
+          keyId = settings.gatewayKeys[provider][env].keyId;
+        } else if (settings.gatewayKeyId) {
+          keyId = settings.gatewayKeyId;
+        }
+        if (settings.gatewayKeys?.[provider]?.[env]?.keySecret) {
+          keySecret = settings.gatewayKeys[provider][env].keySecret;
+        } else if (settings.gatewayKeySecret) {
+          keySecret = settings.gatewayKeySecret;
+        }
+      }
     }
   } catch(e) {}
 
-  if (!razorpayInstance || razorpayInstance.key_id !== keyId) {
-    try {
-      const Razorpay = require('razorpay');
-      razorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-      razorpayInstance.key_id = keyId;
-    } catch(err) {
-      console.warn('Razorpay init notice:', err.message);
-    }
-  }
+  const Razorpay = require('razorpay');
+  razorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
+  razorpayInstance.key_id = keyId;
+  razorpayInstance.key_secret = keySecret;
   return razorpayInstance;
 }
 
@@ -921,7 +929,8 @@ app.post(['/api/create-order', '/api/payment/create-order'], async (req, res) =>
     }
 
     if (gateway.toLowerCase() === 'razorpay') {
-      const order = await razorpay.orders.create({
+      const rzpClient = await getRazorpayClient();
+      const order = await rzpClient.orders.create({
         amount: totalAmount * 100,
         currency: 'INR',
         receipt: 'rcpt_' + Date.now().toString().slice(-8)
@@ -950,8 +959,10 @@ app.post(['/api/verify-payment', '/api/payment/verify'], async (req, res) => {
     }
 
     const signPayload = razorpay_order_id + "|" + razorpay_payment_id;
+    const rzpClient = await getRazorpayClient();
+    const activeSecret = rzpClient.key_secret || process.env.RAZORPAY_KEY_SECRET || 'hi0cJuGYThQVGLC7ViA4eqCa';
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'hi0cJuGYThQVGLC7ViA4eqCa')
+      .createHmac('sha256', activeSecret)
       .update(signPayload.toString())
       .digest('hex');
 

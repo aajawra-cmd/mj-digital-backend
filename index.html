@@ -1640,8 +1640,18 @@ async function getActiveRazorpayKey() {
         let activeCheckoutData = null;
         let userOrders = [];
 
+        
         let myCart = [];
+        try { myCart = JSON.parse(localStorage.getItem('mj_cart') || '[]'); } catch(e) { myCart = []; }
         let myWishlist = [];
+        try { myWishlist = JSON.parse(localStorage.getItem('mj_wishlist') || '[]'); } catch(e) { myWishlist = []; }
+        function saveCartToStorage() {
+            try { localStorage.setItem('mj_cart', JSON.stringify(myCart)); } catch(e) {}
+        }
+        function saveWishlistToStorage() {
+            try { localStorage.setItem('mj_wishlist', JSON.stringify(myWishlist)); } catch(e) {}
+        }
+
         let catalogItemsCache = {};
         let currentGalleryMedia = [];
         let currentSelectedProductForPricing = null;
@@ -1837,6 +1847,9 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
     document.querySelectorAll('.nav-btn, .nav-link').forEach(btn => btn.classList.remove('active'));
     if (navEl) {
         navEl.classList.add('active');
+    } else {
+        const matchingNav = document.querySelector(`a[onclick*="${pageId}"]`);
+        if (matchingNav) matchingNav.classList.add('active');
     }
 
     if (updateUrl && PAGE_ROUTE_MAP[pageId]) {
@@ -1845,9 +1858,22 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
 
     if (pageId === 'page-home') {
         if (typeof loadHomeTrending === 'function') loadHomeTrending();
-        if (typeof fetchStoreItems === 'function') fetchStoreItems();
-    } else if (pageId === 'page-mobile' || pageId === 'page-electronics' || pageId === 'page-fashion' || pageId === 'page-travels') {
-        
+    } else if (pageId === 'page-mobile') {
+        if (typeof loadMobiles === 'function') loadMobiles();
+    } else if (pageId === 'page-electronics') {
+        if (typeof loadElectronics === 'function') loadElectronics();
+    } else if (pageId === 'page-fashion') {
+        if (typeof loadFashion === 'function') loadFashion();
+    } else if (pageId === 'page-services') {
+        if (typeof loadServices === 'function') loadServices();
+    } else if (pageId === 'page-travels') {
+        if (typeof filterTravels === 'function') filterTravels(travelMemory.activeRegion || 'All');
+    } else if (pageId === 'page-all-catalog') {
+        if (typeof loadAllCatalog === 'function') loadAllCatalog();
+    } else if (pageId === 'page-cart') {
+        if (typeof renderCartPage === 'function') renderCartPage();
+    } else if (pageId === 'page-wishlist') {
+        if (typeof renderWishlistPage === 'function') renderWishlistPage();
     } else if (pageId === 'page-profile') {
         if (typeof loadOrdersTable === 'function') loadOrdersTable();
     } else if (pageId === 'page-utility-hub') {
@@ -1862,23 +1888,18 @@ function routeCurrentPath() {
     let isTravel = params.get('type') === 'travel' || localStorage.getItem('mj_last_viewed_is_travel') === '1';
 
     if (path.includes('item') || path.includes('view')) {
-        let attempts = 0;
-        const interval = setInterval(() => {
-            attempts++;
-            if (typeof forceRenderAllCategories === 'function') 
-            
-            if (!itemId) {
-                itemId = 'm2'; // Default fallback to Samsung Galaxy S24 Ultra
+        Promise.all([
+            fetchStoreItems(true),
+            fetch('/api/travel-packages?_t=1791983900961?_t=' + Date.now()).then(r => r.json()).catch(() => ({}))
+        ]).then(([prods, travRes]) => {
+            const travs = Array.isArray(travRes) ? travRes : (travRes.data || []);
+            travs.forEach(t => { catalogItemsCache[t._id] = t; });
+            if (travs.length > 0) travelMemory.all = travs;
+            if (!itemId) itemId = 'm2';
+            if (typeof openItemDetailsPage === 'function') {
+                openItemDetailsPage(itemId, isTravel, false);
             }
-
-            const hasItem = (typeof catalogItemsCache !== 'undefined' && catalogItemsCache[itemId]);
-            if (hasItem || attempts > 15) {
-                clearInterval(interval);
-                if (typeof openItemDetailsPage === 'function') {
-                    openItemDetailsPage(itemId, isTravel, false);
-                }
-            }
-        }, 100);
+        });
         return;
     }
 
@@ -1902,10 +1923,27 @@ window.addEventListener('popstate', function(e) {
 
         let cachedAllProducts = (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined') ? [...PRODUCT_FALLBACK_ITEMS] : [];
 
-        async function fetchStoreItems(forceRefresh = false) {
-            if (!forceRefresh && cachedAllProducts && cachedAllProducts.length > 0) {
-                return cachedAllProducts;
+        async function fetchStoreItems(forceRefresh = true) {
+            try {
+                const res = await fetch('/api/products?_t=' + Date.now());
+                if (res.ok) {
+                    const data = await res.json();
+                    const items = Array.isArray(data) ? data : (data.data || []);
+                    if (items.length > 0) {
+                        items.forEach(it => { catalogItemsCache[it._id] = it; });
+                        cachedAllProducts = items;
+                        return items;
+                    }
+                }
+            } catch (err) {
+                console.warn('Using fallback cache catalog');
             }
+            if (!cachedAllProducts || cachedAllProducts.length === 0) {
+                cachedAllProducts = PRODUCT_FALLBACK_ITEMS;
+                PRODUCT_FALLBACK_ITEMS.forEach(it => { catalogItemsCache[it._id] = it; });
+            }
+            return cachedAllProducts;
+        }
             
             // Baseline fallback data instantly ready
             const baseFallback = (typeof PRODUCT_FALLBACK_ITEMS !== 'undefined' && PRODUCT_FALLBACK_ITEMS.length > 0)
@@ -1997,7 +2035,7 @@ window.addEventListener('popstate', function(e) {
 
             let travels = [];
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                const res = await fetch('/api/travel-packages?_t=1791983900961');
                 if (res.ok) {
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
@@ -2031,7 +2069,7 @@ window.addEventListener('popstate', function(e) {
 
             let travels = [];
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                const res = await fetch('/api/travel-packages?_t=1791983900961');
                 if (res.ok) {
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
@@ -2090,7 +2128,7 @@ window.addEventListener('popstate', function(e) {
             grid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading live items from database...</div>';
 
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products?category=' + encodeURIComponent(catKey));
+                const res = await fetch('/api/products?_t=' + Date.now() + '&category=' + encodeURIComponent(catKey));
                 const json = await res.json();
                 let items = Array.isArray(json) ? json : (json.data || []);
                 
@@ -2120,6 +2158,74 @@ window.addEventListener('popstate', function(e) {
             } catch (err) {
                 grid.innerHTML = '<div class="col-12 text-center text-danger py-4">Database connect error. Please check server.</div>';
             }
+        }
+
+        const CAT_GRID_LOOKUP = {
+            mobile: 'mobileGrid',
+            electronics: 'electronicsProductsGrid',
+            fashion: 'fashionProductsGrid',
+            services: 'servicesProductsGrid'
+        };
+
+        function renderCategoryGrid(gridId, list, emptyMsg = 'No products found') {
+            const grid = document.getElementById(gridId);
+            if (!grid) return;
+            if (!list || list.length === 0) {
+                grid.innerHTML = `<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-box-open fs-2 mb-2 d-block opacity-50"></i>${emptyMsg}</div>`;
+                return;
+            }
+            grid.innerHTML = list.map(item => createProductCardHTML(item)).join('');
+        }
+
+        function applyCategoryFilters(catKey) {
+            const mem = categoryMemory[catKey];
+            if (!mem) return;
+            let list = [...(mem.all || [])];
+
+            if (mem.activeBrand && mem.activeBrand !== 'All') {
+                list = list.filter(p => String(p.brand || '').toLowerCase().trim() === mem.activeBrand.toLowerCase().trim());
+            }
+
+            if (mem.query) {
+                const q = mem.query.toLowerCase();
+                list = list.filter(p => {
+                    const title = String(p.title || p.name || '').toLowerCase();
+                    const brand = String(p.brand || '').toLowerCase();
+                    const desc = String(p.description || '').toLowerCase();
+                    return title.includes(q) || brand.includes(q) || desc.includes(q);
+                });
+            }
+
+            if (mem.sort === 'low-high') {
+                list.sort((a, b) => Number(a.discountPrice || a.price || 0) - Number(b.discountPrice || b.price || 0));
+            } else if (mem.sort === 'high-low') {
+                list.sort((a, b) => Number(b.discountPrice || b.price || 0) - Number(a.discountPrice || a.price || 0));
+            }
+
+            mem.filtered = list;
+            renderCategoryGrid(CAT_GRID_LOOKUP[catKey], list, 'No matching ' + catKey + ' products found.');
+        }
+
+        function filterCategoryByBrand(catKey, brandName, btnEl) {
+            if (!categoryMemory[catKey]) return;
+            categoryMemory[catKey].activeBrand = brandName;
+            if (btnEl && btnEl.parentElement) {
+                btnEl.parentElement.querySelectorAll('.brand-chip-btn').forEach(b => b.classList.remove('active'));
+                btnEl.classList.add('active');
+            }
+            applyCategoryFilters(catKey);
+        }
+
+        function filterCategoryBySearch(catKey, queryText) {
+            if (!categoryMemory[catKey]) return;
+            categoryMemory[catKey].query = String(queryText || '').trim();
+            applyCategoryFilters(catKey);
+        }
+
+        function sortCategoryProducts(catKey, sortType) {
+            if (!categoryMemory[catKey]) return;
+            categoryMemory[catKey].sort = sortType;
+            applyCategoryFilters(catKey);
         }
 
         function loadMobiles() { loadCategoryFromDatabase('mobile', 'mobileGrid', 'mobileBrandChips'); }
@@ -2217,7 +2323,7 @@ window.addEventListener('popstate', function(e) {
 
             // Background me live data fetch karo
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                const res = await fetch('/api/travel-packages?_t=1791983900961');
                 if (res.ok) {
                     const result = await res.json();
                     const remoteData = Array.isArray(result) ? result : (result.data || []);
@@ -2957,11 +3063,13 @@ window.addEventListener('popstate', function(e) {
         }
 
         function updateWishlistBadge() {
+            if (typeof saveWishlistToStorage === 'function') saveWishlistToStorage();
             const el = document.getElementById('wishCount');
             if (el) el.innerText = myWishlist.length;
         }
 
         function updateCartBadge() {
+            if (typeof saveCartToStorage === 'function') saveCartToStorage();
             const el = document.getElementById('cartCount');
             const totalItems = myCart.reduce((sum, item) => sum + (item.qty || 1), 0);
             if (el) el.innerText = totalItems;
@@ -3351,10 +3459,27 @@ window.addEventListener('popstate', function(e) {
                             name: "M J DIGITAL",
                             description: "Purchase Order",
                             order_id: orderData.order.id,
+                            config: {
+                                display: {
+                                    blocks: {
+                                        utib: {
+                                            name: "UPI & Popular Methods",
+                                            instruments: [
+                                                { method: "upi" },
+                                                { method: "card" },
+                                                { method: "netbanking" },
+                                                { method: "wallet" }
+                                            ]
+                                        }
+                                    },
+                                    sequence: ["block.utib"],
+                                    preferences: { show_default_blocks: true }
+                                }
+                            },
                             prefill: {
                                 name: name,
                                 email: "mjdigitalworlds@gmail.com",
-                                contact: phone
+                                contact: String(phone).replace(/[^0-9]/g, '').slice(-10)
                             },
                             theme: { color: "#2563eb" },
                             handler: async function (response) {
@@ -3447,7 +3572,9 @@ window.addEventListener('popstate', function(e) {
 
             async function finishCheckout() {
                 myCart = [];
+                localStorage.removeItem('mj_cart');
                 if (typeof updateCartBadge === 'function') updateCartBadge();
+                if (typeof renderCartPage === 'function') renderCartPage();
                 resetButton();
 
                 const defaultRadio = document.querySelector('input[name="fpPaymentGateway"][value="razorpay"]');
@@ -3460,8 +3587,7 @@ window.addEventListener('popstate', function(e) {
                 if (detailTab) detailTab.style.display = 'none';
                 if (listTab) listTab.style.display = 'block';
 
-                if (typeof loadOrdersTable === 'function') loadOrdersTable();
-window.location.reload();
+                await loadOrdersTable();
                 switchProfileTab('p-orders', document.querySelector('.profile-nav-btn'));
                 navigateTo('page-profile');
             }
@@ -3697,7 +3823,7 @@ window.location.reload();
             if (isTravel) {
                 let travels = [];
                 try {
-                    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages');
+                    const res = await fetch('/api/travel-packages?_t=1791983900961');
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
                 } catch(e) {
@@ -3800,7 +3926,7 @@ window.location.reload();
 
         async function loadMainSitePolicies() {
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/cms/policies');
+                const res = await fetch('/api/cms/policies?_t=1791983900964');
                 if (!res.ok) return;
                 const result = await res.json();
                 const policies = Array.isArray(result) ? result : (result.data || []);
@@ -3821,7 +3947,7 @@ window.location.reload();
 
         async function syncLiveStoreSettings() {
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/settings');
+                const res = await fetch('/api/settings?_t=1791983900963');
                 const result = await res.json();
                 if (!res.ok || !result.success || !result.data) return;
                 const s = result.data;
@@ -4045,100 +4171,7 @@ window.initiateRazorpay = window.openRazorpayModal;
 window.initiatePayment = window.openRazorpayModal;
 </script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    function launchRazorpayDirect(e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-        }
-        
-        var selectedPg = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'razorpay';
-        if (selectedPg !== 'razorpay' && !selectedPg.toLowerCase().includes('razor')) {
-            return; // Agar COD ya PhonePe select ho toh default form chalne do
-        }
-
-        if (typeof Razorpay === 'undefined') {
-            alert("Razorpay script connect ho rahi hai. 2 second me dubara dabayein.");
-            return false;
-        }
-
-        var options = {
-            "key": "rzp_test_TmdZOFE7j1h68c",
-            "amount": 3499900,
-            "currency": "INR",
-            "name": "M J DIGITAL",
-            "description": "Order Payment Test",
-            "image": "https://mjdigital.co.in/favicon.ico",
-            "handler": async function (response) {
-                    try {
-        var cartData = (typeof myCart !== "undefined" && myCart.length > 0) 
-            ? myCart[0] 
-            : { id: "item-1", title: "Iphone 18 pro", price: 314999, qty: 1 };
-        
-        await fetch("/api/orders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                customerName: document.getElementById("fpCheckoutName")?.value || "Mohsin J",
-                customerPhone: document.getElementById("fpCheckoutPhone")?.value || "8306669999",
-                customerEmail: "mjdigitalworlds@gmail.com",
-                shippingAddress: "GF5, Imran Residency, Danilimda, Ahmedabad, Gujarat",
-                orderType: "Product",
-                totalAmount: cartData.price || 314999,
-                paymentGateway: "razorpay",
-                paymentStatus: "Paid",
-                transactionId: response.razorpay_payment_id,
-                status: "Processing",
-                itemDetails: {
-                    itemId: cartData.id,
-                    title: cartData.title,
-                    quantity: cartData.qty || 1
-                }
-            })
-        });
-    } catch(err) {
-        console.error("Order save error:", err);
-    }
-            alert("Payment Success! Order Placed. ID: " + response.razorpay_payment_id);
-    if (typeof triggerCustomerWhatsAppReceipt === "function") {
-        var custPhone = document.getElementById("fpCheckoutPhone")?.value || "8306669999";
-        var custName = document.getElementById("fpCheckoutName")?.value || "Mohsin J";
-        triggerCustomerWhatsAppReceipt(cartData ? [cartData] : [], custPhone, custName);
-    }
-    if (typeof triggerCustomerWhatsAppReceipt === "function") {
-        var custPhone = document.getElementById("fpCheckoutPhone")?.value || "8306669999";
-        var custName = document.getElementById("fpCheckoutName")?.value || "Mohsin J";
-        triggerCustomerWhatsAppReceipt(cartData ? [cartData] : [], custPhone, custName);
-    }
-                window.location.reload();
-            },
-            "prefill": {
-                "name": document.getElementById('custName')?.value || "Mohsin J",
-                "email": "support@mjdigital.co.in",
-                "contact": document.getElementById('custPhone')?.value || "8306669999"
-            },
-            "theme": {
-                "color": "#0d6efd"
-            }
-        };
-
-        var rzp = new Razorpay(options);
-        rzp.on('payment.failed', function (resp){
-            alert("Payment Failed: " + resp.error.description);
-        });
-        rzp.open();
-        return false;
-    }
-
-    var btn = document.getElementById('fpCheckoutSubmitBtn');
-    if (btn) {
-        btn.addEventListener('click', launchRazorpayDirect, true);
-    }
-    window.launchRazorpayDirect = launchRazorpayDirect;
-});
-</script>
+<!-- Removed conflicting hardcoded Razorpay hijack script -->
 
 <script>
 window.openWalletModal = function() {
