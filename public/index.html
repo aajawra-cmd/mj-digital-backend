@@ -634,7 +634,7 @@ async function getActiveRazorpayKey() {
          ========================================================= */
       body {
         background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 50%, #eef2ff 100%) !important;
-        perspective: 1500px;
+        /* perspective removed from body to keep fixed modals centered */
       }
 
       /* 3D Glassmorphic Floating Navbar */
@@ -1003,6 +1003,33 @@ async function getActiveRazorpayKey() {
       .mjpay-paymode-tile:has(input:checked) {
         border-color: #2563eb;
         background: #eff6ff;
+      }
+    </style>
+<style id="mjRazorpayViewportFix">
+      /* Ensure body NEVER traps position:fixed elements like Razorpay */
+      html, body {
+        perspective: none !important;
+        transform: none !important;
+        filter: none !important;
+      }
+
+      /* Lock Razorpay Popup strictly to the user's current visible screen (100% Viewport Center) */
+      .razorpay-container {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 2147483647 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+      }
+      .razorpay-checkout-frame {
+        position: relative !important;
+        margin: auto !important;
+        max-height: 94vh !important;
       }
     </style>
 </head>
@@ -7088,6 +7115,36 @@ window.handleFullPageCheckoutSubmit = async function(e) {
     resetButton();
   }
 };
+</script>
+<script id="mjCompactCheckoutEnhancer">
+  (function() {
+    const origDivert = window.divertMjPayToCheckoutPage;
+    if (typeof origDivert === 'function') {
+      window.divertMjPayToCheckoutPage = function(payPayload) {
+        origDivert(payPayload);
+        // Hide Shipping Address card during MJ Pay digital checkout so Payment Options are at the very top!
+        const shippingInput = document.getElementById('fpCheckoutAddrText');
+        const shippingCard = shippingInput ? shippingInput.closest('.card-custom') : null;
+        if (shippingCard) {
+          shippingCard.style.display = 'none';
+        }
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      };
+    }
+
+    const origCartCheckout = window.checkoutFromCart;
+    if (typeof origCartCheckout === 'function') {
+      window.checkoutFromCart = function() {
+        const shippingInput = document.getElementById('fpCheckoutAddrText');
+        const shippingCard = shippingInput ? shippingInput.closest('.card-custom') : null;
+        if (shippingCard) {
+          shippingCard.style.display = 'block';
+        }
+        origCartCheckout();
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      };
+    }
+  })();
 </script>
 </body>
 </html>
