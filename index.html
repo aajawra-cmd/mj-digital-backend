@@ -770,6 +770,241 @@ async function getActiveRazorpayKey() {
         box-shadow: 0 8px 16px rgba(37, 99, 235, 0.16);
       }
     </style>
+<style id="mjAmazonPay3DStyle">
+      /* Keep utility/checkout/profile containers straight & stable */
+      #page-utility-hub .card-custom,
+      #page-utility-hub .card-custom:hover,
+      #page-checkout .card-custom,
+      #page-checkout .card-custom:hover,
+      #page-profile .card-custom,
+      #page-profile .card-custom:hover,
+      #page-cart .card-custom,
+      #page-cart .card-custom:hover {
+        transform: none !important;
+      }
+
+      /* Amazon Pay Style 3D Category Section Card */
+      .apay-3d-section-card {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        padding: 24px 26px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 25px -6px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+        transition: box-shadow 0.25s ease, border-color 0.25s ease;
+      }
+      .apay-3d-section-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 18px 36px -8px rgba(37, 99, 235, 0.1);
+      }
+      .apay-section-title {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 18px;
+        letter-spacing: -0.2px;
+      }
+
+      /* Left Sticky Balance Sidebar Card */
+      .apay-balance-sidebar {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.08);
+        position: sticky;
+        top: 90px;
+      }
+      .apay-balance-header {
+        padding: 18px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      }
+      .apay-sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        color: #0f172a;
+        font-size: 13.5px;
+        font-weight: 600;
+        text-decoration: none;
+        border-bottom: 1px solid #f8fafc;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .apay-sidebar-link i {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        background: #eff6ff;
+        color: #0284c7;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        transition: transform 0.2s ease;
+      }
+      .apay-sidebar-link:hover {
+        background: #f0f9ff;
+        color: #0284c7;
+        padding-left: 24px;
+      }
+      .apay-sidebar-link:hover i {
+        transform: scale(1.12);
+        background: #0284c7;
+        color: #ffffff;
+      }
+
+      /* 3D Icon Grid Items inside Category Sections */
+      .apay-icon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 18px 12px;
+      }
+      .apay-icon-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        cursor: pointer;
+        padding: 10px 6px;
+        border-radius: 16px;
+        transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+        user-select: none;
+      }
+      .apay-icon-item .icon-3d-box {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 18px -4px rgba(15, 23, 42, 0.08), inset 0 2px 2px #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 25px;
+        margin-bottom: 9px;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+      }
+      .apay-icon-item .icon-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #1e293b;
+        line-height: 1.25;
+      }
+      .apay-icon-item:hover {
+        background: #f8fafc;
+        transform: translateY(-5px);
+      }
+      .apay-icon-item:hover .icon-3d-box {
+        transform: scale(1.12) translateY(-3px);
+        border-color: #38bdf8;
+        box-shadow: 0 14px 26px -6px rgba(2, 132, 199, 0.22), inset 0 2px 3px #ffffff;
+        background: linear-gradient(145deg, #ffffff 0%, #e0f2fe 100%);
+      }
+      .apay-icon-item:hover .icon-label {
+        color: #0284c7;
+      }
+      .apay-badge-new {
+        position: absolute;
+        top: 2px;
+        right: 14px;
+        background: linear-gradient(135deg, #f97316, #ea580c);
+        color: #fff;
+        font-size: 9px;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        box-shadow: 0 3px 8px rgba(234, 88, 12, 0.35);
+        z-index: 2;
+      }
+
+      /* Amazon Pay Balance Page (Screenshot 1 Style) */
+      .apay-balance-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 24px;
+        box-shadow: 0 10px 25px -6px rgba(15, 23, 42, 0.06);
+        margin-bottom: 20px;
+      }
+      .apay-yellow-btn {
+        background: linear-gradient(180deg, #ffd814 0%, #f7ca00 100%);
+        border: 1px solid #fcd200;
+        color: #0f1111 !important;
+        font-weight: 700;
+        border-radius: 50px;
+        padding: 11px 28px;
+        box-shadow: 0 6px 14px rgba(247, 202, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.6);
+        transition: all 0.2s ease;
+      }
+      .apay-yellow-btn:hover {
+        background: linear-gradient(180deg, #f7ca00 0%, #f0b800 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(247, 202, 0, 0.45);
+      }
+      .apay-quick-pill {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #0f172a;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 6px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+      .apay-quick-pill:hover, .apay-quick-pill.active {
+        border-color: #0284c7;
+        background: #f0f9ff;
+        color: #0284c7;
+        transform: translateY(-1px);
+      }
+      .apay-action-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 4px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #0f172a;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .apay-action-row:last-child {
+        border-bottom: none;
+      }
+      .apay-action-row:hover {
+        color: #0284c7;
+        padding-left: 8px;
+      }
+
+      /* Payment mode tiles inside service drawer */
+      .mjpay-paymode-tile {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .mjpay-paymode-tile:has(input:checked) {
+        border-color: #2563eb;
+        background: #eff6ff;
+      }
+    </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
@@ -1024,106 +1259,500 @@ async function getActiveRazorpayKey() {
         </div>
 
         
-        <!-- DEDICATED FULL-PAGE UTILITY & BBPS BILL PAYMENT HUB -->
+        <!-- DEDICATED FULL-PAGE UTILITY & BBPS BILL PAYMENT HUB (AMAZON PAY 3D SUPER-HUB UI) -->
         <div id="page-utility-hub" class="page-view">
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                <div>
-                    <h3 class="fw-bold mb-1 text-dark"><i class="fa-solid fa-bolt text-warning me-2"></i>Recharge & Bill Payments Hub (BBPS)</h3>
-                    <p class="text-muted small mb-0">Instant mobile recharges, utility bill clearance & 1-click M J Wallet checkout</p>
+            <!-- Top Brand Bar (Amazon Pay Style Header Strip) -->
+            <div class="d-flex justify-content-between align-items-center bg-white px-4 py-3 rounded-4 border shadow-xs mb-4 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center cursor-pointer" onclick="openMjPaySubView('home')">
+                        <span class="fw-black fs-4 text-dark" style="letter-spacing: -0.5px;">MJ <span class="text-primary">pay</span></span>
+                        <span class="badge bg-warning text-dark ms-2 rounded-pill px-2.5 py-1" style="font-size: 10px;"><i class="fa-solid fa-bolt me-1"></i>BBPS 3D</span>
+                    </div>
+                    <div class="vr d-none d-sm-block"></div>
+                    <span class="text-muted small d-none d-sm-inline">Instant Recharges, Bill Payments, Travel & Wallet Hub</span>
                 </div>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="navigateTo('page-home')">
-                    &larr; Back to Home Store
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold" onclick="openMjPaySubView('balance')">
+                        <i class="fa-solid fa-wallet me-1"></i> Wallet: <span id="apayTopBarBal">₹0.00</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold" onclick="navigateTo('page-home')">
+                        &larr; Store Home
+                    </button>
+                </div>
             </div>
 
-            <div class="row g-4">
-                <!-- Left Column: Service Menu & Action Form -->
-                <div class="col-lg-5">
-                    <div class="card-custom p-4 mb-4">
-                        <h6 class="fw-bold text-dark mb-3">1. Select Service Category</h6>
-                        <div class="d-flex flex-wrap gap-2 mb-4">
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 active utility-tab-selector" data-service="mobile" onclick="switchUtilityTab('mobile', this)">📱 Mobile</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="dth" onclick="switchUtilityTab('dth', this)">📺 DTH</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="electricity" onclick="switchUtilityTab('electricity', this)">💡 Electricity</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="fastag" onclick="switchUtilityTab('fastag', this)">🚗 FASTag</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="gas" onclick="switchUtilityTab('gas', this)">⛽ Gas</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="broadband" onclick="switchUtilityTab('broadband', this)">🌐 Broadband</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="water" onclick="switchUtilityTab('water', this)">💧 Water</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="insurance" onclick="switchUtilityTab('insurance', this)">🏥 Insurance</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="credit_card" onclick="switchUtilityTab('credit_card', this)">💳 Credit Card</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="loan" onclick="switchUtilityTab('loan', this)">🏦 Loan EMI</button>
-                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold utility-tab-selector" data-service="wallet" onclick="switchUtilityTab('wallet', this)">👛 Wallet Hub</button>
+            <!-- ===================================================================
+                 SUB-VIEW 1: AMAZON PAY STYLE CATEGORIZED 3D HOME HUB (SCREENSHOT 2 & 3)
+                 =================================================================== -->
+            <div id="mjpayHomeHubView">
+                <div class="row g-4 align-items-start">
+                    <!-- Left Sticky Sidebar: MJ Pay Balance & Quick Links -->
+                    <div class="col-lg-3 col-md-4">
+                        <div class="apay-balance-sidebar">
+                            <div class="apay-balance-header">
+                                <span class="fw-bold text-dark" style="font-size: 14px;">MJ Pay Balance</span>
+                                <span class="fw-extrabold fs-5" style="color: #16a34a;" id="homeStripWalletBalance">₹0.00</span>
+                            </div>
+                            <div class="py-1">
+                                <a href="javascript:void(0)" class="apay-sidebar-link" onclick="openMjPaySubView('balance', 'cash')">
+                                    <i class="fa-solid fa-circle-plus"></i>
+                                    <span>Add Money</span>
+                                </a>
+                                <a href="javascript:void(0)" class="apay-sidebar-link" onclick="openMjPaySubView('balance', 'gift')">
+                                    <i class="fa-solid fa-gift"></i>
+                                    <span>Add Gift Card</span>
+                                </a>
+                                <a href="javascript:void(0)" class="apay-sidebar-link" onclick="openMjPayServiceDesk('wallet')">
+                                    <i class="fa-solid fa-receipt"></i>
+                                    <span>Your Transactions</span>
+                                </a>
+                                <a href="javascript:void(0)" class="apay-sidebar-link" onclick="checkAuthAndNavigate()">
+                                    <i class="fa-solid fa-gear"></i>
+                                    <span>Account Settings</span>
+                                </a>
+                            </div>
+                            <div class="p-3 bg-light border-top text-center">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle w-100 py-1.5 fw-bold" style="font-size: 10.5px;">
+                                    <i class="fa-solid fa-shield-check me-1"></i> RBI BBPS Verified Partner
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Categorized 3D Service Sections -->
+                    <div class="col-lg-9 col-md-8">
+                        <!-- 1. TRAVEL SECTION -->
+                        <div class="apay-3d-section-card">
+                            <h5 class="apay-section-title">Travel</h5>
+                            <div class="apay-icon-grid">
+                                <div class="apay-icon-item" onclick="navigateTo('page-travels')">
+                                    <div class="icon-3d-box">✈️</div>
+                                    <span class="icon-label">Flights</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="navigateTo('page-travels')">
+                                    <div class="icon-3d-box">🚌</div>
+                                    <span class="icon-label">Bus Tickets</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="navigateTo('page-travels')">
+                                    <div class="icon-3d-box">🚆</div>
+                                    <span class="icon-label">Trains</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="navigateTo('page-travels')">
+                                    <span class="apay-badge-new">New</span>
+                                    <div class="icon-3d-box">🏨</div>
+                                    <span class="icon-label">Hotels</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="navigateTo('page-travels')">
+                                    <div class="icon-3d-box">🏖️</div>
+                                    <span class="icon-label">Tour Packages</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <hr class="my-3">
-
-                        <form id="fullPageUtilityForm" onsubmit="handleFullPageUtilitySubmit(event)">
-                            <div id="fullPageDynamicFields"></div>
-
-                            <div class="card p-3 bg-light rounded-3 border my-3">
-                                <label class="small fw-bold text-dark d-block mb-2">Select Payment Mode:</label>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="fpPaySource" id="fpPayWalletRadio" value="wallet" checked>
-                                    <label class="form-check-label d-flex justify-content-between small fw-semibold cursor-pointer" for="fpPayWalletRadio">
-                                        <span>👛 Pay via M J Wallet (Instant 1-Click)</span>
-                                        <span class="text-success fw-bold" id="fpFormWalletBalText">Bal: ₹0.00</span>
-                                    </label>
+                        <!-- 2. RECHARGES SECTION -->
+                        <div class="apay-3d-section-card">
+                            <h5 class="apay-section-title">Recharges</h5>
+                            <div class="apay-icon-grid">
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('mobile')">
+                                    <div class="icon-3d-box">📱</div>
+                                    <span class="icon-label">Mobile Recharge</span>
                                 </div>
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" name="fpPaySource" id="fpPayUpiQrRadio" value="upi_qr">
-                                    <label class="form-check-label small fw-semibold text-primary cursor-pointer" for="fpPayUpiQrRadio">
-                                        <span>📱 Pay via Instant UPI QR / UPI ID (GPay, PhonePe, Paytm)</span>
-                                    </label>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('dth')">
+                                    <div class="icon-3d-box">📡</div>
+                                    <span class="icon-label">DTH Recharge</span>
                                 </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="fpPaySource" id="fpPayGatewayRadio" value="gateway">
-                                    <label class="form-check-label small fw-semibold cursor-pointer" for="fpPayGatewayRadio">
-                                        <span>💳 Pay via Razorpay (Cards / Netbanking / Wallet)</span>
-                                    </label>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('google_play')">
+                                    <div class="icon-3d-box">▶️</div>
+                                    <span class="icon-label">Google Play Recharge</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('app_store')">
+                                    <div class="icon-3d-box">🍎</div>
+                                    <span class="icon-label">App Store Code</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. BILL PAYMENTS SECTION -->
+                        <div class="apay-3d-section-card">
+                            <h5 class="apay-section-title">Bill Payments</h5>
+                            <div class="apay-icon-grid">
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('electricity')">
+                                    <div class="icon-3d-box">💡</div>
+                                    <span class="icon-label">Electricity</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('mobile')">
+                                    <div class="icon-3d-box">📲</div>
+                                    <span class="icon-label">Mobile Postpaid</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('credit_card')">
+                                    <div class="icon-3d-box">💳</div>
+                                    <span class="icon-label">Credit Card Bill</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('loan')">
+                                    <div class="icon-3d-box">🏦</div>
+                                    <span class="icon-label">Loan Repayment</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('gas')">
+                                    <div class="icon-3d-box">⛽</div>
+                                    <span class="icon-label">LPG Cylinder</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('insurance')">
+                                    <div class="icon-3d-box">🛡️</div>
+                                    <span class="icon-label">Insurance Premium</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('gas')">
+                                    <div class="icon-3d-box">🔥</div>
+                                    <span class="icon-label">Piped Gas</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('water')">
+                                    <div class="icon-3d-box">💧</div>
+                                    <span class="icon-label">Water Bill</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('broadband')">
+                                    <div class="icon-3d-box">☎️</div>
+                                    <span class="icon-label">Landline</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('broadband')">
+                                    <div class="icon-3d-box">🌐</div>
+                                    <span class="icon-label">Broadband</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('water')">
+                                    <div class="icon-3d-box">🏛️</div>
+                                    <span class="icon-label">Municipal Tax</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('dth')">
+                                    <div class="icon-3d-box">📺</div>
+                                    <span class="icon-label">Cable TV</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('education')">
+                                    <div class="icon-3d-box">🎓</div>
+                                    <span class="icon-label">Education Fees</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. TRANSIT & FASTAG SECTION -->
+                        <div class="apay-3d-section-card">
+                            <h5 class="apay-section-title">Transit & Toll</h5>
+                            <div class="apay-icon-grid">
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('fastag')">
+                                    <div class="icon-3d-box">🚘</div>
+                                    <span class="icon-label">MJ Pay ICICI FASTag</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('fastag')">
+                                    <div class="icon-3d-box">🏷️</div>
+                                    <span class="icon-label">FASTag Recharge</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('metro')">
+                                    <div class="icon-3d-box">🚇</div>
+                                    <span class="icon-label">Metro Recharge</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. INSURANCE SECTION -->
+                        <div class="apay-3d-section-card">
+                            <h5 class="apay-section-title">Insurance (mjdigital.co.in)</h5>
+                            <div class="apay-icon-grid">
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('insurance')">
+                                    <div class="icon-3d-box">🚗</div>
+                                    <span class="icon-label">Car Insurance</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('insurance')">
+                                    <div class="icon-3d-box">🏍️</div>
+                                    <span class="icon-label">Bike Insurance</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('insurance')">
+                                    <div class="icon-3d-box">🏥</div>
+                                    <span class="icon-label">Health Insurance</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. GIFT CARDS AND VOUCHERS SECTION -->
+                        <div class="apay-3d-section-card">
+                            <h5 class="apay-section-title">Gift cards and Vouchers</h5>
+                            <div class="apay-icon-grid">
+                                <div class="apay-icon-item" onclick="openMjPaySubView('balance', 'gift')">
+                                    <div class="icon-3d-box">➕🎁</div>
+                                    <span class="icon-label">Add Gift Card</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPaySubView('balance', 'gift')">
+                                    <div class="icon-3d-box">🎀</div>
+                                    <span class="icon-label">Gift Cards</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPaySubView('balance', 'gift')">
+                                    <div class="icon-3d-box">🎟️</div>
+                                    <span class="icon-label">MJ Vouchers</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPaySubView('balance', 'gift')">
+                                    <div class="icon-3d-box">🏷️</div>
+                                    <span class="icon-label">Brand Vouchers</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPaySubView('balance', 'gift')">
+                                    <div class="icon-3d-box">🎂</div>
+                                    <span class="icon-label">Birthday Giftcards</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPaySubView('balance', 'gift')">
+                                    <div class="icon-3d-box">💍</div>
+                                    <span class="icon-label">Wedding Giftcards</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPaySubView('balance', 'gift')">
+                                    <div class="icon-3d-box">🏢</div>
+                                    <span class="icon-label">Corporate Gifting</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 7. MANAGE SECTION -->
+                        <div class="apay-3d-section-card mb-0">
+                            <h5 class="apay-section-title">Manage</h5>
+                            <div class="apay-icon-grid">
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('wallet')">
+                                    <div class="icon-3d-box">🧾</div>
+                                    <span class="icon-label">Your Transactions</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPaySubView('balance')">
+                                    <div class="icon-3d-box">👑</div>
+                                    <span class="icon-label">Your Rewards</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('loan')">
+                                    <div class="icon-3d-box">📅</div>
+                                    <span class="icon-label">EMI</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="checkAuthAndNavigate(); switchProfileTab('p-cards', document.querySelectorAll('.profile-nav-btn')[3]);">
+                                    <div class="icon-3d-box">💳</div>
+                                    <span class="icon-label">Your Saved Cards</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="navigateTo('page-faq')">
+                                    <div class="icon-3d-box">💬</div>
+                                    <span class="icon-label">Help and FAQs</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="navigateTo('page-contact')">
+                                    <div class="icon-3d-box">⚠️</div>
+                                    <span class="icon-label">Lodge a complaint</span>
+                                </div>
+                                <div class="apay-icon-item" onclick="openMjPayServiceDesk('wallet')">
+                                    <div class="icon-3d-box">📋</div>
+                                    <span class="icon-label">Passbook History</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================================================================
+                 SUB-VIEW 2: AMAZON PAY BALANCE & GIFT CARD TOP-UP PAGE (SCREENSHOT 1)
+                 =================================================================== -->
+            <div id="mjpayBalanceTopupView" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="fw-extrabold text-dark mb-0">MJ Pay balance</h2>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold" onclick="openMjPaySubView('home')">
+                        &larr; Back to MJ Pay Home
+                    </button>
+                </div>
+
+                <div class="row g-4 align-items-start">
+                    <!-- Left Column: Total Balance Breakdown + Add Money/Gift Cards Box -->
+                    <div class="col-lg-7">
+                        <div class="apay-balance-card">
+                            <div class="d-flex justify-content-between align-items-center pb-3 mb-3" style="border-bottom: 2px dashed #e2e8f0;">
+                                <h4 class="fw-extrabold text-dark mb-0">Total balance</h4>
+                                <h3 class="fw-extrabold mb-0" style="color: #007185;" id="fpWalletWidgetBal">₹0.00</h3>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom text-secondary">
+                                <span class="fw-semibold">Wallet (Instant BBPS & Store Balance)</span>
+                                <span class="fw-bold text-dark" id="apayBreakdownWallet">₹0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-2.5 border-bottom text-secondary">
+                                <div>
+                                    <span class="fw-semibold d-block">Gift Cards</span>
+                                    <small class="text-muted" style="font-size: 11px;">Includes Cashback & Refunds</small>
+                                </div>
+                                <span class="fw-bold text-dark">₹0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 text-secondary">
+                                <span class="fw-semibold">Vouchers</span>
+                                <span class="fw-bold text-dark">₹0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Add Money / Gift Cards to Balance Card -->
+                        <div class="apay-balance-card">
+                            <h5 class="fw-extrabold text-dark mb-3" id="apayTopupBoxHeading">Add money / gift cards to balance</h5>
+                            <div class="mb-3" style="max-width: 340px;">
+                                <div class="input-group input-group-lg border rounded-3 overflow-hidden shadow-xs">
+                                    <span class="input-group-text bg-white border-0 fw-bold text-dark fs-4">₹</span>
+                                    <input type="number" id="fpWalletTopupInput" class="form-control border-0 fw-bold fs-4 text-dark" value="1000" min="10">
                                 </div>
                             </div>
 
-                            <button type="submit" id="fpUtilityProceedBtn" class="btn btn-brand w-100 py-2.5 fw-bold shadow-sm">
-                                Proceed to Payment
+                            <div class="d-flex flex-wrap gap-2 mb-4">
+                                <button type="button" class="apay-quick-pill" onclick="document.getElementById('fpWalletTopupInput').value='500'">+ ₹500</button>
+                                <button type="button" class="apay-quick-pill active" onclick="document.getElementById('fpWalletTopupInput').value='1000'">+ ₹1000</button>
+                                <button type="button" class="apay-quick-pill" onclick="document.getElementById('fpWalletTopupInput').value='1500'">+ ₹1500</button>
+                                <button type="button" class="apay-quick-pill" onclick="document.getElementById('fpWalletTopupInput').value='2000'">+ ₹2000</button>
+                            </div>
+
+                            <button type="button" onclick="executeFullPageWalletTopup()" class="btn apay-yellow-btn px-5 py-2.5 fs-6">
+                                Add money to balance
                             </button>
-                        </form>
+                        </div>
                     </div>
 
-                    <!-- Wallet Quick Top-Up Widget -->
-                    <div class="card-custom p-4 bg-light-subtle">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-wallet text-success me-2"></i>M J Wallet Passbook</h6>
-                            <span class="badge bg-success-subtle text-success fs-6 fw-bold" id="fpWalletWidgetBal">₹0.00</span>
+                    <!-- Right Column: Do More With MJ Pay Balance + Transaction History + Manage -->
+                    <div class="col-lg-5">
+                        <div class="apay-balance-card">
+                            <h6 class="fw-extrabold text-dark mb-2">Do more with MJ Pay Balance</h6>
+                            <a href="javascript:void(0)" class="apay-action-row" onclick="document.getElementById('apayTopupBoxHeading').innerText='Add gift cards to balance'; document.getElementById('fpWalletTopupInput').focus();">
+                                <span>Add Gift card to balance</span>
+                                <i class="fa-solid fa-chevron-right text-muted small"></i>
+                            </a>
+                            <a href="javascript:void(0)" class="apay-action-row" onclick="document.getElementById('apayTopupBoxHeading').innerText='Add cash / UPI top-up to balance'; executeFullPageWalletTopup();">
+                                <span>Add Cash to balance (UPI QR / Cards)</span>
+                                <i class="fa-solid fa-chevron-right text-muted small"></i>
+                            </a>
                         </div>
-                        <p class="text-muted small mb-3">Add balance instantly for 1-click OTP-less recharges.</p>
-                        
-                        <div class="input-group mb-2">
-                            <span class="input-group-text bg-white">₹</span>
-                            <input type="number" id="fpWalletTopupInput" class="form-control fw-bold" value="500" min="10">
-                            <button class="btn btn-success fw-bold px-3" type="button" onclick="executeFullPageWalletTopup()">+ Add Money</button>
+
+                        <div class="apay-balance-card py-3">
+                            <a href="javascript:void(0)" class="apay-action-row py-1" onclick="openMjPayServiceDesk('wallet')">
+                                <span class="fw-extrabold fs-6">Transaction history</span>
+                                <i class="fa-solid fa-chevron-right text-muted small"></i>
+                            </a>
                         </div>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary py-0.5 px-2" onclick="document.getElementById('fpWalletTopupInput').value='100'">+₹100</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary py-0.5 px-2" onclick="document.getElementById('fpWalletTopupInput').value='500'">+₹500</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary py-0.5 px-2" onclick="document.getElementById('fpWalletTopupInput').value='1000'">+₹1,000</button>
+
+                        <div class="apay-balance-card">
+                            <h6 class="fw-extrabold text-dark mb-2">Manage</h6>
+                            <a href="javascript:void(0)" class="apay-action-row" onclick="checkAuthAndNavigate()">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fa-regular fa-user text-primary"></i>
+                                    </div>
+                                    <span>Account Settings</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right text-muted small"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column: Browse Plans / Live Bill Overview / Passbook -->
-                <div class="col-lg-7">
-                    <div class="card-custom p-4 h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0 text-dark" id="fpRightPanelTitle">Browse Operator Plans & Offers</h5>
-                            <span class="badge bg-primary-subtle text-primary" id="fpActiveServiceBadge">JIO PREPAID</span>
+                <div class="text-center mt-3 mb-2 small">
+                    <a href="javascript:void(0)" onclick="navigateTo('page-faq')" class="text-decoration-none fw-bold" style="color: #007185;">Help & FAQs</a>
+                    <span class="text-muted mx-2">|</span>
+                    <a href="javascript:void(0)" onclick="navigateTo('page-terms')" class="text-decoration-none fw-bold" style="color: #007185;">Condition of Use</a>
+                </div>
+            </div>
+
+            <!-- ===================================================================
+                 SUB-VIEW 3: ACTIVE SERVICE RECHARGE / BILL DESK & PASSBOOK LEDGER
+                 =================================================================== -->
+            <div id="mjpayActiveServiceView" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold" onclick="openMjPaySubView('home')">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back to All MJ Pay Services
+                    </button>
+                    <div class="d-flex flex-wrap gap-1.5">
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 utility-tab-selector active" data-service="mobile" onclick="switchUtilityTab('mobile', this)">📱 Mobile</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 utility-tab-selector" data-service="dth" onclick="switchUtilityTab('dth', this)">📡 DTH</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 utility-tab-selector" data-service="electricity" onclick="switchUtilityTab('electricity', this)">💡 Electricity</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 utility-tab-selector" data-service="fastag" onclick="switchUtilityTab('fastag', this)">🚘 FASTag</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 utility-tab-selector" data-service="gas" onclick="switchUtilityTab('gas', this)">⛽ Gas</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 utility-tab-selector" data-service="broadband" onclick="switchUtilityTab('broadband', this)">🌐 Broadband</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 utility-tab-selector" data-service="water" onclick="switchUtilityTab('water', this)">💧 Water</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 utility-tab-selector" data-service="credit_card" onclick="switchUtilityTab('credit_card', this)">💳 Credit Card</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 utility-tab-selector" data-service="loan" onclick="switchUtilityTab('loan', this)">🏦 Loan EMI</button>
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold utility-tab-selector" data-service="wallet" onclick="switchUtilityTab('wallet', this)">🧾 Passbook</button>
+                    </div>
+                </div>
+
+                <div class="row g-4 align-items-start">
+                    <!-- Left Column: Biller & Recharge Form -->
+                    <div class="col-lg-5">
+                        <div class="card-custom p-4 border shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary rounded-circle p-2"><i class="fa-solid fa-bolt"></i></span>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0" id="fpLeftFormHeader">Instant Recharge & Bill Desk</h6>
+                                        <span class="text-muted" style="font-size: 11px;">Real-time operator lookup</span>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 10.5px;">BBPS Assured</span>
+                            </div>
+
+                            <form id="fullPageUtilityForm" onsubmit="handleFullPageUtilitySubmit(event)">
+                                <div id="fullPageDynamicFields"></div>
+
+                                <div class="my-3">
+                                    <label class="small fw-bold text-dark d-block mb-2">Choose Payment Mode:</label>
+                                    <div class="d-flex flex-column gap-2">
+                                        <label class="mjpay-paymode-tile" for="fpPayWalletRadio">
+                                            <input class="form-check-input mt-0" type="radio" name="fpPaySource" id="fpPayWalletRadio" value="wallet" checked>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <strong class="small text-dark">👛 M J Pay Balance</strong>
+                                                    <span class="badge bg-success-subtle text-success fw-bold" id="fpFormWalletBalText">Bal: ₹0.00</span>
+                                                </div>
+                                                <span class="text-muted d-block" style="font-size: 11px;">1-Click Instant Debit • No OTP Needed</span>
+                                            </div>
+                                        </label>
+
+                                        <label class="mjpay-paymode-tile" for="fpPayUpiQrRadio">
+                                            <input class="form-check-input mt-0" type="radio" name="fpPaySource" id="fpPayUpiQrRadio" value="upi_qr">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <strong class="small text-primary">📱 Instant UPI QR / UPI ID</strong>
+                                                    <span class="badge bg-primary-subtle text-primary" style="font-size: 10px;">0% Fee</span>
+                                                </div>
+                                                <span class="text-muted d-block" style="font-size: 11px;">Scan QR with GPay, PhonePe, Paytm or BHIM</span>
+                                            </div>
+                                        </label>
+
+                                        <label class="mjpay-paymode-tile" for="fpPayGatewayRadio">
+                                            <input class="form-check-input mt-0" type="radio" name="fpPaySource" id="fpPayGatewayRadio" value="gateway">
+                                            <div class="flex-grow-1">
+                                                <strong class="small text-dark d-block">💳 Razorpay Gateway</strong>
+                                                <span class="text-muted d-block" style="font-size: 11px;">Credit/Debit Cards, Netbanking & Wallets</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <button type="submit" id="fpUtilityProceedBtn" class="btn apay-yellow-btn w-100 py-2.5 fs-6 mt-1">
+                                    Proceed to Payment
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Operator Plans / Live Bill Details + Mini Recent Passbook -->
+                    <div class="col-lg-7">
+                        <div class="card-custom p-4 border shadow-sm mb-4">
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-dark" id="fpRightPanelTitle">Browse Operator Plans & 5G Offers</h5>
+                                    <span class="text-muted" style="font-size: 11.5px;">Click any plan to auto-fill recharge amount</span>
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1.5 rounded-pill fw-bold" id="fpActiveServiceBadge">MOBILE PREPAID</span>
+                            </div>
+
+                            <div id="fpRightDynamicContent" style="max-height: 430px; overflow-y: auto; padding-right: 4px;"></div>
                         </div>
 
-                        <div id="fpRightDynamicContent"></div>
+                        <div class="card-custom p-4 border shadow-sm bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Recent MJ Pay & Wallet Activity</h6>
+                                <a href="javascript:void(0)" onclick="switchUtilityTab('wallet')" class="small fw-bold text-primary text-decoration-none">Full Passbook &rarr;</a>
+                            </div>
+                            <div id="fpMiniRecentTransactions">
+                                <div class="text-center text-muted small py-3">No recent recharges yet. Your instant BBPS receipts will appear here.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-  
 
         <!-- 4. CONTACT US VIEW -->
         <div id="page-contact" class="page-view">
@@ -5916,6 +6545,115 @@ window.handleFullPageUtilitySubmit = handleFullPageUtilitySubmit;
 document.addEventListener('DOMContentLoaded', function() {
   fetchLiveWalletFromServer();
 });
+</script>
+<script id="mjAmazonPayViewRouter">
+  // Add extra Amazon Pay services into BBPS_SERVICE_CONFIG
+  if (typeof BBPS_SERVICE_CONFIG !== 'undefined') {
+    BBPS_SERVICE_CONFIG.google_play = {
+      badge: 'GOOGLE PLAY RECHARGE CODE',
+      panelTitle: 'Instant Google Play Gift Recharge Code',
+      btnText: 'Buy Google Play Code',
+      opLabel: 'Delivery Channel',
+      operators: ['Google Play India - Instant Code via SMS & Email'],
+      targetLabel: 'Recipient Mobile Number',
+      targetPlaceholder: 'e.g. 8306669999',
+      defaultTarget: '8306669999',
+      defaultAmt: 500,
+      packs: [
+        { amount: 100, tag: 'Instant Code', title: '₹100 Google Play Recharge Voucher', desc: 'Use for games, apps, movies & YouTube Premium' },
+        { amount: 500, tag: 'Best Seller', title: '₹500 Google Play Recharge Voucher', desc: 'Zero fee • 16-digit redeem code generated immediately' },
+        { amount: 1000, tag: 'Pro Gamer', title: '₹1,000 Google Play Mega Pack', desc: 'Valid across all Android apps & in-app purchases' }
+      ]
+    };
+    BBPS_SERVICE_CONFIG.app_store = {
+      badge: 'APPLE APP STORE & ITUNES',
+      panelTitle: 'Official Apple App Store & iCloud Codes',
+      btnText: 'Buy App Store Code',
+      opLabel: 'Apple Store Region',
+      operators: ['Apple App Store India (INR)'],
+      targetLabel: 'Recipient Email / Mobile Number',
+      targetPlaceholder: 'e.g. mjdigitalworlds@gmail.com',
+      defaultTarget: '8306669999',
+      defaultAmt: 500,
+      packs: [
+        { amount: 500, tag: 'Apple ID', title: '₹500 Apple App Store & iCloud Code', desc: 'Redeemable on iPhone, iPad, Mac & Apple Music' },
+        { amount: 1500, tag: 'Popular', title: '₹1,500 Apple One & App Store Pack', desc: 'Instant digital delivery on screen & SMS' }
+      ]
+    };
+    BBPS_SERVICE_CONFIG.metro = {
+      badge: 'METRO SMART CARD RECHARGE',
+      panelTitle: 'Instant Metro Rail Smart Card Top-Up',
+      btnText: 'Recharge Metro Card',
+      opLabel: 'Metro Rail Corporation',
+      operators: ['Gujarat Metro Rail (GMRC - Ahmedabad/Surat)', 'Mumbai Metro', 'Delhi Metro (DMRC)', 'Bangalore Metro (BMRCL)'],
+      targetLabel: 'Metro Smart Card Number',
+      targetPlaceholder: 'e.g. 6019283746',
+      defaultTarget: '6019283746',
+      defaultAmt: 200,
+      packs: [
+        { amount: 200, tag: 'Commuter', title: '₹200 Metro Smart Card Top-up', desc: 'Instant AFC gate tap validation' },
+        { amount: 500, tag: 'Monthly', title: '₹500 Regular Metro Rider Pack', desc: 'Valid across all stations without queue' }
+      ]
+    };
+    BBPS_SERVICE_CONFIG.education = {
+      badge: 'EDUCATION & SCHOOL FEES',
+      panelTitle: 'School, College & University Fee Desk (BBPS)',
+      btnText: 'Pay Education Fee',
+      opLabel: 'Institution / University',
+      operators: ['Gujarat University / GTU Fee Desk', 'DPS / Udgam / St. Kabir School Ahmedabad', 'Allen / Aakash / PW Coaching Institute', 'Other BBPS Registered Institute'],
+      targetLabel: 'Student Enrollment / GR Number',
+      targetPlaceholder: 'e.g. ENR2026991',
+      defaultTarget: 'ENR2026991',
+      defaultAmt: 5000,
+      hasFetchBill: true
+    };
+  }
+
+  window.openMjPaySubView = function(viewName, subMode = '') {
+    const homeView = document.getElementById('mjpayHomeHubView');
+    const balView = document.getElementById('mjpayBalanceTopupView');
+    const srvView = document.getElementById('mjpayActiveServiceView');
+    if (!homeView || !balView || !srvView) return;
+
+    homeView.style.display = (viewName === 'home') ? 'block' : 'none';
+    balView.style.display = (viewName === 'balance') ? 'block' : 'none';
+    srvView.style.display = (viewName === 'service') ? 'block' : 'none';
+
+    if (viewName === 'balance') {
+      const heading = document.getElementById('apayTopupBoxHeading');
+      if (heading) {
+        heading.innerText = (subMode === 'gift') ? 'Add gift cards to balance' : 'Add money to MJ Pay balance';
+      }
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  window.openMjPayServiceDesk = function(serviceKey) {
+    openMjPaySubView('service');
+    if (typeof switchUtilityTab === 'function') {
+      switchUtilityTab(serviceKey);
+    }
+  };
+
+  // Override openUtilityFullPage so clicking any icon on the Store Home strip opens the exact service desk or hub
+  window.openUtilityFullPage = function(serviceKey) {
+    navigateTo('page-utility-hub');
+    if (serviceKey && serviceKey !== 'home') {
+      openMjPayServiceDesk(serviceKey);
+    } else {
+      openMjPaySubView('home');
+    }
+  };
+
+  // Keep all Amazon Pay balance elements synced whenever wallet balance updates
+  const origSyncWallet = window.syncAllWalletElements;
+  window.syncAllWalletElements = function() {
+    if (typeof origSyncWallet === 'function') origSyncWallet();
+    const formatted = '₹' + Number(fpCurrentWalletBalance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    ['apayTopBarBal', 'apayBreakdownWallet', 'homeStripWalletBalance', 'fpWalletWidgetBal'].forEach(id => {
+      document.querySelectorAll('#' + id).forEach(el => { el.innerText = formatted; });
+    });
+  };
 </script>
 </body>
 </html>
