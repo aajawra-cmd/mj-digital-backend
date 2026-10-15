@@ -65,6 +65,33 @@ app.get(['/invoice', '/invoice.html', '/account/invoice', '/account/invoice.html
 });
 
 // ==========================================
+// ADVANCED ADMIN HIGH-LEVEL SECURITY SHIELD
+// ==========================================
+const adminLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 3, // Strict: Max 3 attempts per IP
+  message: {
+    success: false,
+    message: '🚨 Security Alert: Too many failed admin login attempts. IP temporarily blocked.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply strict rate limiter to admin auth gates
+app.use('/api/admin/login', adminLoginLimiter);
+app.use('/api/admin/verify-2fa', adminLoginLimiter);
+
+// Strict CSP & Clickjacking Defense Headers for Admin Panel
+app.use('/admin', (req, res, next) => {
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Content-Security-Policy', "default-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline' 'unsafe-eval'");
+  next();
+});
+
+// ==========================================
 // SECURITY & RATE LIMITING MIDDLEWARES
 // ==========================================
 app.use(helmet());
