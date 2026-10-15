@@ -1979,15 +1979,40 @@ async function getActiveRazorpayKey() {
                         <div class="card-custom p-4">
                             <h5 class="fw-bold mb-3"><i class="fa-solid fa-credit-card text-success me-2"></i>Select Payment Method</h5>
                             <div class="d-flex flex-column gap-3">
-                                <!-- 0. Instant UPI QR & Apps -->
-                                <label class="payment-radio-card d-flex align-items-center gap-3" style="border-color: #2563eb; background: #eff6ff;">
-                                    <input type="radio" name="fpPaymentGateway" value="upi_qr" checked class="form-check-input mt-0">
-                                    <div>
-                                        <strong class="d-block text-primary">UPI Instant QR / UPI ID (GPay, PhonePe, Paytm)</strong>
-                                        <span class="small text-muted">Scan Dynamic QR or enter UPI ID (0% Fee • Instant Confirm)</span>
+                                <!-- 0. Instant UPI QR & Apps (With Inline Expandable Box - No Popup!) -->
+                                <div class="border rounded-3 p-3" style="border-color: #2563eb !important; background: #eff6ff;">
+                                    <label class="d-flex align-items-center gap-3 cursor-pointer mb-0">
+                                        <input type="radio" name="fpPaymentGateway" value="upi_qr" checked class="form-check-input mt-0" onchange="toggleInlineCheckoutUpiBox()">
+                                        <div>
+                                            <strong class="d-block text-primary">UPI Instant QR / UPI ID (GPay, PhonePe, Paytm)</strong>
+                                            <span class="small text-muted">Scan Dynamic QR or enter UPI ID directly on this page (0% Fee)</span>
+                                        </div>
+                                        <i class="fa-solid fa-qrcode fs-3 text-primary ms-auto"></i>
+                                    </label>
+                                    <div id="inlineCheckoutUpiBox" class="mt-3 pt-3 border-top bg-white rounded-3 p-3 text-center shadow-xs">
+                                        <div class="row align-items-center g-3">
+                                            <div class="col-sm-5 text-center border-end-md">
+                                                <span class="badge bg-success-subtle text-success mb-2 px-2.5 py-1 rounded-pill" style="font-size: 10.5px;">
+                                                    <i class="fa-solid fa-bolt me-1"></i> Scan with any UPI App
+                                                </span>
+                                                <div class="p-2 border rounded-3 d-inline-block bg-light">
+                                                    <img id="inlineCheckoutQrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=8306669999@upi" alt="UPI QR" style="width: 145px; height: 145px; object-fit: contain;">
+                                                </div>
+                                                <div class="small text-muted fw-bold mt-1" style="font-size: 11px;">📱 GPay • PhonePe • Paytm • BHIM</div>
+                                            </div>
+                                            <div class="col-sm-7 text-start">
+                                                <label class="small fw-bold text-dark mb-1">Or Enter Your UPI ID / VPA</label>
+                                                <div class="input-group input-group-sm mb-2">
+                                                    <input type="text" id="inlineCheckoutVpaInput" class="form-control fw-semibold" placeholder="yourname@okicici / @ybl / @paytm" value="mohsin@okicici">
+                                                    <button class="btn btn-outline-primary fw-bold" type="button" onclick="this.innerText='✓ Verified'; this.className='btn btn-success fw-bold';">Verify VPA</button>
+                                                </div>
+                                                <p class="small text-muted mb-0" style="font-size: 11.5px;">
+                                                    <i class="fa-solid fa-shield-halved text-success me-1"></i> Scan QR or verify UPI ID above, then click <strong>"Complete Payment & Place Order"</strong> on the right.
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <i class="fa-solid fa-qrcode fs-3 text-primary ms-auto"></i>
-                                </label>
+                                </div>
 
                                 <!-- 1. Razorpay -->
                                 <label class="payment-radio-card d-flex align-items-center gap-3">
@@ -6654,6 +6679,415 @@ document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll('#' + id).forEach(el => { el.innerText = formatted; });
     });
   };
+</script>
+<script id="mjDirectCheckoutRedirectEngine">
+// ============================================================================
+// DIRECT FULL-PAGE CHECKOUT ENGINE FOR MJ PAY & STORE (ZERO POPUP MODALS)
+// ============================================================================
+window.pendingMjPayAction = null;
+
+window.toggleInlineCheckoutUpiBox = function() {
+  const selected = document.querySelector('input[name="fpPaymentGateway"]:checked')?.value || 'upi_qr';
+  const box = document.getElementById('inlineCheckoutUpiBox');
+  if (box) {
+    box.style.display = (selected === 'upi_qr') ? 'block' : 'none';
+  }
+};
+
+document.addEventListener('change', function(e) {
+  if (e.target && e.target.name === 'fpPaymentGateway') {
+    toggleInlineCheckoutUpiBox();
+  }
+});
+
+// Redirect any MJ Pay Top-Up or Utility Bill directly to /checkout page
+window.divertMjPayToCheckoutPage = function(payPayload) {
+  // Hide any accidentally open bootstrap modals
+  document.querySelectorAll('.modal.show').forEach(m => {
+    try { bootstrap.Modal.getInstance(m)?.hide(); } catch(e) {}
+  });
+  if (typeof cleanStuckBackdrops === 'function') cleanStuckBackdrops();
+
+  window.pendingMjPayAction = payPayload;
+  const amt = Math.round(Number(payPayload.amount || 0));
+
+  // Populate Checkout Order Summary for MJ Pay item
+  myCart = [{
+    id: payPayload.isWalletTopup ? 'MJ-WALLET-TOPUP' : ('BBPS-' + String(payPayload.service || 'UTILITY').toUpperCase()),
+    title: payPayload.title,
+    price: amt,
+    img: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300',
+    type: 'Services',
+    qty: 1,
+    isMjPayCheckout: true,
+    mjPayMeta: payPayload
+  }];
+
+  const summaryList = document.getElementById('fpCheckoutItemsSummary');
+  if (summaryList) {
+    summaryList.innerHTML = `
+      <div class="p-2.5 rounded-3 bg-primary-subtle border border-primary-subtle mb-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="badge bg-primary">⚡ MJ PAY INSTANT CHECKOUT</span>
+          <span class="fw-extrabold text-primary">₹${amt.toLocaleString('en-IN')}</span>
+        </div>
+        <div class="fw-bold text-dark small mt-1">${payPayload.title}</div>
+        ${payPayload.targetNumber ? `<div class="text-muted" style="font-size: 11px;">Number / ID: <strong>${payPayload.targetNumber}</strong> (${payPayload.operator || 'BBPS'})</div>` : ''}
+      </div>
+    `;
+  }
+
+  const subEl = document.getElementById('fpCheckoutSubtotal');
+  if (subEl) subEl.innerText = '₹' + amt.toLocaleString('en-IN');
+  const totEl = document.getElementById('fpCheckoutTotalPayable');
+  if (totEl) totEl.innerText = '₹' + amt.toLocaleString('en-IN');
+
+  activeCheckoutData = {
+    title: payPayload.title,
+    price: amt,
+    type: 'Services',
+    isMjPayCheckout: true,
+    mjPayMeta: payPayload
+  };
+
+  // Update inline QR code on /checkout page with exact payable amount
+  const upiUri = `upi://pay?pa=8306669999@upi&pn=${encodeURIComponent('M J DIGITAL')}&am=${amt}&cu=INR&tn=${encodeURIComponent(payPayload.title)}`;
+  const qrImg = document.getElementById('inlineCheckoutQrImg');
+  if (qrImg) {
+    qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(upiUri);
+  }
+
+  toggleInlineCheckoutUpiBox();
+  navigateTo('page-checkout');
+};
+
+// Also update normalcheckoutFromCart so inline QR on /checkout always shows the live cart total
+const origCheckoutFromCart = window.checkoutFromCart;
+window.checkoutFromCart = function() {
+  window.pendingMjPayAction = null;
+  if (typeof origCheckoutFromCart === 'function') origCheckoutFromCart();
+  const amt = Math.round(Number(activeCheckoutData?.price || 0));
+  if (amt > 0) {
+    const upiUri = `upi://pay?pa=8306669999@upi&pn=${encodeURIComponent('M J DIGITAL')}&am=${amt}&cu=INR`;
+    const qrImg = document.getElementById('inlineCheckoutQrImg');
+    if (qrImg) {
+      qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(upiUri);
+    }
+  }
+  toggleInlineCheckoutUpiBox();
+};
+
+// 1. Override executeFullPageWalletTopup -> Directly divert to /checkout page (NO POPUP!)
+window.executeFullPageWalletTopup = function(customAmt) {
+  let amt = Number(customAmt || 0);
+  if (!amt) {
+    // Read from whichever topup input is currently visible
+    const inputs = document.querySelectorAll('#fpWalletTopupInput');
+    inputs.forEach(inp => {
+      if (inp.offsetParent !== null && Number(inp.value) > 0) {
+        amt = Number(inp.value);
+      }
+    });
+    if (!amt && inputs[0]) amt = Number(inputs[0].value || 500);
+  }
+
+  if (amt < 10) return alert('Minimum Wallet Top-Up amount ₹10 hai.');
+
+  divertMjPayToCheckoutPage({
+    isWalletTopup: true,
+    service: 'WALLET_TOPUP',
+    operator: 'M J Digital Wallet',
+    targetNumber: getCustomerActivePhone(),
+    amount: amt,
+    title: 'M J Pay Balance Top-Up (+₹' + amt.toLocaleString('en-IN') + ')'
+  });
+};
+
+// 2. Override handleFullPageUtilitySubmit -> 1-Click if paying via sufficient Wallet Balance, else divert to /checkout page!
+window.handleFullPageUtilitySubmit = async function(e) {
+  if (e) e.preventDefault();
+  const amt = Math.round(Number(document.getElementById('fpAmountInput')?.value || 0));
+  if (amt <= 0) return alert('Kripya valid amount enter karein.');
+
+  if (fpCurrentService === 'wallet') {
+    executeFullPageWalletTopup(amt);
+    return;
+  }
+
+  const target = document.getElementById('fpTargetInput')?.value?.trim() || '';
+  const operator = document.getElementById('fpOperatorSelect')?.value || 'BBPS Biller';
+  const payMode = document.querySelector('input[name="fpPaySource"]:checked')?.value || 'wallet';
+
+  if (!target) return alert('Kripya valid Mobile / Consumer / Account number enter karein.');
+
+  // Case A: User selected M J Pay Wallet and has enough balance -> Instant 1-Click Clearance
+  if (payMode === 'wallet' && fpCurrentWalletBalance >= amt) {
+    const btn = document.getElementById('fpUtilityProceedBtn');
+    const origText = btn ? btn.innerHTML : 'Proceed to Payment';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Paying via M J Wallet...';
+    }
+    try {
+      const txnRef = 'WAL-' + Date.now().toString().slice(-8);
+      const res = await fetch('/api/wallet/pay-utility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: getCustomerActivePhone(),
+          customerName: getCustomerActiveName(),
+          service: fpCurrentService,
+          operator: operator,
+          targetNumber: target,
+          amount: amt,
+          payMode: 'wallet',
+          transactionId: txnRef
+        })
+      });
+      const data = await res.json();
+      if (btn) { btn.disabled = false; btn.innerHTML = origText; }
+
+      if (res.ok && data.success) {
+        fpCurrentWalletBalance = Number(data.balance || 0);
+        currentWalletBalance = fpCurrentWalletBalance;
+        window.mjWalletTransactions = data.transactions || [];
+        localStorage.setItem('mj_wallet_bal', String(fpCurrentWalletBalance));
+        syncAllWalletElements();
+        alert('✅ Paid ₹' + amt.toLocaleString('en-IN') + ' instantly via M J Pay Balance!\nRef ID: ' + data.transactionId);
+        if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+        navigateTo('page-profile');
+        return;
+      }
+    } catch (err) {
+      if (btn) { btn.disabled = false; btn.innerHTML = origText; }
+    }
+  }
+
+  // Case B: User selected UPI/Gateway OR Wallet balance is lower than bill -> Divert directly to /checkout page!
+  divertMjPayToCheckoutPage({
+    isWalletTopup: false,
+    service: fpCurrentService,
+    operator: operator,
+    targetNumber: target,
+    amount: amt,
+    title: String(fpCurrentService).toUpperCase() + ' Recharge/Bill - ' + target + ' (' + operator + ')'
+  });
+};
+
+// 3. Override handleFullPageCheckoutSubmit on /checkout so it processes both MJ Pay & Store Cart without opening the old UPI popup!
+window.handleFullPageCheckoutSubmit = async function(e) {
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+  const btn = document.getElementById('fpCheckoutSubmitBtn');
+  const resetButton = () => {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-lock me-2"></i> Complete Payment & Place Order';
+    }
+  };
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Processing Payment...';
+  }
+
+  const name = document.getElementById('fpCheckoutName')?.value || 'Mohsin J';
+  const phone = document.getElementById('fpCheckoutPhone')?.value || '+91 830 666 9999';
+  const cleanPhone = String(phone).replace(/[^0-9]/g, '').slice(-10) || '8306669999';
+  const street = document.getElementById('fpCheckoutAddrText')?.value || '';
+  const city = document.getElementById('fpCheckoutCity')?.value || '';
+  const pincode = document.getElementById('fpCheckoutPincode')?.value || '';
+  const state = document.getElementById('fpCheckoutState')?.value || '';
+  const country = document.getElementById('fpCheckoutCountry')?.value || '';
+  const fullAddr = `${street}, ${city} - ${pincode}, ${state}, ${country}`;
+
+  const gateway = document.querySelector('input[name="fpPaymentGateway"]:checked')?.value || 'upi_qr';
+  const totalPayable = Math.round(Number(activeCheckoutData?.price || 0));
+
+  if (totalPayable <= 0) {
+    alert('Payable amount valid nahi hai!');
+    resetButton();
+    return;
+  }
+
+  // Helper to complete MJ Pay Top-up or Utility Bill after payment confirmation
+  async function completeMjPayCheckoutOnServer(txnId, gatewayLabel) {
+    const meta = window.pendingMjPayAction || activeCheckoutData?.mjPayMeta;
+    if (!meta) return false;
+
+    if (meta.isWalletTopup) {
+      const res = await fetch('/api/wallet/topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          customerName: name,
+          amount: totalPayable,
+          gateway: gatewayLabel,
+          transactionId: txnId
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        fpCurrentWalletBalance = Number(data.balance || 0);
+        currentWalletBalance = fpCurrentWalletBalance;
+        window.mjWalletTransactions = data.transactions || [];
+        localStorage.setItem('mj_wallet_bal', String(fpCurrentWalletBalance));
+        syncAllWalletElements();
+        window.pendingMjPayAction = null;
+        myCart = [];
+        localStorage.removeItem('mj_cart');
+        if (typeof updateCartBadge === 'function') updateCartBadge();
+        resetButton();
+        alert('🎉 ₹' + totalPayable.toLocaleString('en-IN') + ' successfully added to your MJ Pay Balance!\nUpdated Balance: ₹' + Number(fpCurrentWalletBalance).toLocaleString('en-IN') + '\nRef ID: ' + txnId);
+        navigateTo('page-utility-hub');
+        if (typeof openMjPaySubView === 'function') openMjPaySubView('balance');
+        return true;
+      }
+    } else {
+      const res = await fetch('/api/wallet/pay-utility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          customerName: name,
+          service: meta.service,
+          operator: meta.operator,
+          targetNumber: meta.targetNumber,
+          amount: totalPayable,
+          payMode: gatewayLabel,
+          transactionId: txnId
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        fpCurrentWalletBalance = Number(data.balance || 0);
+        currentWalletBalance = fpCurrentWalletBalance;
+        window.mjWalletTransactions = data.transactions || [];
+        localStorage.setItem('mj_wallet_bal', String(fpCurrentWalletBalance));
+        syncAllWalletElements();
+        window.pendingMjPayAction = null;
+        myCart = [];
+        localStorage.removeItem('mj_cart');
+        if (typeof updateCartBadge === 'function') updateCartBadge();
+        resetButton();
+        alert('✅ ' + String(meta.service).toUpperCase() + ' Bill/Recharge of ₹' + totalPayable.toLocaleString('en-IN') + ' Successful!\nRef ID: ' + txnId);
+        if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+        navigateTo('page-profile');
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Helper to complete normal Store / Travel Cart orders
+  async function completeStandardCartOrders(payStatus, ordStatus, txnId) {
+    const orderPromises = myCart.map(c => {
+      const itemCost = Math.round(c.type === 'Travel'
+        ? ((c.adults || 1) * c.price + (c.children || 0) * c.price * 0.5)
+        : (c.price * (c.qty || 1)));
+
+      const payload = {
+        customerName: name,
+        customerPhone: phone,
+        customerEmail: document.getElementById('profileEmailInput')?.value || 'mjdigitalworlds@gmail.com',
+        shippingAddress: fullAddr,
+        orderType: c.type || 'Product',
+        totalAmount: itemCost,
+        paymentGateway: gateway.toUpperCase(),
+        paymentStatus: payStatus,
+        status: ordStatus,
+        transactionId: txnId,
+        itemDetails: {
+          itemId: c.id,
+          title: c.title,
+          quantity: c.qty || 1
+        },
+        items: [{
+          id: c.id,
+          title: c.title,
+          type: c.type || 'Product',
+          category: c.type || 'Product',
+          price: Number(c.price),
+          qty: c.qty || 1,
+          itemTotal: itemCost,
+          hsn: '851713',
+          gstRate: 18
+        }]
+      };
+
+      return fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(r => r.json());
+    });
+
+    await Promise.all(orderPromises);
+    myCart = [];
+    localStorage.removeItem('mj_cart');
+    if (typeof updateCartBadge === 'function') updateCartBadge();
+    if (typeof renderCartPage === 'function') renderCartPage();
+    resetButton();
+    alert('🎉 Order successfully placed! Reference ID: ' + txnId);
+    if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+    navigateTo('page-profile');
+  }
+
+  try {
+    // FLOW 1: Razorpay Gateway Selected
+    if (gateway === 'razorpay' && typeof Razorpay !== 'undefined') {
+      const activeKey = (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey());
+      const options = {
+        key: activeKey,
+        amount: totalPayable * 100,
+        currency: 'INR',
+        name: 'M J DIGITAL',
+        description: activeCheckoutData?.title || 'Order Payment',
+        prefill: {
+          name: name,
+          email: 'mjdigitalworlds@gmail.com',
+          contact: '+91' + cleanPhone
+        },
+        theme: { color: '#2563eb' },
+        handler: async function(response) {
+          const rzpId = response.razorpay_payment_id || ('RZP-' + Date.now().toString().slice(-8));
+          if (window.pendingMjPayAction || activeCheckoutData?.isMjPayCheckout) {
+            await completeMjPayCheckoutOnServer(rzpId, 'RAZORPAY');
+          } else {
+            await completeStandardCartOrders('Paid', 'Processing', rzpId);
+          }
+        },
+        modal: {
+          ondismiss: function() {
+            resetButton();
+          }
+        }
+      };
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', function(resp) {
+        alert('Payment Failed: ' + (resp.error?.description || 'Declined'));
+        resetButton();
+      });
+      rzp.open();
+      return;
+    }
+
+    // FLOW 2: Direct Page Checkout (Inline UPI QR, PhonePe, Cashfree, Paytm, PayU, CCAvenue, or COD) -> NO POPUP!
+    const prefix = gateway.toUpperCase().replace('_', '-');
+    const txnId = prefix + '-' + Date.now().toString().slice(-8);
+    const isCod = (gateway === 'cod');
+
+    if (window.pendingMjPayAction || activeCheckoutData?.isMjPayCheckout) {
+      await completeMjPayCheckoutOnServer(txnId, gateway.toUpperCase());
+    } else {
+      await completeStandardCartOrders(isCod ? 'Pending' : 'Paid', 'Processing', txnId);
+    }
+  } catch (err) {
+    alert('Payment processing error: ' + err.message);
+    resetButton();
+  }
+};
 </script>
 </body>
 </html>
