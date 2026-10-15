@@ -1289,6 +1289,221 @@ app.patch(['/api/products/:id/status', '/api/items/:id/status'], async (req, res
   }
 });
 
+// === MJ PAY & WALLET LIVE API ENGINE ===
+const walletAccountSchema = new mongoose.Schema({
+  phone: { type: String, required: true, unique: true, index: true },
+  customerName: { type: String, default: 'Mohsin J' },
+  balance: { type: Number, default: 0 },
+  transactions: [{
+    txnId: String,
+    type: { type: String, enum: ['CREDIT', 'DEBIT'] },
+    service: String,
+    operator: String,
+    targetNumber: String,
+    amount: Number,
+    balanceAfter: Number,
+    paymentGateway: String,
+    status: { type: String, default: 'Success' },
+    description: String,
+    createdAt: { type: Date, default: Date.now }
+  }]
+}, { timestamps: true });
+
+const WalletAccount = mongoose.models.WalletAccount || mongoose.model('WalletAccount', walletAccountSchema);
+
+function normalizePhoneKey(rawPhone) {
+  const digits = String(rawPhone || '').replace(/[^0-9]/g, '').slice(-10);
+  return digits.length === 10 ? digits : '8306669999';
+}
+
+// 1. GET Live Wallet Balance & Passbook Ledger
+app.get('/api/wallet', async (req, res) => {
+  try {
+    const phoneKey = normalizePhoneKey(req.query.phone);
+    let wallet = await WalletAccount.findOne({ phone: phoneKey });
+    if (!wallet) {
+      wallet = await WalletAccount.create({
+        phone: phoneKey,
+        customerName: 'Mohsin J',
+        balance: 0,
+        transactions: []
+      });
+    }
+    res.json({
+      success: true,
+      balance: Number(wallet.balance || 0),
+      phone: wallet.phone,
+      transactions: (wallet.transactions || []).slice().reverse().slice(0, 50)
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 2. POST Add Money / Top-up Wallet
+app.post('/api/wallet/topup', async (req, res) => {
+  try {
+    const phoneKey = normalizePhoneKey(req.body.phone);
+    const amount = Math.round(Number(req.body.amount || 0));
+    const gateway = req.body.gateway || 'UPI / Razorpay';
+    const txnId = req.body.transactionId || ('TOPUP-' + Date.now().toString().slice(-8));
+    const customerName = req.body.customerName || 'Mohsin J';
+
+    if (amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid top-up amount' });
+    }
+
+    let wallet = await WalletAccount.findOne({ phone: phoneKey });
+    if (!wallet) {
+      wallet = new WalletAccount({ phone: phoneKey, customerName, balance: 0, transactions: [] });
+    }
+
+    wallet.balance = Number(wallet.balance || 0) + amount;
+    wallet.transactions.push({
+      txnId,
+      type: 'CREDIT',
+      service: 'Wallet Top-Up',
+      operator: gateway.toUpperCase(),
+      targetNumber: phoneKey,
+      amount,
+      balanceAfter: wallet.balance,
+      paymentGateway: gateway,
+      status: 'Success',
+      description: 'Wallet Top-up via ' + gateway.toUpperCase(),
+      createdAt: new Date()
+    });
+    await wallet.save();
+
+    // Also record in Orders collection so Admin Dashboard & Customer Orders track it live
+    await Order.create({
+      customerName,
+      customerPhone: '+91 ' + phoneKey,
+      customerEmail: req.body.customerEmail || 'mjdigitalworlds@gmail.com',
+      shippingAddress: 'M J Digital Wallet Passbook Credit (Instant Top-Up)',
+      orderType: 'Services',
+      totalAmount: amount,
+      paymentGateway: gateway,
+      paymentStatus: 'Paid',
+      status: 'Delivered',
+      transactionId: txnId,
+      itemDetails: {
+        itemId: 'MJ-WALLET-TOPUP',
+        title: 'M J Wallet Top-Up (+₹' + amount + ')',
+        category: 'Services',
+        quantity: 1
+      },
+      items: [{
+        id: 'MJ-WALLET-TOPUP',
+        title: 'M J Wallet Top-Up (+₹' + amount + ')',
+        type: 'Services',
+        category: 'Services',
+        price: amount,
+        qty: 1,
+        itemTotal: amount,
+        hsn: '997159',
+        gstRate: 18
+      }]
+    }).catch(() => null);
+
+    res.json({
+      success: true,
+      balance: wallet.balance,
+      transactionId: txnId,
+      transactions: wallet.transactions.slice().reverse().slice(0, 50)
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 3. POST Pay Utility / Recharge Bill (Wallet Debit or Direct Gateway)
+app.post('/api/wallet/pay-utility', async (req, res) => {
+  try {
+    const phoneKey = normalizePhoneKey(req.body.phone);
+    const amount = Math.round(Number(req.body.amount || 0));
+    const service = String(req.body.service || 'Utility').toUpperCase();
+    const operator = req.body.operator || 'BBPS Biller';
+    const targetNumber = req.body.targetNumber || '';
+    const payMode = req.body.payMode || 'wallet'; // 'wallet' | 'gateway' | 'upi'
+    const txnId = req.body.transactionId || ('BBPS-' + Date.now().toString().slice(-8));
+    const customerName = req.body.customerName || 'Mohsin J';
+
+    if (amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid bill amount' });
+    }
+
+    let wallet = await WalletAccount.findOne({ phone: phoneKey });
+    if (!wallet) {
+      wallet = new WalletAccount({ phone: phoneKey, customerName, balance: 0, transactions: [] });
+    }
+
+    if (payMode === 'wallet') {
+      if (Number(wallet.balance || 0) < amount) {
+        return res.status(400).json({
+          success: false,
+          message: 'Insufficient M J Wallet Balance! Available: ₹' + Number(wallet.balance || 0).toFixed(2)
+        });
+      }
+      wallet.balance = Number(wallet.balance || 0) - amount;
+    }
+
+    wallet.transactions.push({
+      txnId,
+      type: 'DEBIT',
+      service,
+      operator,
+      targetNumber,
+      amount,
+      balanceAfter: wallet.balance,
+      paymentGateway: payMode === 'wallet' ? 'MJ_WALLET' : payMode.toUpperCase(),
+      status: 'Completed',
+      description: service + ' Recharge/Bill: ' + operator + ' (' + targetNumber + ')',
+      createdAt: new Date()
+    });
+    await wallet.save();
+
+    const createdOrder = await Order.create({
+      customerName,
+      customerPhone: '+91 ' + phoneKey,
+      customerEmail: req.body.customerEmail || 'mjdigitalworlds@gmail.com',
+      shippingAddress: 'BBPS Instant Digital Clearance • Ref: ' + txnId,
+      orderType: 'Services',
+      totalAmount: amount,
+      paymentGateway: payMode === 'wallet' ? 'MJ_WALLET' : payMode.toUpperCase(),
+      paymentStatus: 'Paid',
+      status: 'Delivered',
+      transactionId: txnId,
+      itemDetails: {
+        itemId: 'BBPS-' + service,
+        title: service + ' - ' + targetNumber + ' (' + operator + ')',
+        category: 'Services',
+        quantity: 1
+      },
+      items: [{
+        id: 'BBPS-' + service,
+        title: service + ' - ' + targetNumber + ' (' + operator + ')',
+        type: 'Services',
+        category: 'Services',
+        price: amount,
+        qty: 1,
+        itemTotal: amount,
+        hsn: '998313',
+        gstRate: 18
+      }]
+    });
+
+    res.json({
+      success: true,
+      balance: wallet.balance,
+      transactionId: txnId,
+      order: createdOrder,
+      transactions: wallet.transactions.slice().reverse().slice(0, 50)
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });

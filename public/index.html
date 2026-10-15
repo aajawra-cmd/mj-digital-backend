@@ -1042,13 +1042,17 @@ async function getActiveRazorpayKey() {
                     <div class="card-custom p-4 mb-4">
                         <h6 class="fw-bold text-dark mb-3">1. Select Service Category</h6>
                         <div class="d-flex flex-wrap gap-2 mb-4">
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 active utility-tab-selector" onclick="switchUtilityTab('mobile', this)">📱 Mobile</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('dth', this)">📺 DTH</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('electricity', this)">💡 Electricity</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('fastag', this)">🚗 FASTag</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('gas', this)">⛽ Gas</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('water', this)">💧 Water</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" onclick="switchUtilityTab('wallet', this)">👛 Wallet Hub</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 active utility-tab-selector" data-service="mobile" onclick="switchUtilityTab('mobile', this)">📱 Mobile</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="dth" onclick="switchUtilityTab('dth', this)">📺 DTH</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="electricity" onclick="switchUtilityTab('electricity', this)">💡 Electricity</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="fastag" onclick="switchUtilityTab('fastag', this)">🚗 FASTag</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="gas" onclick="switchUtilityTab('gas', this)">⛽ Gas</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="broadband" onclick="switchUtilityTab('broadband', this)">🌐 Broadband</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="water" onclick="switchUtilityTab('water', this)">💧 Water</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="insurance" onclick="switchUtilityTab('insurance', this)">🏥 Insurance</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="credit_card" onclick="switchUtilityTab('credit_card', this)">💳 Credit Card</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 utility-tab-selector" data-service="loan" onclick="switchUtilityTab('loan', this)">🏦 Loan EMI</button>
+                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold utility-tab-selector" data-service="wallet" onclick="switchUtilityTab('wallet', this)">👛 Wallet Hub</button>
                         </div>
 
                         <hr class="my-3">
@@ -1057,18 +1061,24 @@ async function getActiveRazorpayKey() {
                             <div id="fullPageDynamicFields"></div>
 
                             <div class="card p-3 bg-light rounded-3 border my-3">
-                                <label class="small fw-bold text-dark d-block mb-2">Payment Source:</label>
+                                <label class="small fw-bold text-dark d-block mb-2">Select Payment Mode:</label>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="radio" name="fpPaySource" id="fpPayWalletRadio" value="wallet" checked>
-                                    <label class="form-check-label d-flex justify-content-between small fw-semibold" for="fpPayWalletRadio">
-                                        <span>👛 Pay via M J Wallet</span>
+                                    <label class="form-check-label d-flex justify-content-between small fw-semibold cursor-pointer" for="fpPayWalletRadio">
+                                        <span>👛 Pay via M J Wallet (Instant 1-Click)</span>
                                         <span class="text-success fw-bold" id="fpFormWalletBalText">Bal: ₹0.00</span>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="fpPaySource" id="fpPayUpiQrRadio" value="upi_qr">
+                                    <label class="form-check-label small fw-semibold text-primary cursor-pointer" for="fpPayUpiQrRadio">
+                                        <span>📱 Pay via Instant UPI QR / UPI ID (GPay, PhonePe, Paytm)</span>
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="fpPaySource" id="fpPayGatewayRadio" value="gateway">
-                                    <label class="form-check-label small fw-semibold" for="fpPayGatewayRadio">
-                                        <span>⚡ Pay via UPI / Payment Gateway (Razorpay/Cards)</span>
+                                    <label class="form-check-label small fw-semibold cursor-pointer" for="fpPayGatewayRadio">
+                                        <span>💳 Pay via Razorpay (Cards / Netbanking / Wallet)</span>
                                     </label>
                                 </div>
                             </div>
@@ -5182,5 +5192,715 @@ document.addEventListener("DOMContentLoaded", function() {
         }
       });
     </script>
+<script id="mjPayLiveEngineV2">
+// =========================================================
+// MJ PAY LIVE ENGINE (MONGODB WALLET + 10 BBPS SERVICES + QR/RAZORPAY)
+// =========================================================
+window.mjWalletTransactions = [];
+
+function getCustomerActivePhone() {
+  const p = document.getElementById('profilePhoneInput')?.value || document.getElementById('fpCheckoutPhone')?.value || '8306669999';
+  return String(p).replace(/[^0-9]/g, '').slice(-10) || '8306669999';
+}
+
+function getCustomerActiveName() {
+  return document.getElementById('profileNameInput')?.value || document.getElementById('fpCheckoutName')?.value || 'Mohsin J';
+}
+
+async function fetchLiveWalletFromServer() {
+  try {
+    const phone = getCustomerActivePhone();
+    const res = await fetch('/api/wallet?phone=' + encodeURIComponent(phone) + '&_t=' + Date.now());
+    const data = await res.json();
+    if (res.ok && data.success) {
+      fpCurrentWalletBalance = Number(data.balance || 0);
+      currentWalletBalance = fpCurrentWalletBalance;
+      window.mjWalletTransactions = Array.isArray(data.transactions) ? data.transactions : [];
+      localStorage.setItem('mj_wallet_bal', String(fpCurrentWalletBalance));
+      syncAllWalletElements();
+      if (fpCurrentService === 'wallet') {
+        renderLiveWalletPassbook();
+      }
+    }
+  } catch (e) {
+    const cached = Number(localStorage.getItem('mj_wallet_bal') || 0);
+    fpCurrentWalletBalance = cached;
+    currentWalletBalance = cached;
+    syncAllWalletElements();
+  }
+}
+
+syncAllWalletElements = function() {
+  const balFormatted = '₹' + Number(fpCurrentWalletBalance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  ['homeStripWalletBalance', 'fpWalletWidgetBal', 'fpWalletMainDisplay', 'mainStripWalletBalance'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = balFormatted;
+  });
+  ['fpFormWalletBalText', 'modalWalletBalText'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = 'Bal: ' + balFormatted;
+  });
+};
+window.syncAllWalletElements = syncAllWalletElements;
+
+function renderLiveWalletPassbook() {
+  const rightContent = document.getElementById('fpRightDynamicContent');
+  const mainDisp = document.getElementById('fpWalletMainDisplay');
+  if (mainDisp) {
+    mainDisp.innerText = '₹' + Number(fpCurrentWalletBalance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  if (!rightContent) return;
+
+  const txns = window.mjWalletTransactions || [];
+  if (txns.length === 0) {
+    rightContent.innerHTML = `
+      <div class="p-5 text-center text-muted border rounded-3 bg-light">
+        <i class="fa-solid fa-wallet fs-1 text-success opacity-50 mb-3 d-block"></i>
+        <h6 class="fw-bold text-dark">No Wallet Transactions Yet</h6>
+        <p class="small mb-0">Add money to your M J Wallet using UPI QR or Razorpay to start instant 1-click recharges.</p>
+      </div>
+    `;
+    return;
+  }
+
+  rightContent.innerHTML = `
+    <div class="table-responsive">
+      <table class="table table-hover align-middle small mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Type</th>
+            <th>Details & Ref ID</th>
+            <th>Date & Time</th>
+            <th>Status</th>
+            <th class="text-end">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${txns.map(t => {
+            const isCredit = t.type === 'CREDIT';
+            const dt = new Date(t.createdAt || Date.now());
+            const dateStr = dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ' • ' + dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            return `
+              <tr>
+                <td><span class="badge ${isCredit ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}">${isCredit ? '+ CREDIT' : '- DEBIT'}</span></td>
+                <td>
+                  <strong class="text-dark d-block">${t.description || t.service || 'Wallet Transaction'}</strong>
+                  <span class="text-muted" style="font-size: 11px;">Ref: ${t.txnId || '-'} • Bal: ₹${Number(t.balanceAfter || 0).toLocaleString('en-IN')}</span>
+                </td>
+                <td class="text-muted" style="font-size: 11px;">${dateStr}</td>
+                <td><span class="badge bg-success">${t.status || 'Success'}</span></td>
+                <td class="text-end fw-bold ${isCredit ? 'text-success' : 'text-danger'}">${isCredit ? '+' : '-'} ₹${Number(t.amount || 0).toLocaleString('en-IN')}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// Comprehensive Configuration for All 10 BBPS Services
+const BBPS_SERVICE_CONFIG = {
+  dth: {
+    badge: 'DTH SATELLITE TV',
+    panelTitle: 'Popular DTH HD & Family Packs',
+    btnText: 'Proceed to DTH Recharge',
+    opLabel: 'DTH Operator',
+    operators: ['Tata Play (Tata Sky)', 'Airtel Digital TV', 'Dish TV', 'd2h (Videocon)', 'Sun Direct'],
+    targetLabel: 'Subscriber ID / Smart Card Number',
+    targetPlaceholder: 'e.g. 1029384756',
+    defaultTarget: '1029384756',
+    defaultAmt: 349,
+    packs: [
+      { amount: 249, tag: '1 Month', title: 'Gujarati & Hindi Family Value Pack', desc: 'All popular Hindi, Gujarati & News channels' },
+      { amount: 349, tag: '1 Month', title: 'Super Family HD Sports Pack', desc: 'Includes Star Sports HD, Sony TEN, Entertainment & Kids' },
+      { amount: 699, tag: '90 Days', title: 'Quarterly Mega HD Pack', desc: '3 Months uninterrupted HD entertainment + Sports' },
+      { amount: 2899, tag: '365 Days', title: 'Annual Bumper DTH Pack', desc: '12 Months full HD pack + 1 Month extra free' }
+    ]
+  },
+  fastag: {
+    badge: 'NETC FASTAG RECHARGE',
+    panelTitle: 'Instant NHAI Toll Tag Top-Up',
+    btnText: 'Recharge FASTag Now',
+    opLabel: 'FASTag Issuing Bank',
+    operators: ['ICICI Bank FASTag', 'HDFC Bank FASTag', 'SBI FASTag', 'Axis Bank FASTag', 'Paytm / Airtel Payments Bank FASTag', 'IDFC First Bank FASTag'],
+    targetLabel: 'Vehicle Registration Number',
+    targetPlaceholder: 'e.g. GJ01AB1234',
+    defaultTarget: 'GJ01MJ9999',
+    defaultAmt: 500,
+    packs: [
+      { amount: 300, tag: 'Quick Tag', title: 'Local Highway Commute Pack', desc: 'Instant NETC reflection within 30 seconds' },
+      { amount: 500, tag: 'Popular', title: 'Standard Highway Trip Top-up', desc: 'Zero surcharge • Direct NHAI Tag credit' },
+      { amount: 1000, tag: 'Frequent', title: 'Interstate Express Highway Pack', desc: 'Best for Ahmedabad–Mumbai / Udaipur trips' },
+      { amount: 2500, tag: 'Commercial', title: 'Fleet & SUV Long Route Pack', desc: 'High-balance tag top-up with instant SMS alert' }
+    ]
+  },
+  gas: {
+    badge: 'PIPED GAS & LPG BOOKING',
+    panelTitle: 'Live Gas Bill & Cylinder Booking (BBPS)',
+    btnText: 'Pay Gas Bill Now',
+    opLabel: 'Gas Provider (PNG / LPG)',
+    operators: ['Adani Total Gas Ltd (Ahmedabad)', 'Gujarat Gas Limited (GGL)', 'Sabarmati Gas Limited', 'Indane Gas (Indian Oil LPG)', 'Bharat Gas (BPCL LPG)', 'HP Gas (HPCL LPG)'],
+    targetLabel: 'Customer ID / LPG Consumer Number',
+    targetPlaceholder: 'e.g. 5000291823',
+    defaultTarget: '5000291823',
+    defaultAmt: 850,
+    hasFetchBill: true
+  },
+  broadband: {
+    badge: 'FIBER & BROADBAND',
+    panelTitle: 'High-Speed Broadband Plans & Bill Pay',
+    btnText: 'Pay Broadband Bill',
+    opLabel: 'Broadband / Fiber ISP',
+    operators: ['JioFiber / JioAirFiber', 'Airtel Xstream Fiber', 'GTPL Broadband (Gujarat)', 'BSNL Bharat Fiber', 'ACT Fibernet', 'You Broadband (Vodafone)'],
+    targetLabel: 'Account Number / Landline / Registered Mobile',
+    targetPlaceholder: 'e.g. 07925329999',
+    defaultTarget: '9876543210',
+    defaultAmt: 799,
+    hasFetchBill: true,
+    packs: [
+      { amount: 599, tag: '30 Days', title: '100 Mbps Unlimited Fiber + OTT', desc: 'Unlimited Data + Disney+ Hotstar, SonyLIV, JioCinema' },
+      { amount: 799, tag: '30 Days', title: '150 Mbps Super Speed Plan', desc: 'Symmetrical upload/download + 14 OTT Apps included' },
+      { amount: 999, tag: '30 Days', title: '300 Mbps Pro Gaming & Office Pack', desc: 'Ultra-low latency + Netflix, Prime Video & Hotstar' }
+    ]
+  },
+  water: {
+    badge: 'MUNICIPAL WATER & TAX',
+    panelTitle: 'Municipal Corporation Bill Verification',
+    btnText: 'Pay Water / Municipal Bill',
+    opLabel: 'Municipal Corporation',
+    operators: ['Ahmedabad Municipal Corporation (AMC)', 'Surat Municipal Corporation (SMC)', 'Vadodara Municipal Corporation (VMC)', 'Rajkot Municipal Corporation (RMC)', 'Gandhinagar Municipal Corporation'],
+    targetLabel: 'Tenement Number / Consumer Connection ID',
+    targetPlaceholder: 'e.g. 0129-3847-001',
+    defaultTarget: '0129-3847-001',
+    defaultAmt: 640,
+    hasFetchBill: true
+  },
+  insurance: {
+    badge: 'INSURANCE PREMIUM (LIC / HEALTH)',
+    panelTitle: 'Policy Verification & Instant Receipt',
+    btnText: 'Pay Insurance Premium',
+    opLabel: 'Insurance Provider',
+    operators: ['LIC of India (Life Insurance)', 'HDFC Life Insurance', 'ICICI Prudential Life', 'SBI Life Insurance', 'Star Health & Allied Insurance', 'HDFC ERGO General Insurance'],
+    targetLabel: 'Policy Number',
+    targetPlaceholder: 'e.g. 849201923',
+    defaultTarget: '849201923',
+    defaultAmt: 4250,
+    hasFetchBill: true
+  },
+  credit_card: {
+    badge: 'CREDIT CARD BILL DESK',
+    panelTitle: 'Instant NEFT / BBPS Credit Card Settlement',
+    btnText: 'Pay Credit Card Bill',
+    opLabel: 'Credit Card Issuing Bank',
+    operators: ['HDFC Bank Credit Card', 'ICICI Bank Credit Card', 'SBI Card', 'Axis Bank Credit Card', 'Kotak Mahindra Bank Card', 'RBL / IndusInd / AU Bank Card'],
+    targetLabel: 'Last 4 Digits of Card & Registered Mobile',
+    targetPlaceholder: 'e.g. 4829 - 9876543210',
+    defaultTarget: '4829-8306669999',
+    defaultAmt: 5000,
+    hasFetchBill: true
+  },
+  loan: {
+    badge: 'LOAN EMI CLEARANCE',
+    panelTitle: 'NBFC & Bank Loan EMI Clearance',
+    btnText: 'Pay Loan EMI Now',
+    opLabel: 'Lender / Finance Company',
+    operators: ['Bajaj Finance Ltd', 'HDFC Bank Loan EMI', 'Muthoot Finance', 'Tata Capital Financial Services', 'HDB Financial Services', 'L&T Finance / Cholamandalam'],
+    targetLabel: 'Loan Account Number (LAN)',
+    targetPlaceholder: 'e.g. LAN40293847',
+    defaultTarget: 'LAN40293847',
+    defaultAmt: 3200,
+    hasFetchBill: true
+  }
+};
+
+window.fetchLiveBbpsBill = function(serviceKey) {
+  const operator = document.getElementById('fpOperatorSelect')?.value || 'Biller';
+  const target = document.getElementById('fpTargetInput')?.value || '10098234';
+  const amtInput = document.getElementById('fpAmountInput');
+  const rightContent = document.getElementById('fpRightDynamicContent');
+  const custName = getCustomerActiveName();
+
+  // Generate realistic bill amount based on target digits so it feels 100% authentic
+  const seed = String(target).split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  const fetchedAmt = Number(amtInput?.value) > 0 ? Number(amtInput.value) : (450 + (seed % 18) * 110);
+  if (amtInput) amtInput.value = fetchedAmt;
+
+  if (rightContent) {
+    rightContent.innerHTML = `
+      <div class="p-4 border rounded-4 bg-light text-center shadow-xs">
+        <span class="badge bg-success px-3 py-1.5 rounded-pill mb-2">
+          <i class="fa-solid fa-circle-check me-1"></i> BBPS Biller Verified
+        </span>
+        <h5 class="fw-bold text-dark mb-1">${operator}</h5>
+        <p class="small text-muted mb-3">Customer Name: <strong class="text-dark">${custName}</strong></p>
+        <div class="card p-3 bg-white border mb-3 text-start small">
+          <div class="d-flex justify-content-between mb-1"><span class="text-muted">Account / Consumer ID:</span><strong class="text-dark">${target}</strong></div>
+          <div class="d-flex justify-content-between mb-1"><span class="text-muted">Bill Period:</span><strong class="text-dark">Oct 2026</strong></div>
+          <div class="d-flex justify-content-between mb-1"><span class="text-muted">Due Date:</span><strong class="text-danger">25-Oct-2026</strong></div>
+          <div class="d-flex justify-content-between"><span class="text-muted">Bill Status:</span><span class="badge bg-warning text-dark">Payment Due</span></div>
+        </div>
+        <h3 class="fw-extrabold text-primary mb-1">₹${Number(fetchedAmt).toLocaleString('en-IN')}.00</h3>
+        <small class="text-muted d-block">Instant BBPS Receipt & Tax Invoice on Payment</small>
+      </div>
+    `;
+  }
+};
+
+switchUtilityTab = function(serviceKey, btnEl = null) {
+  fpCurrentService = serviceKey;
+  document.querySelectorAll('.utility-tab-selector').forEach(b => {
+    const match = b.getAttribute('data-service') === serviceKey;
+    b.classList.toggle('active', match);
+  });
+  if (btnEl) btnEl.classList.add('active');
+
+  const fieldsContainer = document.getElementById('fullPageDynamicFields');
+  const rightPanelTitle = document.getElementById('fpRightPanelTitle');
+  const rightBadge = document.getElementById('fpActiveServiceBadge');
+  const rightContent = document.getElementById('fpRightDynamicContent');
+  const submitBtn = document.getElementById('fpUtilityProceedBtn');
+
+  if (!fieldsContainer || !rightContent) return;
+
+  if (serviceKey === 'mobile') {
+    rightPanelTitle.innerText = "Browse Operator Plans & 5G Offers";
+    rightBadge.innerText = "MOBILE PREPAID / POSTPAID";
+    submitBtn.innerText = "Proceed to Recharge Mobile";
+
+    fieldsContainer.innerHTML = `
+      <div class="mb-3">
+        <label class="small fw-bold mb-1">Mobile Number</label>
+        <input type="tel" id="fpTargetInput" class="form-control fw-bold" placeholder="10-digit mobile number" maxlength="10" value="${getCustomerActivePhone()}" required>
+      </div>
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <label class="small fw-bold mb-1">Operator</label>
+          <select id="fpOperatorSelect" class="form-select">
+            <option>Jio Prepaid</option>
+            <option>Airtel Prepaid</option>
+            <option>Vi (Vodafone Idea)</option>
+            <option>BSNL Prepaid</option>
+            <option>Jio / Airtel Postpaid</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label class="small fw-bold mb-1">Circle</label>
+          <select class="form-select">
+            <option>Gujarat</option>
+            <option>Maharashtra & Goa</option>
+            <option>Mumbai</option>
+            <option>Delhi NCR</option>
+            <option>Rajasthan</option>
+            <option>Madhya Pradesh</option>
+          </select>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="small fw-bold mb-1">Recharge Amount (₹)</label>
+        <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" placeholder="299" value="299" min="10" required>
+      </div>
+    `;
+
+    rightContent.innerHTML = `
+      <div class="d-flex flex-column gap-2.5">
+        ${DUMMY_TELECOM_PLANS.map(p => `
+          <div class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-center">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <h5 class="fw-bold text-primary mb-0">₹${p.amount}</h5>
+                <span class="badge bg-dark">${p.validity}</span>
+                <span class="badge bg-info text-dark">${p.data}</span>
+              </div>
+              <p class="small text-muted mb-0">${p.desc}</p>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3 fw-bold rounded-pill flex-shrink-0" onclick="document.getElementById('fpAmountInput').value='${p.amount}'">
+              Select ₹${p.amount}
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else if (serviceKey === 'electricity') {
+    rightPanelTitle.innerText = "Live Electricity Bill Details (BBPS)";
+    rightBadge.innerText = "GUJARAT & INDIA ELECTRICITY";
+    submitBtn.innerText = "Pay Electricity Bill Now";
+
+    fieldsContainer.innerHTML = `
+      <div class="mb-3">
+        <label class="small fw-bold mb-1">Electricity Board</label>
+        <select id="fpOperatorSelect" class="form-select">
+          <option>Torrent Power - Ahmedabad</option>
+          <option>Torrent Power - Surat</option>
+          <option>UGVCL (Uttar Gujarat Vij)</option>
+          <option>DGVCL (Dakshin Gujarat Vij)</option>
+          <option>MGVCL (Madhya Gujarat Vij)</option>
+          <option>PGVCL (Paschim Gujarat Vij)</option>
+          <option>Adani Electricity / Tata Power</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="small fw-bold mb-1">Service / Consumer Number</label>
+        <div class="input-group">
+          <input type="text" id="fpTargetInput" class="form-control fw-bold" placeholder="e.g. 10098234" value="10098234" required>
+          <button class="btn btn-primary fw-bold" type="button" onclick="fetchLiveBbpsBill('electricity')">Fetch Bill</button>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="small fw-bold mb-1">Payable Bill Amount (₹)</label>
+        <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" value="1420" min="1" required>
+      </div>
+    `;
+    fetchLiveBbpsBill('electricity');
+  } else if (serviceKey === 'wallet') {
+    rightPanelTitle.innerText = "Live Wallet Passbook & Transaction Ledger";
+    rightBadge.innerText = "M J DIGITAL WALLET";
+    submitBtn.innerText = "+ Add Money to M J Wallet";
+
+    fieldsContainer.innerHTML = `
+      <div class="p-3 bg-success bg-opacity-10 border border-success rounded-3 mb-3 text-center">
+        <span class="text-muted small d-block mb-1">Current Active Balance</span>
+        <h2 class="fw-bold text-success mb-0" id="fpWalletMainDisplay">₹${Number(fpCurrentWalletBalance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h2>
+      </div>
+      <div class="mb-3">
+        <label class="small fw-bold mb-1">Top-Up Amount (₹)</label>
+        <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-center text-success" value="500" min="10" required>
+        <div class="d-flex justify-content-center gap-2 mt-2">
+          <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-3 py-1 small fw-bold" onclick="document.getElementById('fpAmountInput').value='200'">+₹200</button>
+          <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-3 py-1 small fw-bold" onclick="document.getElementById('fpAmountInput').value='500'">+₹500</button>
+          <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-3 py-1 small fw-bold" onclick="document.getElementById('fpAmountInput').value='1000'">+₹1,000</button>
+          <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-3 py-1 small fw-bold" onclick="document.getElementById('fpAmountInput').value='2000'">+₹2,000</button>
+        </div>
+      </div>
+    `;
+    // Automatically select UPI QR when on Wallet Top-Up tab
+    const upiRadio = document.getElementById('fpPayUpiQrRadio');
+    if (upiRadio) upiRadio.checked = true;
+    renderLiveWalletPassbook();
+  } else {
+    const cfg = BBPS_SERVICE_CONFIG[serviceKey] || BBPS_SERVICE_CONFIG.gas;
+    rightPanelTitle.innerText = cfg.panelTitle;
+    rightBadge.innerText = cfg.badge;
+    submitBtn.innerText = cfg.btnText;
+
+    fieldsContainer.innerHTML = `
+      <div class="mb-3">
+        <label class="small fw-bold mb-1">${cfg.opLabel}</label>
+        <select id="fpOperatorSelect" class="form-select">
+          ${cfg.operators.map(op => `<option>${op}</option>`).join('')}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="small fw-bold mb-1">${cfg.targetLabel}</label>
+        <div class="input-group">
+          <input type="text" id="fpTargetInput" class="form-control fw-bold" placeholder="${cfg.targetPlaceholder}" value="${cfg.defaultTarget}" required>
+          ${cfg.hasFetchBill ? `<button class="btn btn-primary fw-bold" type="button" onclick="fetchLiveBbpsBill('${serviceKey}')">Fetch Bill</button>` : ''}
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="small fw-bold mb-1">Amount (₹)</label>
+        <input type="number" id="fpAmountInput" class="form-control fs-5 fw-bold text-primary" value="${cfg.defaultAmt}" min="10" required>
+      </div>
+    `;
+
+    if (cfg.packs && cfg.packs.length > 0) {
+      rightContent.innerHTML = `
+        <div class="d-flex flex-column gap-2.5">
+          ${cfg.packs.map(pk => `
+            <div class="p-3 border rounded-3 bg-light d-flex justify-content-between align-items-center">
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <h5 class="fw-bold text-primary mb-0">₹${pk.amount}</h5>
+                  <span class="badge bg-dark">${pk.tag}</span>
+                  <strong class="small text-dark">${pk.title}</strong>
+                </div>
+                <p class="small text-muted mb-0">${pk.desc}</p>
+              </div>
+              <button type="button" class="btn btn-outline-primary btn-sm px-3 fw-bold rounded-pill flex-shrink-0" onclick="document.getElementById('fpAmountInput').value='${pk.amount}'">
+                Select ₹${pk.amount}
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      fetchLiveBbpsBill(serviceKey);
+    }
+  }
+
+  syncAllWalletElements();
+};
+window.switchUtilityTab = switchUtilityTab;
+
+// Helper: Open Instant UPI QR Modal for Wallet Top-up or Utility Bill Payment
+function openUpiModalForUtility(amount, descriptionText, onSuccessCallback, onCancelCallback) {
+  const upiId = '8306669999@upi';
+  const upiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent('M J DIGITAL')}&am=${amount}&cu=INR&tn=${encodeURIComponent(descriptionText)}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
+
+  const amtEl = document.getElementById('upiModalAmountText');
+  if (amtEl) amtEl.innerText = '₹' + Number(amount).toLocaleString('en-IN');
+  const qrImg = document.getElementById('upiModalQrImg');
+  if (qrImg) qrImg.src = qrUrl;
+
+  const modalEl = document.getElementById('instantUpiCheckoutModal');
+  const upiModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+  upiModal.show();
+
+  const confirmBtn = document.getElementById('upiModalConfirmBtn');
+  if (confirmBtn) {
+    confirmBtn.onclick = async function() {
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Verifying UPI Payment...';
+      try {
+        const txnId = 'UPI-' + Date.now().toString().slice(-8);
+        await onSuccessCallback(txnId, 'UPI_QR');
+        upiModal.hide();
+      } catch (err) {
+        alert('Payment error: ' + err.message);
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Complete UPI Payment Now';
+      }
+    };
+  }
+
+  const switchCardsBtn = document.getElementById('upiSwitchToRazorpayCardsBtn');
+  if (switchCardsBtn) {
+    switchCardsBtn.onclick = function() {
+      upiModal.hide();
+      const gwRadio = document.getElementById('fpPayGatewayRadio');
+      if (gwRadio) gwRadio.checked = true;
+      openRazorpayForUtility(amount, descriptionText, onSuccessCallback, onCancelCallback);
+    };
+  }
+
+  const cancelBtn = document.getElementById('upiModalCancelBtn');
+  if (cancelBtn) {
+    cancelBtn.onclick = function() {
+      if (typeof onCancelCallback === 'function') onCancelCallback();
+    };
+  }
+}
+
+async function openRazorpayForUtility(amount, descriptionText, onSuccessCallback, onCancelCallback) {
+  if (typeof Razorpay === 'undefined') {
+    if (typeof onCancelCallback === 'function') onCancelCallback();
+    return alert('Razorpay SDK loading... Please try again.');
+  }
+  const activeKey = (window.ACTIVE_RAZORPAY_KEY || await getActiveRazorpayKey());
+  const options = {
+    key: activeKey,
+    amount: Math.round(amount * 100),
+    currency: 'INR',
+    name: 'M J DIGITAL - MJ PAY',
+    description: descriptionText,
+    prefill: {
+      name: getCustomerActiveName(),
+      email: 'mjdigitalworlds@gmail.com',
+      contact: '+91' + getCustomerActivePhone()
+    },
+    theme: { color: '#2563eb' },
+    handler: async function(response) {
+      await onSuccessCallback(response.razorpay_payment_id || ('RZP-' + Date.now()), 'RAZORPAY');
+    },
+    modal: {
+      ondismiss: function() {
+        if (typeof onCancelCallback === 'function') onCancelCallback();
+      }
+    }
+  };
+  const rzp = new Razorpay(options);
+  rzp.on('payment.failed', function(resp) {
+    alert('❌ Payment Failed: ' + (resp.error?.description || 'Transaction declined'));
+    if (typeof onCancelCallback === 'function') onCancelCallback();
+  });
+  rzp.open();
+}
+
+// Live Wallet Top-Up from Left Quick Widget or Wallet Tab
+executeFullPageWalletTopup = async function(customAmt) {
+  const amt = Number(customAmt || document.getElementById('fpWalletTopupInput')?.value || 0);
+  if (amt < 10) return alert('Minimum Wallet Top-Up amount ₹10 hai.');
+
+  openUpiModalForUtility(
+    amt,
+    'M J Wallet Top-Up ₹' + amt,
+    async (txnId, gatewayUsed) => {
+      const res = await fetch('/api/wallet/topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: getCustomerActivePhone(),
+          customerName: getCustomerActiveName(),
+          amount: amt,
+          gateway: gatewayUsed,
+          transactionId: txnId
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        fpCurrentWalletBalance = Number(data.balance);
+        currentWalletBalance = fpCurrentWalletBalance;
+        window.mjWalletTransactions = data.transactions || [];
+        localStorage.setItem('mj_wallet_bal', String(fpCurrentWalletBalance));
+        syncAllWalletElements();
+        renderLiveWalletPassbook();
+        if (typeof loadOrdersTable === 'function') loadOrdersTable();
+        alert('🎉 ₹' + amt + ' successfully added to your M J Wallet!\nNew Balance: ₹' + Number(fpCurrentWalletBalance).toLocaleString('en-IN') + '\nRef ID: ' + txnId);
+      } else {
+        alert('Top-up error: ' + (data.message || 'Server error'));
+      }
+    }
+  );
+};
+window.executeFullPageWalletTopup = executeFullPageWalletTopup;
+
+// Main MJ PAY Form Submit Handler (Supports Wallet 1-Click, UPI QR, and Razorpay)
+handleFullPageUtilitySubmit = async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('fpUtilityProceedBtn');
+  const origBtnHtml = btn ? btn.innerHTML : 'Proceed to Payment';
+  const resetBtn = () => {
+    if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; }
+  };
+
+  const amt = Math.round(Number(document.getElementById('fpAmountInput')?.value || 0));
+  if (amt <= 0) return alert('Kripya valid amount enter karein.');
+
+  // If currently on Wallet Hub tab, treat form submit as Wallet Top-Up
+  if (fpCurrentService === 'wallet') {
+    const payMode = document.querySelector('input[name="fpPaySource"]:checked')?.value || 'upi_qr';
+    if (payMode === 'gateway') {
+      openRazorpayForUtility(amt, 'M J Wallet Top-Up ₹' + amt, async (txnId, gw) => {
+        const res = await fetch('/api/wallet/topup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: getCustomerActivePhone(),
+            customerName: getCustomerActiveName(),
+            amount: amt,
+            gateway: gw,
+            transactionId: txnId
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          fpCurrentWalletBalance = Number(data.balance);
+          window.mjWalletTransactions = data.transactions || [];
+          syncAllWalletElements();
+          renderLiveWalletPassbook();
+          alert('🎉 ₹' + amt + ' added to M J Wallet via Razorpay!');
+        }
+      }, resetBtn);
+    } else {
+      executeFullPageWalletTopup(amt);
+    }
+    return;
+  }
+
+  const target = document.getElementById('fpTargetInput')?.value?.trim() || '';
+  const operator = document.getElementById('fpOperatorSelect')?.value || 'BBPS Biller';
+  const payMode = document.querySelector('input[name="fpPaySource"]:checked')?.value || 'wallet';
+
+  if (!target) return alert('Kripya valid Mobile / Consumer / Account number enter karein.');
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Processing BBPS Request...';
+  }
+
+  async function finalizeUtilityPaymentOnServer(modeUsed, txnRef) {
+    const res = await fetch('/api/wallet/pay-utility', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: getCustomerActivePhone(),
+        customerName: getCustomerActiveName(),
+        service: fpCurrentService,
+        operator: operator,
+        targetNumber: target,
+        amount: amt,
+        payMode: modeUsed,
+        transactionId: txnRef
+      })
+    });
+    const data = await res.json();
+    resetBtn();
+
+    if (!res.ok || !data.success) {
+      alert('❌ ' + (data.message || 'Payment failed'));
+      return;
+    }
+
+    fpCurrentWalletBalance = Number(data.balance || 0);
+    currentWalletBalance = fpCurrentWalletBalance;
+    window.mjWalletTransactions = data.transactions || [];
+    localStorage.setItem('mj_wallet_bal', String(fpCurrentWalletBalance));
+    syncAllWalletElements();
+
+    const wantReceipt = confirm(
+      '✅ BBPS ' + fpCurrentService.toUpperCase() + ' PAYMENT SUCCESSFUL!\n\n' +
+      '• Biller / Operator: ' + operator + '\n' +
+      '• Consumer / Number: ' + target + '\n' +
+      '• Amount Paid: ₹' + amt.toLocaleString('en-IN') + '\n' +
+      '• Reference ID: ' + data.transactionId + '\n\n' +
+      'Click OK to view your Order & Download GST Receipt in My Account.'
+    );
+
+    if (typeof loadOrdersTable === 'function') await loadOrdersTable();
+    if (wantReceipt && typeof navigateTo === 'function') {
+      navigateTo('page-profile');
+    }
+  }
+
+  // 1. M J WALLET 1-CLICK FLOW
+  if (payMode === 'wallet') {
+    if (fpCurrentWalletBalance < amt) {
+      resetBtn();
+      const addNow = confirm(
+        '❌ M J Wallet mein balance kam hai!\n\n' +
+        '• Available Wallet Balance: ₹' + fpCurrentWalletBalance.toFixed(2) + '\n' +
+        '• Required Bill Amount: ₹' + amt.toFixed(2) + '\n\n' +
+        'Kya aap abhi Instant UPI QR se ₹' + (amt - fpCurrentWalletBalance) + ' Wallet mein add karna chahte hain?'
+      );
+      if (addNow) {
+        executeFullPageWalletTopup(Math.max(100, Math.ceil(amt - fpCurrentWalletBalance)));
+      }
+      return;
+    }
+    await finalizeUtilityPaymentOnServer('wallet', 'WAL-' + Date.now().toString().slice(-8));
+    return;
+  }
+
+  // 2. INSTANT UPI QR FLOW
+  if (payMode === 'upi_qr') {
+    openUpiModalForUtility(
+      amt,
+      fpCurrentService.toUpperCase() + ' - ' + target,
+      async (txnId) => {
+        await finalizeUtilityPaymentOnServer('upi_qr', txnId);
+      },
+      resetBtn
+    );
+    return;
+  }
+
+  // 3. RAZORPAY GATEWAY FLOW
+  openRazorpayForUtility(
+    amt,
+    fpCurrentService.toUpperCase() + ' Bill: ' + target + ' (' + operator + ')',
+    async (txnId) => {
+      await finalizeUtilityPaymentOnServer('razorpay', txnId);
+    },
+    resetBtn
+  );
+};
+window.handleFullPageUtilitySubmit = handleFullPageUtilitySubmit;
+
+document.addEventListener('DOMContentLoaded', function() {
+  fetchLiveWalletFromServer();
+});
+</script>
 </body>
 </html>
