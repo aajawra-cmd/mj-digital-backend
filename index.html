@@ -7163,5 +7163,32 @@ window.handleFullPageCheckoutSubmit = async function(e) {
     }
   })();
 </script>
+<script id="mjCheckoutAutoScroll">
+  window.addEventListener('popstate', function() {
+    if (window.location.pathname.includes('checkout')) {
+      setTimeout(() => {
+        const payBox = document.getElementById('fpCheckoutSubmitBtn') || document.querySelector('.payment-radio-card');
+        if (payBox) payBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 200);
+    }
+  });
+
+  // Intercept navigateTo for checkout
+  const origNavigateTo = window.navigateTo;
+  if (typeof origNavigateTo === 'function') {
+    window.navigateTo = function(pageId, navEl, updateUrl) {
+      origNavigateTo(pageId, navEl, updateUrl);
+      if (pageId === 'page-checkout') {
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          const payBox = document.getElementById('fpCheckoutSubmitBtn');
+          if (payBox) {
+            payBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 150);
+      }
+    };
+  }
+</script>
 </body>
 </html>
