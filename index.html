@@ -1006,30 +1006,10 @@ async function getActiveRazorpayKey() {
       }
     </style>
 <style id="mjRazorpayViewportFix">
-      /* Ensure body NEVER traps position:fixed elements like Razorpay */
-      html, body {
-        perspective: none !important;
-        transform: none !important;
-        filter: none !important;
-      }
-
-      /* Lock Razorpay Popup strictly to the user's current visible screen (100% Viewport Center) */
-      .razorpay-container {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
+      /* Only style Razorpay when it is actually opened, never force display:flex when hidden! */
+      .razorpay-container[style*="display: block"],
+      .razorpay-container[style*="display: flex"] {
         z-index: 2147483647 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        overflow: hidden !important;
-      }
-      .razorpay-checkout-frame {
-        position: relative !important;
-        margin: auto !important;
-        max-height: 94vh !important;
       }
     </style>
 
