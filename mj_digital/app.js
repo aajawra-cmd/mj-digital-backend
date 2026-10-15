@@ -1196,7 +1196,7 @@ async function deleteTravelPackage(id) {
 
 async function updateTravelStatus(id, newStatus) {
   try {
-    const res = await fetch(`/api/travel-packages?_t=1791901338532/${id}/status`, {
+    const res = await fetch(`/api/travel-packages/${id}/status`, {
       method: 'PATCH',
       headers: { 
         'Content-Type': 'application/json',

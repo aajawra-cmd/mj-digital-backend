@@ -1802,5 +1802,20 @@ document.addEventListener("DOMContentLoaded", function() {
   });
   setInterval(syncTravelCardBadges, 1500);
 </script>
+<script id="mjPersistentDashboardFilter">
+document.addEventListener('DOMContentLoaded', function() {
+  const selectEl = document.getElementById('dashboardTimeframeSelect');
+  if (selectEl) {
+    const savedPeriod = localStorage.getItem('mj_admin_timeframe') || 'weekly';
+    selectEl.value = savedPeriod;
+    selectEl.addEventListener('change', function() {
+      localStorage.setItem('mj_admin_timeframe', this.value);
+      if (typeof handleTimeframeChange === 'function') {
+        handleTimeframeChange(this.value);
+      }
+    });
+  }
+});
+</script>
 </body>
 </html>
