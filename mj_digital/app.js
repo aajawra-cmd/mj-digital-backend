@@ -3396,3 +3396,173 @@ updateTravelStatus = async function(id, newStatus) {
 };
 window.updateTravelStatus = updateTravelStatus;
 window.toggleTravelStatus = updateTravelStatus;
+
+// === ADMIN MJ PAY LIVE CONTROLLER ===
+window.adminMjPayTransactions = [];
+
+async function loadAdminMjPayOverview() {
+  try {
+    const res = await fetch('/api/admin/mjpay-overview?_t=' + Date.now());
+    const data = await res.json();
+    if (!res.ok || !data.success) return;
+
+    const sum = data.summary || {};
+    const setEl = (id, txt) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = txt;
+    };
+
+    setEl('mjpayStatPoolBalance', '₹' + Number(sum.totalWalletPool || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+    setEl('mjpayStatAccountsCount', (sum.totalWallets || 0) + ' Active Customer Wallets');
+    setEl('mjpayStatTopups', '₹' + Number(sum.totalTopupVolume || 0).toLocaleString('en-IN'));
+    setEl('mjpayStatUtilityVol', '₹' + Number(sum.totalUtilityVolume || 0).toLocaleString('en-IN'));
+    setEl('mjpayStatTxnCount', String(sum.totalTransactions || 0));
+
+    const badge = document.getElementById('sidebarMjPayBadge');
+    if (badge) {
+      badge.innerText = (sum.totalTransactions || 0) > 0 ? String(sum.totalTransactions) : 'LIVE';
+    }
+
+    // Render Active Customer Wallets Table
+    const wBody = document.getElementById('adminWalletsTableBody');
+    if (wBody) {
+      const wallets = data.wallets || [];
+      if (wallets.length === 0) {
+        wBody.innerHTML = '<tr><td colspan="5" class="py-4 text-center text-gray-400">No wallet accounts created yet.</td></tr>';
+      } else {
+        wBody.innerHTML = wallets.map(w => {
+          const dt = new Date(w.updatedAt || Date.now());
+          const dateStr = dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) + ' ' + dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+          return `
+            <tr class="hover:bg-gray-50 transition">
+              <td class="py-2.5 px-3 font-bold text-gray-800">${w.customerName || 'Mohsin J'}</td>
+              <td class="py-2.5 px-3 font-mono text-blue-600 font-semibold">+91 ${w.phone}</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 bg-gray-100 rounded-full font-bold">${(w.transactions || []).length} Txns</span></td>
+              <td class="py-2.5 px-3 text-gray-400">${dateStr}</td>
+              <td class="py-2.5 px-3 text-right font-extrabold text-emerald-600 text-sm">₹${Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    window.adminMjPayTransactions = data.transactions || [];
+    filterAdminMjPayLedger();
+  } catch (err) {
+    console.warn('MJ Pay Admin sync warning:', err.message);
+  }
+}
+window.loadAdminMjPayOverview = loadAdminMjPayOverview;
+
+function filterAdminMjPayLedger() {
+  const tbody = document.getElementById('adminMjPayLedgerBody');
+  if (!tbody) return;
+
+  const q = (document.getElementById('mjpaySearchInput')?.value || '').toLowerCase().trim();
+  const typeFilter = document.getElementById('mjpayTypeFilter')?.value || 'all';
+
+  const list = (window.adminMjPayTransactions || []).filter(t => {
+    const matchType = (typeFilter === 'all') || (t.type === typeFilter);
+    const text = [t.txnId, t.customerPhone, t.customerName, t.service, t.operator, t.targetNumber, t.description].join(' ').toLowerCase();
+    const matchQ = !q || text.includes(q);
+    return matchType && matchQ;
+  });
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="py-6 text-center text-gray-400">No MJ Pay transactions matching filter.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(t => {
+    const isCredit = t.type === 'CREDIT';
+    const dt = new Date(t.createdAt || Date.now());
+    const dateStr = dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    return `
+      <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+        <td class="py-3 px-4">
+          <span class="font-mono font-bold text-blue-600 block">${t.txnId || '-'}</span>
+          <span class="text-[10px] text-gray-400">${dateStr} • ${timeStr}</span>
+        </td>
+        <td class="py-3 px-4">
+          <strong class="text-gray-800 block">${t.customerName || 'Mohsin J'}</strong>
+          <span class="text-[10px] text-gray-400">+91 ${t.customerPhone || '8306669999'}</span>
+        </td>
+        <td class="py-3 px-4">
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${isCredit ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+            ${isCredit ? '+ CREDIT' : '- DEBIT'}
+          </span>
+        </td>
+        <td class="py-3 px-4">
+          <strong class="text-gray-800 block">${t.service || 'MJ Pay'}</strong>
+          <span class="text-[11px] text-gray-500">${t.operator || '-'}</span>
+        </td>
+        <td class="py-3 px-4 font-mono font-semibold text-gray-800">${t.targetNumber || '-'}</td>
+        <td class="py-3 px-4"><span class="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-700">${t.paymentGateway || 'WALLET'}</span></td>
+        <td class="py-3 px-4 text-right font-extrabold text-sm ${isCredit ? 'text-emerald-600' : 'text-rose-600'}">
+          ${isCredit ? '+' : '-'} ₹${Number(t.amount || 0).toLocaleString('en-IN')}
+        </td>
+        <td class="py-3 px-4 text-right font-bold text-gray-800">
+          ₹${Number(t.balanceAfter || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+window.filterAdminMjPayLedger = filterAdminMjPayLedger;
+
+async function handleAdminWalletAdjust(e) {
+  e.preventDefault();
+  const btn = document.getElementById('admWalletSubmitBtn');
+  const origText = btn ? btn.innerText : 'Execute Wallet Update';
+  if (btn) { btn.disabled = true; btn.innerText = 'Updating...'; }
+
+  const phone = document.getElementById('admWalletPhone')?.value || '8306669999';
+  const type = document.getElementById('admWalletType')?.value || 'CREDIT';
+  const amount = Number(document.getElementById('admWalletAmt')?.value || 0);
+  const remark = document.getElementById('admWalletRemark')?.value || 'Admin Manual Adjustment';
+
+  try {
+    const res = await fetch('/api/admin/mjpay-adjust', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, type, amount, remark })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert('✅ ' + data.message + '\nUpdated Customer Wallet Balance: ₹' + Number(data.balance).toLocaleString('en-IN'));
+      await loadAdminMjPayOverview();
+      if (typeof loadAdminOrders === 'function') loadAdminOrders();
+    } else {
+      alert('❌ Error: ' + (data.message || 'Adjustment failed'));
+    }
+  } catch (err) {
+    alert('Server error: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = origText; }
+  }
+}
+window.handleAdminWalletAdjust = handleAdminWalletAdjust;
+
+// Hook switchTab so clicking "MJ Pay & Wallet" loads live data immediately
+const origSwitchTabFn = window.switchTab;
+window.switchTab = function(tabName) {
+  if (typeof origSwitchTabFn === 'function') origSwitchTabFn(tabName);
+  if (String(tabName).includes('mjpay')) {
+    loadAdminMjPayOverview();
+  }
+};
+
+// Also poll MJ Pay overview in the 4-second live background loop
+setInterval(() => {
+  const mjSec = document.getElementById('mjpaySection');
+  if (mjSec && !mjSec.classList.contains('hidden')) {
+    const isSearching = document.activeElement && (document.activeElement.id === 'mjpaySearchInput' || document.activeElement.id === 'admWalletPhone' || document.activeElement.id === 'admWalletAmt' || document.activeElement.id === 'admWalletRemark');
+    if (!isSearching) loadAdminMjPayOverview();
+  }
+}, 4000);
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadAdminMjPayOverview();
+});

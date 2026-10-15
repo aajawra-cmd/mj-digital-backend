@@ -1504,6 +1504,114 @@ app.post('/api/wallet/pay-utility', async (req, res) => {
   }
 });
 
+// === ADMIN MJ PAY LIVE MANAGEMENT API ===
+// 1. GET All Customer Wallets & Flattened MJ Pay Transaction Ledger for Admin Panel
+app.get('/api/admin/mjpay-overview', async (req, res) => {
+  try {
+    const wallets = await WalletAccount.find().sort({ updatedAt: -1 }).lean();
+    let totalWalletPool = 0;
+    let totalTopupVolume = 0;
+    let totalUtilityVolume = 0;
+    const allTransactions = [];
+
+    wallets.forEach(w => {
+      totalWalletPool += Number(w.balance || 0);
+      (w.transactions || []).forEach(t => {
+        const amt = Number(t.amount || 0);
+        if (t.type === 'CREDIT') totalTopupVolume += amt;
+        else totalUtilityVolume += amt;
+
+        allTransactions.push({
+          ...t,
+          customerPhone: w.phone,
+          customerName: w.customerName || 'Mohsin J',
+          currentWalletBalance: w.balance
+        });
+      });
+    });
+
+    allTransactions.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+    res.json({
+      success: true,
+      summary: {
+        totalWallets: wallets.length,
+        totalWalletPool,
+        totalTopupVolume,
+        totalUtilityVolume,
+        totalTransactions: allTransactions.length
+      },
+      wallets,
+      transactions: allTransactions.slice(0, 200)
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 2. POST Admin Manual Wallet Credit / Debit Adjustment
+app.post('/api/admin/mjpay-adjust', async (req, res) => {
+  try {
+    const phoneKey = normalizePhoneKey(req.body.phone);
+    const amount = Math.round(Number(req.body.amount || 0));
+    const actionType = (req.body.type === 'DEBIT') ? 'DEBIT' : 'CREDIT';
+    const remark = req.body.remark || ('Admin Manual ' + actionType);
+    const customerName = req.body.customerName || 'Mohsin J';
+
+    if (amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid amount required' });
+    }
+
+    let wallet = await WalletAccount.findOne({ phone: phoneKey });
+    if (!wallet) {
+      wallet = new WalletAccount({ phone: phoneKey, customerName, balance: 0, transactions: [] });
+    }
+
+    if (actionType === 'DEBIT' && Number(wallet.balance || 0) < amount) {
+      return res.status(400).json({ success: false, message: 'Customer wallet balance is lower than debit amount' });
+    }
+
+    wallet.balance = actionType === 'CREDIT'
+      ? Number(wallet.balance || 0) + amount
+      : Number(wallet.balance || 0) - amount;
+
+    const txnId = 'ADM-' + Date.now().toString().slice(-8);
+    wallet.transactions.push({
+      txnId,
+      type: actionType,
+      service: 'Admin Adjustment',
+      operator: 'M J ADMIN DESK',
+      targetNumber: phoneKey,
+      amount,
+      balanceAfter: wallet.balance,
+      paymentGateway: 'ADMIN_PANEL',
+      status: 'Success',
+      description: remark,
+      createdAt: new Date()
+    });
+    await wallet.save();
+
+    if (mongoose.models.AuditLog) {
+      await mongoose.models.AuditLog.create({
+        admin: 'M. J. Admin',
+        role: 'Super Admin',
+        action: actionType === 'CREDIT' ? 'CREATE' : 'UPDATE',
+        description: 'MJ Pay Wallet ' + actionType + ' ₹' + amount + ' for ' + phoneKey + ' (' + remark + ')',
+        ip: req.ip || '127.0.0.1',
+        status: 'Success'
+      }).catch(() => null);
+    }
+
+    res.json({
+      success: true,
+      message: 'Wallet ' + actionType + ' of ₹' + amount + ' successful!',
+      balance: wallet.balance
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
