@@ -599,6 +599,22 @@ async function getActiveRazorpayKey() {
     </style>
   
 
+<style id="mjStickyFix">
+      .navbar-custom.sticky-top {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1080 !important;
+        backface-visibility: hidden;
+        transform: translateZ(0);
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25) !important;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        overflow-x: hidden !important;
+      }
+    </style>
 <style id="mj3dProTheme">
       /* =========================================================
          M J DIGITAL — FULL SITE 3D ANIMATION & MODERN PRO DESIGN
@@ -3214,8 +3230,12 @@ window.addEventListener('popstate', function(e) {
 
         function handleAddToCartClick(e, id, isTravel = false) {
             if (e) { e.preventDefault(); e.stopPropagation(); }
+            
+            // Smooth scroll to top so user instantly sees the cart count update in header
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             let item = catalogItemsCache[id];
-            if (!item && typeof travelMemory !== 'undefined') {
+            if (!item && typeof travelMemory !== 'undefined' && travelMemory.all) {
                 item = travelMemory.all.find(t => String(t._id) === String(id));
             }
             if (!item) {
@@ -3228,7 +3248,10 @@ window.addEventListener('popstate', function(e) {
             const img = resolveMediaUrl(rawImg);
             const type = isTravel ? 'Travel' : 'Product';
 
-            const existing = myCart.find(c => String(c.id) === String(id));
+            let cart = [];
+            try { cart = JSON.parse(localStorage.getItem('mj_cart') || '[]'); } catch(err) { cart = []; }
+
+            const existing = cart.find(c => String(c.id) === String(id));
             if (existing) {
                 if (isTravel) {
                     existing.adults = (existing.adults || 1) + 1;
@@ -3238,24 +3261,25 @@ window.addEventListener('popstate', function(e) {
                 }
             } else {
                 if (isTravel) {
-                    myCart.push({ id, title, price, img, type, adults: 1, children: 0, qty: 1 });
+                    cart.push({ id, title, price, img, type: 'Travel', adults: 1, children: 0, qty: 1 });
                 } else {
-                    myCart.push({ id, title, price, img, type, qty: 1 });
+                    cart.push({ id, title, price, img, type: 'Product', qty: 1 });
                 }
             }
+
+            localStorage.setItem('mj_cart', JSON.stringify(cart));
+            myCart = cart;
             if (typeof updateCartBadge === 'function') updateCartBadge();
             
             const targetBtn = e ? e.currentTarget : null;
             if (targetBtn) {
                 const origText = targetBtn.innerHTML;
-                targetBtn.innerHTML = `<i class="fa-solid fa-check me-1"></i> Added to Bag`;
+                targetBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Added to Bag';
                 targetBtn.classList.add('btn-success');
                 setTimeout(() => {
                     targetBtn.innerHTML = origText;
                     targetBtn.classList.remove('btn-success');
                 }, 1500);
-            } else {
-                alert(`Added "${title}" to your Shopping Bag!`);
             }
         }
 
