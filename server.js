@@ -73,6 +73,21 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '50mb' }));
+
+// PERMANENT MONGODB MEDIA MIDDLEWARE (Prevents Render /uploads/ ephemeral wipe)
+app.use((req, res, next) => {
+  try {
+    if (req.body && req.body.base64Images) {
+      const parsed = JSON.parse(req.body.base64Images);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        req.body.images = parsed;
+        if (!req.body.imageUrl) req.body.imageUrl = parsed[0];
+      }
+    }
+  } catch (e) {}
+  next();
+});
+
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');

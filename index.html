@@ -4021,7 +4021,7 @@ window.addEventListener('popstate', function(e) {
                 <div class="col-md-4 col-sm-6">
                     <div class="card-custom p-3 text-center h-100 d-flex flex-column justify-content-between">
                         <div onclick="openItemDetailsPage('${item.id}', ${item.type === 'Travel'})" style="cursor: pointer;">
-                            <img src="${resolveMediaUrl(item.img)}" class="img-fluid rounded-3 mb-3" style="height: 140px; object-fit: cover;" onerror="this.src='https://placehold.co/140'">
+                            <img src="${resolveMediaUrl(item.img)}" class="img-fluid rounded-3 mb-3" style="height: 140px; object-fit: cover;" onerror="this.onerror=null; this.src=getSmartFallbackImage(item, item.type==='Travel')">
                             <h6 class="fw-bold">${item.title}</h6>
                             <p class="text-primary fw-bold">₹${Number(item.price).toLocaleString('en-IN')}</p>
                         </div>
@@ -4183,7 +4183,7 @@ window.addEventListener('popstate', function(e) {
                 return `
                     <div class="d-flex align-items-center justify-content-between py-3 border-bottom flex-wrap gap-3">
                         <div class="d-flex align-items-center gap-3">
-                            <img src="${resolveMediaUrl(item.img)}" class="rounded-3 border" style="width: 65px; height: 65px; object-fit: cover;" onerror="this.src='https://placehold.co/65'">
+                            <img src="${resolveMediaUrl(item.img)}" class="rounded-3 border" style="width: 65px; height: 65px; object-fit: cover;" onerror="this.onerror=null; this.src=getSmartFallbackImage(item, item.type==='Travel')">
                             <div>
                                 <span class="badge ${isTravel ? 'bg-warning text-dark' : 'bg-primary-subtle text-primary'} text-uppercase mb-1" style="font-size: 10px;">
                                     ${isTravel ? 'Travel Tour' : 'Product'}
@@ -4685,7 +4685,7 @@ window.addEventListener('popstate', function(e) {
                                     <img src="${resolveMediaUrl(o.rawItem?.imageUrl || (o.rawItem?.images && o.rawItem?.images[0]) || '')}" 
                                          class="img-fluid rounded object-fit-contain" 
                                          style="max-height: 100%; max-width: 100%;" 
-                                         onerror="this.src='https://placehold.co/70?text=Item'">
+                                         onerror="this.onerror=null; this.src=getSmartFallbackImage(o, o.type==='Travel')">
                                 </div>
                                 <div>
                                     <h6 class="fw-bold text-dark mb-1">${o.title}</h6>
@@ -7128,5 +7128,191 @@ window.handleFullPageCheckoutSubmit = async function(e) {
   })();
 </script>
 
+<script id="mjPermanentMediaEngine">
+// ============================================================================
+// PERMANENT MEDIA & FALLBACK ENGINE (CART, WISHLIST, ORDERS, DETAILS & VIDEO)
+// ============================================================================
+window.isVideoMediaUrl = function(url) {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.trim().toLowerCase();
+  return u.startsWith('data:video/') || u.endsWith('.mp4') || u.endsWith('.webm') || u.endsWith('.ogg') || u.endsWith('.mov');
+};
+
+window.getPermanentItemMedia = function(item, isTravel = false) {
+  const fallback = typeof getSmartFallbackImage === 'function' ? getSmartFallbackImage(item, isTravel) : 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800';
+  if (!item) return fallback;
+  const candidates = [];
+  if (Array.isArray(item.images)) candidates.push(...item.images);
+  if (item.imageUrl) candidates.push(item.imageUrl);
+  if (item.img) candidates.push(item.img);
+  if (item.image) candidates.push(item.image);
+
+  for (let raw of candidates) {
+    if (raw && typeof raw === 'string') {
+      const c = raw.trim();
+      if (c && !c.includes('placehold.co') && !c.includes('undefined') && !c.includes('null')) {
+        if (c.startsWith('data:') || c.startsWith('http://') || c.startsWith('https://')) return c;
+        if (c.startsWith('/uploads/')) return window.location.origin + c;
+        if (c.startsWith('uploads/')) return window.location.origin + '/' + c;
+        return window.location.origin + '/uploads/' + c;
+      }
+    }
+  }
+  return fallback;
+};
+
+// Upgrade resolveMediaUrl so it always uses item context fallback instead of broken links
+window.resolveMediaUrl = function(url, fallbackUrl, itemHint) {
+  const smartFb = fallbackUrl || (itemHint && typeof getSmartFallbackImage === 'function' ? getSmartFallbackImage(itemHint, itemHint.type === 'Travel') : 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800');
+  if (!url || typeof url !== 'string' || url.trim() === '' || url.includes('placehold.co') || url.includes('undefined') || url.includes('null')) {
+    return smartFb;
+  }
+  const clean = url.trim();
+  if (clean.startsWith('data:') || clean.startsWith('http://') || clean.startsWith('https://')) return clean;
+  if (clean.startsWith('/uploads/')) return window.location.origin + clean;
+  if (clean.startsWith('uploads/')) return window.location.origin + '/' + clean;
+  return window.location.origin + '/uploads/' + clean;
+};
+
+// Upgrade Add To Cart so it saves smart fallback & image properly
+const origAddToCart = window.handleAddToCartClick;
+window.handleAddToCartClick = function(e, id, isTravel = false) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  let item = catalogItemsCache[id];
+  if (!item && typeof travelMemory !== 'undefined' && travelMemory.all) {
+    item = travelMemory.all.find(t => String(t._id) === String(id));
+  }
+  if (!item && typeof cachedAllProducts !== 'undefined' && cachedAllProducts) {
+    item = cachedAllProducts.find(p => String(p._id) === String(id));
+  }
+  if (!item) {
+    item = { _id: id, title: 'Selected Item', price: 95899 };
+  }
+
+  const detectedTravel = Boolean(isTravel || item.destination || item.pricingTiers || (item.category && String(item.category).toLowerCase().includes('travel')));
+  const title = item.title || item.name || 'Item';
+  const price = detectedTravel ? (item.pricingTiers?.standard?.price || item.price || 45000) : (item.discountPrice ? item.discountPrice : (item.price || item.basePrice || 95899));
+  const img = window.getPermanentItemMedia(item, detectedTravel);
+  const fallbackImg = typeof getSmartFallbackImage === 'function' ? getSmartFallbackImage(item, detectedTravel) : img;
+
+  let cart = [];
+  try { cart = JSON.parse(localStorage.getItem('mj_cart') || '[]'); } catch(err) { cart = []; }
+
+  const existing = cart.find(c => String(c.id) === String(id));
+  if (existing) {
+    existing.img = img;
+    existing.fallbackImg = fallbackImg;
+    if (detectedTravel) {
+      existing.adults = (existing.adults || 1) + 1;
+      existing.qty = (existing.adults || 1) + (existing.children || 0);
+    } else {
+      existing.qty += 1;
+    }
+  } else {
+    cart.push({
+      id,
+      title,
+      price,
+      img,
+      fallbackImg,
+      type: detectedTravel ? 'Travel' : 'Product',
+      adults: 1,
+      children: 0,
+      qty: 1
+    });
+  }
+
+  localStorage.setItem('mj_cart', JSON.stringify(cart));
+  myCart = cart;
+  if (typeof updateCartBadge === 'function') updateCartBadge();
+
+  const targetBtn = e ? e.currentTarget : null;
+  if (targetBtn) {
+    const origText = targetBtn.innerHTML;
+    targetBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Added to Bag';
+    targetBtn.classList.add('btn-success');
+    setTimeout(() => {
+      targetBtn.innerHTML = origText;
+      targetBtn.classList.remove('btn-success');
+    }, 1500);
+  }
+};
+
+// Upgrade renderCartPage so Shopping Bag NEVER shows 65x65 broken image and supports Video + Smart Fallback
+const origRenderCartPage = window.renderCartPage;
+window.renderCartPage = function() {
+  if (typeof origRenderCartPage === 'function') origRenderCartPage();
+  const list = document.getElementById('cartItemsList');
+  if (!list || !Array.isArray(myCart) || myCart.length === 0) return;
+
+  const imgs = list.querySelectorAll('img');
+  imgs.forEach((imgEl, idx) => {
+    const cItem = myCart[idx];
+    if (!cItem) return;
+    const isTrv = cItem.type === 'Travel';
+    const liveCatalogItem = catalogItemsCache[cItem.id] || (typeof travelMemory !== 'undefined' && travelMemory.all ? travelMemory.all.find(t => String(t._id) === String(cItem.id)) : null) || cItem;
+    const smartFb = cItem.fallbackImg || (typeof getSmartFallbackImage === 'function' ? getSmartFallbackImage(liveCatalogItem, isTrv) : 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800');
+    const resolvedSrc = window.getPermanentItemMedia(liveCatalogItem, isTrv);
+
+    if (window.isVideoMediaUrl(resolvedSrc)) {
+      const vid = document.createElement('video');
+      vid.src = resolvedSrc;
+      vid.muted = true;
+      vid.autoplay = true;
+      vid.loop = true;
+      vid.playsInline = true;
+      vid.className = 'rounded-3 border';
+      vid.style.cssText = 'width: 65px; height: 65px; object-fit: cover;';
+      imgEl.replaceWith(vid);
+    } else {
+      imgEl.onerror = function() {
+        this.onerror = null;
+        this.src = smartFb;
+      };
+      if (!imgEl.src || imgEl.src.includes('placehold.co')) {
+        imgEl.src = resolvedSrc || smartFb;
+      } else {
+        imgEl.src = resolvedSrc;
+      }
+    }
+  });
+};
+
+// Upgrade renderWishlistPage so Wishlist NEVER shows broken image
+const origRenderWishlistPage = window.renderWishlistPage;
+window.renderWishlistPage = function() {
+  if (typeof origRenderWishlistPage === 'function') origRenderWishlistPage();
+  const grid = document.getElementById('wishlistProductsGrid');
+  if (!grid || !Array.isArray(myWishlist) || myWishlist.length === 0) return;
+  const imgs = grid.querySelectorAll('img');
+  imgs.forEach((imgEl, idx) => {
+    const wItem = myWishlist[idx];
+    if (!wItem) return;
+    const isTrv = wItem.type === 'Travel';
+    const liveItem = catalogItemsCache[wItem.id] || wItem;
+    const smartFb = typeof getSmartFallbackImage === 'function' ? getSmartFallbackImage(liveItem, isTrv) : 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800';
+    const resolvedSrc = window.getPermanentItemMedia(liveItem, isTrv);
+    imgEl.onerror = function() { this.onerror = null; this.src = smartFb; };
+    imgEl.src = resolvedSrc || smartFb;
+  });
+};
+
+// Global image error interceptor: if ANY image anywhere on the site fails to load (e.g. wiped /uploads/ on Render), automatically swap to smart high-res image instead of placehold.co!
+window.addEventListener('error', function(e) {
+  const target = e.target;
+  if (target && target.tagName === 'IMG') {
+    const currentSrc = target.getAttribute('src') || '';
+    if (currentSrc.includes('unsplash.com') || target.dataset.fallbackApplied === '1') return;
+    target.dataset.fallbackApplied = '1';
+    const altText = (target.getAttribute('alt') || target.closest('.card-custom')?.innerText || '').toLowerCase();
+    const dummyObj = { title: altText, destination: altText };
+    const isTrv = altText.includes('goa') || altText.includes('bali') || altText.includes('kashmir') || altText.includes('dubai') || altText.includes('tour') || altText.includes('travel');
+    const smartUrl = typeof getSmartFallbackImage === 'function' ? getSmartFallbackImage(dummyObj, isTrv) : 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800';
+    target.src = smartUrl;
+  }
+}, true);
+</script>
 </body>
 </html>
