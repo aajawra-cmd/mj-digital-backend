@@ -65,6 +65,35 @@ app.get(['/invoice', '/invoice.html', '/account/invoice', '/account/invoice.html
 });
 
 // ==========================================
+// SECURITY & RATE LIMITING MIDDLEWARES
+// ==========================================
+app.use(helmet());
+app.use(mongoSanitize());
+app.use(hpp());
+
+const signInLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 sign-in/login attempts per windowMs
+  message: {
+    success: false,
+    message: '⚠️ Too many login attempts from this IP. Please try again after 15 minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/admin/login', signInLimiter);
+app.use('/api/admin/verify-2fa', signInLimiter);
+
+const globalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use('/api/', globalApiLimiter);
+
+// ==========================================
 // 1. MIDDLEWARES & STATIC FOLDERS
 // ==========================================
 app.use(cors({
