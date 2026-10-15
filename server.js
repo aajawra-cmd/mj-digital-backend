@@ -1627,6 +1627,42 @@ app.post('/api/admin/mjpay-adjust', async (req, res) => {
   }
 });
 
+// === CUSTOMER ACCOUNT DELETION API ===
+app.delete('/api/customer/delete-account', async (req, res) => {
+  try {
+    const phoneKey = String(req.body.phone || '').replace(/[^0-9]/g, '').slice(-10);
+    const remark = req.body.remark || 'Customer requested account deletion';
+
+    if (!phoneKey || phoneKey.length !== 10) {
+      return res.status(400).json({ success: false, message: 'Valid 10-digit mobile number required' });
+    }
+
+    // Find and remove customer wallet / account data if exists
+    if (mongoose.models.WalletAccount) {
+      await mongoose.models.WalletAccount.deleteOne({ phone: phoneKey });
+    }
+
+    // Log deletion in Audit Logs
+    if (mongoose.models.AuditLog) {
+      await mongoose.models.AuditLog.create({
+        admin: 'Customer Account Deletion',
+        role: 'Customer',
+        action: 'DELETE',
+        description: 'Customer account deleted for phone +91 ' + phoneKey + ' | Remark: ' + remark,
+        ip: req.ip || '127.0.0.1',
+        status: 'Warning'
+      }).catch(() => null);
+    }
+
+    res.json({
+      success: true,
+      message: 'Account successfully deleted and personal records cleared.'
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });

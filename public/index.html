@@ -2155,6 +2155,8 @@ async function getActiveRazorpayKey() {
                         <button class="profile-nav-btn mb-2" onclick="switchProfileTab('p-address', this)"><i class="fa-solid fa-location-dot me-2"></i> Saved Addresses</button>
                         <button class="profile-nav-btn mb-2" onclick="switchProfileTab('p-cards', this)"><i class="fa-solid fa-credit-card me-2"></i> Saved Cards</button>
                         <hr class="my-2">
+                        <button class="profile-nav-btn mb-2 text-danger" onclick="switchProfileTab('p-delete', this)"><i class="fa-solid fa-user-xmark me-2"></i> Delete Account</button>
+                        <hr class="my-2">
                         <button class="profile-nav-btn text-danger" onclick="logout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</button>
                     </div>
                 </div>
@@ -2327,6 +2329,41 @@ async function getActiveRazorpayKey() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        
+                        <div id="p-delete" class="profile-tab-content" style="display:none;">
+                            <div class="p-4 border border-danger border-opacity-25 rounded-4 bg-danger bg-opacity-10 mb-4">
+                                <h4 class="fw-bold text-danger mb-2"><i class="fa-solid fa-triangle-exclamation me-2"></i>Danger Zone: Delete Your Account</h4>
+                                <p class="small text-muted mb-0">Once you delete your account, there is no going back. All active wallet balance, order history references, and saved addresses will be permanently removed.</p>
+                            </div>
+
+                            <form onsubmit="handleCustomerAccountDeletion(event)" class="card p-4 border shadow-xs rounded-4">
+                                <div class="mb-3">
+                                    <label class="small fw-bold text-dark mb-1">Confirm Your Registered Mobile Number *</label>
+                                    <input type="tel" id="delAccPhoneConfirm" class="form-control" placeholder="10-digit mobile number" maxlength="10" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="small fw-bold text-dark mb-1">Reason / Remarks for Deletion *</label>
+                                    <select id="delAccReasonSelect" class="form-select mb-2" required onchange="handleDelReasonDropdown(this.value)">
+                                        <option value="" disabled selected>Select a reason...</option>
+                                        <option value="No longer using this service">No longer using this service</option>
+                                        <option value="Created a duplicate account">Created a duplicate account</option>
+                                        <option value="Privacy or data security concerns">Privacy or data security concerns</option>
+                                        <option value="Other reason">Other reason (Specify below)</option>
+                                    </select>
+                                    <textarea id="delAccCustomRemark" class="form-control" rows="2" placeholder="Please provide your feedback or remarks..." style="display:none;"></textarea>
+                                </div>
+                                <div class="form-check mb-4">
+                                    <input class="form-check-input" type="checkbox" id="delAccCheckboxConfirm" required>
+                                    <label class="form-check-label small fw-semibold text-danger" for="delAccCheckboxConfirm">
+                                        I understand that this action is permanent and cannot be undone.
+                                    </label>
+                                </div>
+                                <button type="submit" id="delAccSubmitBtn" class="btn btn-danger py-2.5 fw-bold shadow-sm">
+                                    <i class="fa-solid fa-user-xmark me-1"></i> Permanently Delete My Account
+                                </button>
+                            </form>
                         </div>
 
                         <div id="p-cards" class="profile-tab-content" style="display:none;">
@@ -7313,6 +7350,69 @@ window.addEventListener('error', function(e) {
     target.src = smartUrl;
   }
 }, true);
+</script>
+<script id="mjCustomerDeletionHandler">
+function handleDelReasonDropdown(val) {
+  const customArea = document.getElementById('delAccCustomRemark');
+  if (customArea) {
+    if (val === 'Other reason') {
+      customArea.style.display = 'block';
+      customArea.required = true;
+    } else {
+      customArea.style.display = 'none';
+      customArea.required = false;
+    }
+  }
+}
+
+async function handleCustomerAccountDeletion(e) {
+  e.preventDefault();
+  const phone = document.getElementById('delAccPhoneConfirm')?.value?.trim() || '';
+  const selectVal = document.getElementById('delAccReasonSelect')?.value || '';
+  const customVal = document.getElementById('delAccCustomRemark')?.value?.trim() || '';
+  const finalRemark = selectVal === 'Other reason' ? customVal : selectVal;
+
+  if (!phone || phone.length !== 10) {
+    return alert('Kripya apna valid 10-digit registered mobile number enter karein.');
+  }
+
+  const confirmed = confirm('⚠️ WARNING: Kya aap sach mein apna M J DIGITAL account permanently delete karna chahte hain? Yeh action wapas nahi ho sakta!');
+  if (!confirmed) return;
+
+  const btn = document.getElementById('delAccSubmitBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Deleting Account...';
+  }
+
+  try {
+    const res = await fetch('/api/customer/delete-account', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, remark: finalRemark })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      alert('✅ ' + data.message);
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+    } else {
+      alert('❌ Deletion failed: ' + (data.message || 'Server error'));
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-user-xmark me-1"></i> Permanently Delete My Account';
+      }
+    }
+  } catch (err) {
+    alert('Server connection error: ' + err.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-user-xmark me-1"></i> Permanently Delete My Account';
+    }
+  }
+}
 </script>
 </body>
 </html>
