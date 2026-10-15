@@ -3566,3 +3566,128 @@ setInterval(() => {
 window.addEventListener('DOMContentLoaded', () => {
   loadAdminMjPayOverview();
 });
+
+// === UPGRADED MJ PAY LEDGER RENDERER (SEPARATE REF ID & DATE/TIME COLUMNS) ===
+loadAdminMjPayOverview = async function() {
+  try {
+    const res = await fetch('/api/admin/mjpay-overview?_t=' + Date.now());
+    const data = await res.json();
+    if (!res.ok || !data.success) return;
+
+    const sum = data.summary || {};
+    const setEl = (id, txt) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = txt;
+    };
+
+    setEl('mjpayStatPoolBalance', '₹' + Number(sum.totalWalletPool || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+    setEl('mjpayStatAccountsCount', (sum.totalWallets || 0) + ' Active Customer Wallets');
+    setEl('mjpayStatTopups', '₹' + Number(sum.totalTopupVolume || 0).toLocaleString('en-IN'));
+    setEl('mjpayStatUtilityVol', '₹' + Number(sum.totalUtilityVolume || 0).toLocaleString('en-IN'));
+    setEl('mjpayStatTxnCount', String(sum.totalTransactions || 0));
+
+    const badge = document.getElementById('sidebarMjPayBadge');
+    if (badge) {
+      badge.innerText = (sum.totalTransactions || 0) > 0 ? String(sum.totalTransactions) : 'LIVE';
+    }
+
+    const wBody = document.getElementById('adminWalletsTableBody');
+    if (wBody) {
+      const wallets = data.wallets || [];
+      if (wallets.length === 0) {
+        wBody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-gray-400">No wallet accounts created yet.</td></tr>';
+      } else {
+        wBody.innerHTML = wallets.map(w => {
+          const dt = new Date(w.updatedAt || Date.now());
+          const datePart = dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+          const timePart = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+          return `
+            <tr onclick="document.getElementById('admWalletPhone').value='${w.phone}'" class="hover:bg-blue-50/50 cursor-pointer transition">
+              <td class="py-3 px-3 font-bold text-gray-800">${w.customerName || 'Mohsin J'}</td>
+              <td class="py-3 px-3 font-mono text-blue-600 font-bold">+91 ${w.phone}</td>
+              <td class="py-3 px-3"><span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-full font-bold text-[11px]">${(w.transactions || []).length} Txns</span></td>
+              <td class="py-3 px-3">
+                <span class="font-semibold text-gray-700 block">${datePart}</span>
+                <span class="text-[10px] text-gray-400"><i class="fa-regular fa-clock mr-1"></i>${timePart}</span>
+              </td>
+              <td class="py-3 px-3 text-right font-extrabold text-emerald-600 text-sm">₹${Number(w.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    window.adminMjPayTransactions = data.transactions || [];
+    filterAdminMjPayLedger();
+  } catch (err) {
+    console.warn('MJ Pay Admin sync warning:', err.message);
+  }
+};
+window.loadAdminMjPayOverview = loadAdminMjPayOverview;
+
+filterAdminMjPayLedger = function() {
+  const tbody = document.getElementById('adminMjPayLedgerBody');
+  if (!tbody) return;
+
+  const q = (document.getElementById('mjpaySearchInput')?.value || '').toLowerCase().trim();
+  const typeFilter = document.getElementById('mjpayTypeFilter')?.value || 'all';
+
+  const list = (window.adminMjPayTransactions || []).filter(t => {
+    const matchType = (typeFilter === 'all') || (t.type === typeFilter);
+    const text = [t.txnId, t.customerPhone, t.customerName, t.service, t.operator, t.targetNumber, t.description].join(' ').toLowerCase();
+    const matchQ = !q || text.includes(q);
+    return matchType && matchQ;
+  });
+
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="py-8 text-center text-gray-400 font-semibold"><i class="fa-solid fa-receipt text-2xl mb-2 block opacity-40"></i>No MJ Pay transactions recorded yet. Execute a wallet top-up or bill payment to see live entries.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(t => {
+    const isCredit = t.type === 'CREDIT';
+    const dt = new Date(t.createdAt || Date.now());
+    const dateStr = dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    const refId = t.txnId || ('TXN-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+
+    return `
+      <tr class="hover:bg-gray-50/80 transition border-b border-gray-100">
+        <td class="py-3.5 px-4">
+          <span class="font-mono font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 text-[11px]">
+            <i class="fa-solid fa-hashtag text-[9px] text-blue-400"></i>${refId}
+          </span>
+        </td>
+        <td class="py-3.5 px-4 whitespace-nowrap">
+          <span class="font-bold text-gray-800 block">${dateStr}</span>
+          <span class="text-[10px] font-semibold text-gray-400"><i class="fa-regular fa-clock mr-1"></i>${timeStr}</span>
+        </td>
+        <td class="py-3.5 px-4">
+          <strong class="text-gray-800 block">${t.customerName || 'Mohsin J'}</strong>
+          <span class="text-[10px] font-mono text-gray-500">+91 ${t.customerPhone || '8306669999'}</span>
+        </td>
+        <td class="py-3.5 px-4">
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${isCredit ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-rose-100 text-rose-700 border border-rose-200'}">
+            <i class="fa-solid ${isCredit ? 'fa-arrow-down-left' : 'fa-arrow-up-right'}"></i>
+            ${isCredit ? 'CREDIT' : 'DEBIT'}
+          </span>
+        </td>
+        <td class="py-3.5 px-4">
+          <strong class="text-gray-800 block">${t.service || 'MJ Pay'}</strong>
+          <span class="text-[11px] text-gray-500">${t.operator || t.description || '-'}</span>
+        </td>
+        <td class="py-3.5 px-4 font-mono font-bold text-gray-800">${t.targetNumber || '-'}</td>
+        <td class="py-3.5 px-4">
+          <span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-md text-[10px] font-bold text-slate-700 uppercase">${t.paymentGateway || 'WALLET'}</span>
+        </td>
+        <td class="py-3.5 px-4 text-right font-extrabold text-sm whitespace-nowrap ${isCredit ? 'text-emerald-600' : 'text-rose-600'}">
+          ${isCredit ? '+' : '-'} ₹${Number(t.amount || 0).toLocaleString('en-IN')}
+        </td>
+        <td class="py-3.5 px-4 text-right font-bold text-gray-900 whitespace-nowrap">
+          ₹${Number(t.balanceAfter || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+window.filterAdminMjPayLedger = filterAdminMjPayLedger;

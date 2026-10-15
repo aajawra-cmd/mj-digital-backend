@@ -5268,28 +5268,43 @@ function renderLiveWalletPassbook() {
       <table class="table table-hover align-middle small mb-0">
         <thead class="table-light">
           <tr>
-            <th>Type</th>
-            <th>Details & Ref ID</th>
+            <th>Reference ID</th>
             <th>Date & Time</th>
-            <th>Status</th>
+            <th>Type</th>
+            <th>Service & Operator Details</th>
             <th class="text-end">Amount</th>
+            <th class="text-end">Closing Bal</th>
           </tr>
         </thead>
         <tbody>
           ${txns.map(t => {
             const isCredit = t.type === 'CREDIT';
             const dt = new Date(t.createdAt || Date.now());
-            const dateStr = dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ' • ' + dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            const datePart = dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const timePart = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            const refId = t.txnId || 'TXN-MJ';
             return `
               <tr>
-                <td><span class="badge ${isCredit ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}">${isCredit ? '+ CREDIT' : '- DEBIT'}</span></td>
+                <td>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1">${refId}</span>
+                </td>
+                <td style="white-space: nowrap;">
+                  <strong class="text-dark d-block" style="font-size: 11.5px;">${datePart}</strong>
+                  <span class="text-muted" style="font-size: 10.5px;"><i class="fa-regular fa-clock me-1"></i>${timePart}</span>
+                </td>
+                <td>
+                  <span class="badge ${isCredit ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}">${isCredit ? '+ CREDIT' : '- DEBIT'}</span>
+                </td>
                 <td>
                   <strong class="text-dark d-block">${t.description || t.service || 'Wallet Transaction'}</strong>
-                  <span class="text-muted" style="font-size: 11px;">Ref: ${t.txnId || '-'} • Bal: ₹${Number(t.balanceAfter || 0).toLocaleString('en-IN')}</span>
+                  <span class="text-muted" style="font-size: 11px;">Mode: ${t.paymentGateway || 'WALLET'} • Status: <span class="text-success fw-bold">${t.status || 'Success'}</span></span>
                 </td>
-                <td class="text-muted" style="font-size: 11px;">${dateStr}</td>
-                <td><span class="badge bg-success">${t.status || 'Success'}</span></td>
-                <td class="text-end fw-bold ${isCredit ? 'text-success' : 'text-danger'}">${isCredit ? '+' : '-'} ₹${Number(t.amount || 0).toLocaleString('en-IN')}</td>
+                <td class="text-end fw-bold ${isCredit ? 'text-success' : 'text-danger'}" style="white-space: nowrap;">
+                  ${isCredit ? '+' : '-'} ₹${Number(t.amount || 0).toLocaleString('en-IN')}
+                </td>
+                <td class="text-end fw-bold text-dark" style="white-space: nowrap;">
+                  ₹${Number(t.balanceAfter || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
               </tr>
             `;
           }).join('')}
