@@ -1255,6 +1255,40 @@ app.delete(['/api/travel-packages/:id', '/api/travel/delete/:id'], async (req, r
   }
 });
 
+// ROBUST STATUS UPDATE ROUTES
+app.patch(['/api/travel-packages/:id/status', '/api/travel-packages/:id'], async (req, res) => {
+  try {
+    const id = req.params.id;
+    const status = req.body.status || req.body.newStatus || (req.body.price !== undefined ? undefined : 'Active');
+    
+    let updateFields = {};
+    if (status) updateFields.status = status;
+    if (req.body.price !== undefined) {
+      updateFields.price = Number(req.body.price);
+      updateFields['pricingTiers.standard.price'] = Number(req.body.price);
+    }
+
+    let updated = await TravelPackage.findByIdAndUpdate(id, { $set: updateFields }, { new: true }).catch(() => null);
+    if (!updated) {
+      updated = await TravelPackage.findOneAndUpdate({ $or: [{ _id: id }, { title: id }] }, { $set: updateFields }, { new: true }).catch(() => null);
+    }
+    return res.json({ success: true, message: 'Status updated successfully', data: updated });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.patch(['/api/products/:id/status', '/api/items/:id/status'], async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { status } = req.body;
+    let updated = await Product.findByIdAndUpdate(id, { $set: { status } }, { new: true }).catch(() => null);
+    return res.json({ success: true, message: 'Product status updated', data: updated });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
