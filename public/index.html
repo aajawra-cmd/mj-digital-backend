@@ -3074,12 +3074,11 @@ window.addEventListener('popstate', function(e) {
                 cachedAllProducts = allItems;
 
                 const matchCategory = (item) => {
-                    const c = String(item.category || '').toLowerCase();
-                    const t = String(item.title || item.name || '').toLowerCase();
-                    if (catKey === 'mobile') return c.includes('mobile') || c.includes('phone') || t.includes('iphone') || t.includes('samsung') || t.includes('phone');
-                    if (catKey === 'electronics') return c.includes('electronic') || c.includes('laptop') || c.includes('audio') || c.includes('gadget') || t.includes('macbook') || t.includes('headphone') || t.includes('sony');
-                    if (catKey === 'fashion') return c.includes('fashion') || c.includes('cloth') || c.includes('shirt') || c.includes('wear') || t.includes('shirt');
-                    if (catKey === 'services') return c.includes('service') || c.includes('it') || c.includes('web') || c.includes('legal');
+                    const c = String(item.category || '').trim().toLowerCase();
+                    if (catKey === 'mobile') return c === 'mobile' || c === 'mobiles' || c === 'smartphone' || c === 'smartphones';
+                    if (catKey === 'electronics') return c === 'electronics' || c === 'electronic' || c === 'laptops' || c === 'audio';
+                    if (catKey === 'fashion') return c === 'fashion' || c === 'apparel' || c === 'clothing';
+                    if (catKey === 'services') return c === 'services' || c === 'service' || c === 'it services';
                     return c.includes(catKey.toLowerCase());
                 };
 
@@ -7474,6 +7473,185 @@ async function handleBulkCsvUploadSubmit(event) {
   }
 }
 window.handleBulkCsvUploadSubmit = handleBulkCsvUploadSubmit;
+</script>
+<script id="mjCleanVariantAndCategoryFix">
+// Helper to check if a variant attribute value is actually meaningful (not "0", "0 / 0", "none", "null", "")
+window.isValidVariantAttr = function(val) {
+  if (val === undefined || val === null) return false;
+  const s = String(val).trim().toLowerCase();
+  if (!s || s === '0' || s === '0gb' || s === '0 / 0' || s === '0/0' || s === 'none' || s === 'null' || s === 'undefined' || s === 'n/a' || s === '-') {
+    return false;
+  }
+  return true;
+};
+
+// Override renderCategoryVariantsDynamic & renderVariantPillsHTML so 0 / 0 NEVER shows
+window.renderCategoryVariantsDynamic = function(item, isTravel = false) {
+  currentSelectedProductForPricing = item;
+  currentVariantSelectionMap = {};
+  const container = document.getElementById('pageDetailVariantsContainer');
+  if (!container) return;
+
+  if (isTravel || (item.category && item.category.toLowerCase().includes('travel')) || item.pricingTiers) {
+    const standardP = item.pricingTiers?.standard?.price || item.price || 0;
+    const deluxeP = item.pricingTiers?.deluxe?.price || 0;
+    const luxuryP = item.pricingTiers?.luxury?.price || 0;
+
+    const tiers = [];
+    if (standardP > 0) tiers.push({ name: 'Standard Tier', price: standardP, desc: item.pricingTiers?.standard?.desc || 'Standard Stay & Transfers' });
+    if (deluxeP > 0) tiers.push({ name: 'Deluxe Tier', price: deluxeP, desc: item.pricingTiers?.deluxe?.desc || '4-Star Resort & AC Cab' });
+    if (luxuryP > 0) tiers.push({ name: 'Luxury / VIP Tier', price: luxuryP, desc: item.pricingTiers?.luxury?.desc || '5-Star Luxury Stay & Private Pool' });
+
+    if (tiers.length > 0) {
+      currentVariantSelectionMap['tier'] = tiers[0].name;
+      container.innerHTML = `
+        <div class="mb-3 variant-block-dynamic" data-attr="tier">
+          <label class="small fw-bold text-dark d-block mb-1.5">Select Travel Tier: <span class="text-primary selected-val">${tiers[0].name}</span></label>
+          <div class="d-flex flex-wrap gap-2">
+            ${tiers.map((t, idx) => `
+              <button type="button" class="variant-pill ${idx === 0 ? 'active' : ''}" onclick="onTravelTierSelect('${t.name}', ${t.price})">
+                ${t.name} (₹${Number(t.price).toLocaleString('en-IN')})
+              </button>
+            `).join('')}
+          </div>
+          <p class="small text-muted mt-1.5" id="travelTierDescription">${tiers[0].desc}</p>
+        </div>
+      `;
+      applyDiscountPriceDisplay(tiers[0].price, 0);
+      return;
+    }
+  }
+
+  let parsed = item.variants;
+  if (typeof parsed === 'string' && parsed.trim() !== '') {
+    try { parsed = JSON.parse(parsed); } catch(e) { parsed = {}; }
+  }
+
+  let configs = [];
+  let opts = {};
+  if (Array.isArray(parsed)) {
+    configs = parsed;
+  } else if (typeof parsed === 'object' && parsed !== null) {
+    configs = parsed.configurations || [];
+    opts = parsed.variantOptions || {};
+  }
+
+  const cat = String(item.category || '').toLowerCase();
+  if (cat.includes('service') || (configs.length === 0 && Object.keys(opts).length === 0)) {
+    container.innerHTML = '';
+    const basePrice = Number(item.price || item.basePrice || 0);
+    const baseDiscount = item.discountPrice ? Number(item.discountPrice) : null;
+    const finalSelling = (baseDiscount && baseDiscount < basePrice) ? baseDiscount : basePrice;
+    const originalMrp = (baseDiscount && baseDiscount < basePrice) ? basePrice : 0;
+    applyDiscountPriceDisplay(finalSelling, originalMrp);
+    return;
+  }
+
+  const firstCfg = configs[0] || {};
+  const initialRam = isValidVariantAttr(firstCfg.ram) ? String(firstCfg.ram).trim() : '';
+  const initialStorage = isValidVariantAttr(firstCfg.storage || firstCfg.rom) ? String(firstCfg.storage || firstCfg.rom).trim() : '';
+  const initialColor = isValidVariantAttr(firstCfg.color || firstCfg.colour) ? String(firstCfg.color || firstCfg.colour).trim() : '';
+  const initialSize = isValidVariantAttr(firstCfg.size) ? String(firstCfg.size).trim() : '';
+
+  if (initialRam && initialStorage) {
+    currentVariantSelectionMap['config'] = `${initialRam} / ${initialStorage}`;
+  } else if (initialStorage) {
+    currentVariantSelectionMap['storage'] = initialStorage;
+  }
+  if (initialColor) currentVariantSelectionMap['color'] = initialColor;
+  if (initialSize) currentVariantSelectionMap['size'] = initialSize;
+
+  renderVariantPillsHTML(item, configs, opts);
+  updateDynamicPriceFromVariants(item);
+};
+
+window.renderVariantPillsHTML = function(item, configs, opts) {
+  const container = document.getElementById('pageDetailVariantsContainer');
+  if (!container) return;
+
+  const rawColors = (opts.colors && opts.colors.length > 0) ? opts.colors : configs.map(c => c.color || c.colour);
+  const colors = [...new Set(rawColors.filter(isValidVariantAttr).map(s => String(s).trim()))];
+
+  const rawSizes = (opts.sizes && opts.sizes.length > 0) ? opts.sizes : configs.map(c => c.size);
+  const sizes = [...new Set(rawSizes.filter(isValidVariantAttr).map(s => String(s).trim()))];
+
+  // Only build RAM/Storage combined pills if BOTH ram and storage are valid non-zero values!
+  const combinedConfigs = configs
+    .filter(c => isValidVariantAttr(c.ram) && isValidVariantAttr(c.storage || c.rom))
+    .map(c => `${String(c.ram).trim()} / ${String(c.storage || c.rom).trim()}`);
+  const uniqueCombined = [...new Set(combinedConfigs)];
+
+  const pureStorage = [...new Set(
+    configs
+      .filter(c => !isValidVariantAttr(c.ram) && isValidVariantAttr(c.storage || c.rom))
+      .map(c => String(c.storage || c.rom).trim())
+  )];
+
+  let html = '';
+
+  // 1. Configuration Pill (RAM / Storage) — ONLY renders if product actually has non-zero RAM/Storage!
+  if (uniqueCombined.length > 0) {
+    const activeCfg = currentVariantSelectionMap['config'] || uniqueCombined[0];
+    currentVariantSelectionMap['config'] = activeCfg;
+    html += `
+      <div class="mb-3 variant-block-dynamic" data-attr="config">
+        <label class="small fw-bold text-dark d-block mb-1.5">Configuration (RAM/Storage): <span class="text-primary selected-val">${activeCfg}</span></label>
+        <div class="d-flex flex-wrap gap-2">
+          ${uniqueCombined.map(cfg => `
+            <button type="button" class="variant-pill ${cfg === activeCfg ? 'active' : ''}" onclick="onDynamicVariantSelect('config', '${cfg}')">${cfg}</button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else if (pureStorage.length > 0) {
+    const activeRom = currentVariantSelectionMap['storage'] || pureStorage[0];
+    currentVariantSelectionMap['storage'] = activeRom;
+    html += `
+      <div class="mb-3 variant-block-dynamic" data-attr="storage">
+        <label class="small fw-bold text-dark d-block mb-1.5">Storage (ROM): <span class="text-primary selected-val">${activeRom}</span></label>
+        <div class="d-flex flex-wrap gap-2">
+          ${pureStorage.map(rom => `
+            <button type="button" class="variant-pill ${rom === activeRom ? 'active' : ''}" onclick="onDynamicVariantSelect('storage', '${rom}')">${rom}</button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // 2. Size Pill — ONLY renders if valid size exists
+  if (sizes.length > 0) {
+    const activeSize = currentVariantSelectionMap['size'] || sizes[0];
+    currentVariantSelectionMap['size'] = activeSize;
+    html += `
+      <div class="mb-3 variant-block-dynamic" data-attr="size">
+        <label class="small fw-bold text-dark d-block mb-1.5">Select Size: <span class="text-primary selected-val">${activeSize}</span></label>
+        <div class="d-flex flex-wrap gap-2">
+          ${sizes.map(s => `
+            <button type="button" class="variant-pill ${s === activeSize ? 'active' : ''}" onclick="onDynamicVariantSelect('size', '${s}')">${s}</button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // 3. Colour Pill — ONLY renders if valid color exists
+  if (colors.length > 0) {
+    const activeColor = currentVariantSelectionMap['color'] || colors[0];
+    currentVariantSelectionMap['color'] = activeColor;
+    html += `
+      <div class="mb-3 variant-block-dynamic" data-attr="color">
+        <label class="small fw-bold text-dark d-block mb-1.5">Colour: <span class="text-primary selected-val">${activeColor}</span></label>
+        <div class="d-flex flex-wrap gap-2">
+          ${colors.map(c => `
+            <button type="button" class="variant-pill ${c === activeColor ? 'active' : ''}" onclick="onDynamicVariantSelect('color', '${c}')">${c}</button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+};
 </script>
 </body>
 </html>
