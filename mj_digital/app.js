@@ -119,6 +119,10 @@ function openModal(modalId) {
 }
 
 function closeModal(modalId) {
+  if (modalId === 'csvModal') {
+    const csvInp = document.getElementById('csvFileInput');
+    if (csvInp) { csvInp.value = ''; } // csvReset
+  }
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.classList.add('hidden');
@@ -145,15 +149,62 @@ function closeModal(modalId) {
   }
 }
 
-function processCSV() {
-  const input = document.getElementById('csvFileInput');
-  if (!input || !input.files[0]) {
-    alert('Kripya pehle CSV file select karein!');
+async function processCSV() {
+  const input = document.getElementById('csvFileInput') || document.querySelector('#csvModal input[type="file"]');
+  if (!input || !input.files || !input.files[0]) {
+    alert('Kripya pehle .csv file select karein!');
     return;
   }
-  
-  closeModal('csvModal');
+
+  const file = input.files[0];
+  const btn = document.querySelector('#csvModal button[onclick*="processCSV"]') || document.getElementById('csvImportSubmitBtn');
+  const origText = btn ? btn.innerText : 'Import Now';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = 'Importing 28 Products to Database...';
+  }
+
+  try {
+    const rawCsvText = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('File read error'));
+      reader.readAsText(file, 'UTF-8');
+    });
+
+    const res = await fetch('/api/products/import-csv', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(typeof getAdminAuthHeaders === 'function' ? getAdminAuthHeaders() : {})
+      },
+      body: JSON.stringify({ csvData: rawCsvText })
+    });
+
+    const data = await res.json();
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = origText;
+    }
+
+    if (res.ok && data.success) {
+      alert('🎉 ' + data.message);
+      input.value = '';
+      closeModal('csvModal');
+      if (typeof loadAdminProducts === 'function') await loadAdminProducts();
+    } else {
+      alert('❌ Import failed: ' + (data.message || 'Server error'));
+    }
+  } catch (err) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = origText;
+    }
+    alert('Server connection error during CSV import: ' + err.message);
+  }
 }
+window.processCSV = processCSV;
+window.handleBulkCsvUploadSubmit = processCSV;
 
 // ==========================================
 // 3. MASTER NAVIGATION CONTROLLER

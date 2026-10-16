@@ -34,6 +34,10 @@ async function getRazorpayClient() {
   return razorpayInstance;
 }
 
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const hpp = require('hpp');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -1719,87 +1723,85 @@ app.delete('/api/customer/delete-account', async (req, res) => {
   }
 });
 
+// === ROBUST BULK CSV IMPORT API ENGINE ===
 app.post('/api/products/import-csv', upload.single('csvFile'), async (req, res) => {
   try {
     let rawCsvText = '';
     if (req.file && req.file.path && fs.existsSync(req.file.path)) {
       rawCsvText = fs.readFileSync(req.file.path, 'utf8');
+      try { fs.unlinkSync(req.file.path); } catch(e) {}
     } else if (req.body && req.body.csvData) {
       rawCsvText = req.body.csvData;
-    } else if (req.body && typeof req.body === 'object') {
-      // If JSON payload was sent
-      const items = req.body.products || req.body.items || [];
-      if (Array.isArray(items) && items.length > 0) {
-        let count = 0;
-        for (let it of items) {
-          await Product.create({
-            type: 'ecommerce',
-            title: it.title || it['Product Title'] || 'Product',
-            brand: it.brand || it['Brand Name'] || '',
-            category: it.category || it['Category'] || 'Electronics',
-            price: Number(it.price || it['Price (₹)'] || 0),
-            discountPrice: it.discountPrice || it['Discount Price (₹)'] ? Number(it.discountPrice || it['Discount Price (₹)']) : null,
-            stock: Number(it.stock || it['Stock Quantity'] || 10),
-            imageUrl: it.imageUrl || it['Product Image'] || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800',
-            description: it.description || it['Detailed Description'] || '',
-            detailedDescription: it.description || it['Detailed Description'] || '',
-            specifications: Array.isArray(it.specifications) ? it.specifications : [],
-            variants: typeof it.variants === 'object' ? it.variants : {},
-            status: 'Active'
-          });
-          count++;
-        }
-        return res.json({ success: true, message: `Successfully imported ${count} products!`, importedCount: count });
+    } else if (req.body && Array.isArray(req.body.products)) {
+      let count = 0;
+      for (const it of req.body.products) {
+        if (!it.title) continue;
+        await Product.findOneAndUpdate(
+          { title: it.title },
+          { $set: it },
+          { upsert: true, new: true }
+        );
+        count++;
       }
+      return res.json({ success: true, message: `Successfully imported ${count} products into MongoDB!`, importedCount: count });
     }
 
     if (!rawCsvText || !rawCsvText.trim()) {
-      return res.status(400).json({ success: false, message: 'CSV file data not found in request' });
+      return res.status(400).json({ success: false, message: 'CSV file data is empty' });
     }
 
-    const lines = rawCsvText.split(/\r?\n/).filter(l => l.trim().length > 0);
-    if (lines.length < 2) {
-      return res.status(400).json({ success: false, message: 'CSV file is empty or missing rows' });
-    }
-
-    const parseCSVLine = (text) => {
+    // Proper RFC-4180 CSV Line Parser (Handles "" escaped quotes inside JSON columns)
+    const parseCSVLine = (line) => {
       const result = [];
-      let current = '';
+      let cur = '';
       let inQuotes = false;
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          result.push(current.trim());
-          current = '';
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === ',' && !inQuotes) {
+          result.push(cur.trim());
+          cur = '';
         } else {
-          current += char;
+          cur += ch;
         }
       }
-      result.push(current.trim());
+      result.push(cur.trim());
       return result;
     };
 
-    const headers = parseCSVLine(lines[0]).map(h => h.replace(/^["']|["']$/g, '').toLowerCase());
+    const lines = rawCsvText.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length < 2) {
+      return res.status(400).json({ success: false, message: 'CSV file must have a header row and at least 1 product row' });
+    }
+
+    const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
     let importedCount = 0;
 
     for (let i = 1; i < lines.length; i++) {
       try {
-        const vals = parseCSVLine(lines[i]).map(v => v.replace(/^["']|["']$/g, ''));
+        const vals = parseCSVLine(lines[i]);
         const rowObj = {};
-        headers.forEach((h, idx) => { rowObj[h] = vals[idx] !== undefined ? vals[idx] : ''; });
+        headers.forEach((h, idx) => {
+          rowObj[h] = vals[idx] !== undefined ? vals[idx] : '';
+        });
 
-        const title = rowObj['product title'] || rowObj['title'] || rowObj['name'] || '';
+        const title = (rowObj['product title'] || rowObj['title'] || rowObj['name'] || '').trim();
         if (!title) continue;
 
-        const brand = rowObj['brand name'] || rowObj['brand'] || '';
-        const category = rowObj['category'] || 'Electronics';
-        const imageUrl = rowObj['product image'] || rowObj['image'] || rowObj['imageurl'] || '';
-        const price = Number(rowObj['price (₹)'] || rowObj['price'] || 0);
-        const discountPrice = rowObj['discount price (₹)'] || rowObj['discountprice'] || '';
-        const stock = Number(rowObj['stock quantity'] || rowObj['stock'] || 10);
-        const description = rowObj['detailed description'] || rowObj['description'] || '';
+        const brand = (rowObj['brand name'] || rowObj['brand'] || '').trim();
+        const category = (rowObj['category'] || 'Electronics').trim();
+        const imageUrl = (rowObj['product image'] || rowObj['image'] || rowObj['imageurl'] || '').trim();
+        const price = Number(String(rowObj['price (₹)'] || rowObj['price'] || '0').replace(/[^0-9.]/g, '')) || 0;
+        const discRaw = String(rowObj['discount price (₹)'] || rowObj['discountprice'] || '').replace(/[^0-9.]/g, '');
+        const discountPrice = discRaw !== '' ? Number(discRaw) : null;
+        const stock = Number(String(rowObj['stock quantity'] || rowObj['stock'] || '10').replace(/[^0-9]/g, '')) || 10;
+        const description = (rowObj['detailed description'] || rowObj['description'] || '').trim();
         const specsRaw = rowObj['technical specifications'] || rowObj['specifications'] || '[]';
         const variantsRaw = rowObj['configuration & pricing matrix (live variant builder)'] || rowObj['variants'] || '{}';
 
@@ -1807,31 +1809,50 @@ app.post('/api/products/import-csv', upload.single('csvFile'), async (req, res) 
         try { specifications = JSON.parse(specsRaw); } catch(e) { specifications = []; }
 
         let variants = {};
-        try { variants = JSON.parse(variantsRaw); } catch(e) { variants = {}; }
+        try {
+          const parsedVar = JSON.parse(variantsRaw);
+          const configs = Array.isArray(parsedVar) ? parsedVar : (parsedVar.configurations || []);
+          variants = {
+            variantOptions: {
+              colors: [...new Set(configs.map(c => c.color || c.colour).filter(Boolean))],
+              ram: [...new Set(configs.map(c => c.ram).filter(Boolean))],
+              storage: [...new Set(configs.map(c => c.storage || c.rom).filter(Boolean))],
+              sizes: [...new Set(configs.map(c => c.size).filter(Boolean))]
+            },
+            configurations: configs
+          };
+        } catch(e) { variants = {}; }
 
-        const numDisc = (discountPrice !== '' && !isNaN(Number(discountPrice))) ? Number(discountPrice) : null;
-
-        await Product.create({
+        const finalImg = imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800';
+        const prodData = {
           type: 'ecommerce',
           title,
           brand,
           category,
           price,
-          discountPrice: (numDisc !== null && numDisc < price) ? numDisc : null,
+          discountPrice: (discountPrice !== null && discountPrice < price) ? discountPrice : null,
           stock,
-          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800',
-          images: imageUrl ? [imageUrl] : [],
+          imageUrl: finalImg,
+          images: [finalImg],
           description,
           detailedDescription: description,
           specifications,
           variants,
           status: stock > 0 ? 'Active' : 'Out of Stock'
-        });
+        };
+
+        await Product.findOneAndUpdate({ title: title }, { $set: prodData }, { upsert: true, new: true });
         importedCount++;
-      } catch (rowErr) {}
+      } catch (rowErr) {
+        console.error('Row import error:', rowErr.message);
+      }
     }
 
-    res.json({ success: true, message: `Successfully imported ${importedCount} products into MongoDB!`, importedCount });
+    res.json({
+      success: true,
+      message: `Successfully imported ${importedCount} products into MongoDB!`,
+      importedCount
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
