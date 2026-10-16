@@ -1814,6 +1814,41 @@ app.post('/api/products/import-csv', upload.single('csvFile'), async (req, res) 
   }
 });
 
+// ==========================================
+// CMS LEGAL POLICIES SCHEMA & API
+// ==========================================
+const cmsPolicySchema = new mongoose.Schema({
+  policyKey: { type: String, required: true, unique: true, index: true },
+  content: { type: String, default: '' },
+  lastUpdated: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const CmsPolicy = mongoose.models.CmsPolicy || mongoose.model('CmsPolicy', cmsPolicySchema);
+
+app.get('/api/cms/policies', async (req, res) => {
+  try {
+    const list = await CmsPolicy.find().lean();
+    res.json({ success: true, data: list });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/cms/policies/:key', async (req, res) => {
+  try {
+    const key = req.params.key;
+    const content = req.body.content || '';
+    const updated = await CmsPolicy.findOneAndUpdate(
+      { policyKey: key },
+      { $set: { content, lastUpdated: new Date() } },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true, message: 'Policy saved successfully!', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
