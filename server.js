@@ -34,10 +34,6 @@ async function getRazorpayClient() {
   return razorpayInstance;
 }
 
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
-const hpp = require('hpp');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -59,6 +55,40 @@ const Category = require('./models/Category');
 const JWT_SECRET = process.env.JWT_SECRET || 'MJ_DIGITAL_SECRET_KEY_2026';
 
 const app = express();
+
+// ==========================================
+// EXPRESS 5 SAFE SECURITY & RATE LIMITER
+// ==========================================
+const loginAttemptsMap = new Map();
+function safeSignInLimiter(req, res, next) {
+  const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000;
+  const record = loginAttemptsMap.get(ip) || { count: 0, resetAt: now + windowMs };
+  if (now > record.resetAt) {
+    record.count = 0;
+    record.resetAt = now + windowMs;
+  }
+  record.count += 1;
+  loginAttemptsMap.set(ip, record);
+  if (record.count > 10) {
+    return res.status(429).json({
+      success: false,
+      message: '⚠️ Too many login attempts from this IP. Please try again after 15 minutes.'
+    });
+  }
+  next();
+}
+app.use('/api/admin/login', safeSignInLimiter);
+app.use('/api/admin/verify-2fa', safeSignInLimiter);
+
+// Safe headers (without breaking inline scripts, Tailwind, Bootstrap, or Razorpay)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  next();
+});
+
 // INVOICE SERVE ROUTE FIX
 app.get(['/invoice', '/invoice.html', '/account/invoice', '/account/invoice.html'], (req, res) => {
   const rootInv = path.join(__dirname, 'invoice.html');
@@ -68,61 +98,7 @@ app.get(['/invoice', '/invoice.html', '/account/invoice', '/account/invoice.html
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// ==========================================
-// ADVANCED ADMIN HIGH-LEVEL SECURITY SHIELD
-// ==========================================
-const adminLoginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // Strict: Max 3 attempts per IP
-  message: {
-    success: false,
-    message: '🚨 Security Alert: Too many failed admin login attempts. IP temporarily blocked.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
-// Apply strict rate limiter to admin auth gates
-app.use('/api/admin/login', adminLoginLimiter);
-app.use('/api/admin/verify-2fa', adminLoginLimiter);
-
-// Strict CSP & Clickjacking Defense Headers for Admin Panel
-app.use('/admin', (req, res, next) => {
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Content-Security-Policy', "default-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline' 'unsafe-eval'");
-  next();
-});
-
-// ==========================================
-// SECURITY & RATE LIMITING MIDDLEWARES
-// ==========================================
-app.use(helmet());
-app.use(mongoSanitize());
-app.use(hpp());
-
-const signInLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 sign-in/login attempts per windowMs
-  message: {
-    success: false,
-    message: '⚠️ Too many login attempts from this IP. Please try again after 15 minutes.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use('/api/admin/login', signInLimiter);
-app.use('/api/admin/verify-2fa', signInLimiter);
-
-const globalApiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false
-});
-app.use('/api/', globalApiLimiter);
 
 // ==========================================
 // 1. MIDDLEWARES & STATIC FOLDERS
@@ -1732,25 +1708,12 @@ app.post('/api/products/import-csv', upload.single('csvFile'), async (req, res) 
       try { fs.unlinkSync(req.file.path); } catch(e) {}
     } else if (req.body && req.body.csvData) {
       rawCsvText = req.body.csvData;
-    } else if (req.body && Array.isArray(req.body.products)) {
-      let count = 0;
-      for (const it of req.body.products) {
-        if (!it.title) continue;
-        await Product.findOneAndUpdate(
-          { title: it.title },
-          { $set: it },
-          { upsert: true, new: true }
-        );
-        count++;
-      }
-      return res.json({ success: true, message: `Successfully imported ${count} products into MongoDB!`, importedCount: count });
     }
 
     if (!rawCsvText || !rawCsvText.trim()) {
       return res.status(400).json({ success: false, message: 'CSV file data is empty' });
     }
 
-    // Proper RFC-4180 CSV Line Parser (Handles "" escaped quotes inside JSON columns)
     const parseCSVLine = (line) => {
       const result = [];
       let cur = '';
@@ -1766,6 +1729,7 @@ app.post('/api/products/import-csv', upload.single('csvFile'), async (req, res) 
           }
         } else if (ch === ',' && !inQuotes) {
           result.push(cur.trim());
+          current = '';
           cur = '';
         } else {
           cur += ch;
@@ -1777,7 +1741,7 @@ app.post('/api/products/import-csv', upload.single('csvFile'), async (req, res) 
 
     const lines = rawCsvText.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l => l.trim().length > 0);
     if (lines.length < 2) {
-      return res.status(400).json({ success: false, message: 'CSV file must have a header row and at least 1 product row' });
+      return res.status(400).json({ success: false, message: 'CSV file is empty or missing rows' });
     }
 
     const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
@@ -1787,9 +1751,7 @@ app.post('/api/products/import-csv', upload.single('csvFile'), async (req, res) 
       try {
         const vals = parseCSVLine(lines[i]);
         const rowObj = {};
-        headers.forEach((h, idx) => {
-          rowObj[h] = vals[idx] !== undefined ? vals[idx] : '';
-        });
+        headers.forEach((h, idx) => { rowObj[h] = vals[idx] !== undefined ? vals[idx] : ''; });
 
         const title = (rowObj['product title'] || rowObj['title'] || rowObj['name'] || '').trim();
         if (!title) continue;
@@ -1843,16 +1805,10 @@ app.post('/api/products/import-csv', upload.single('csvFile'), async (req, res) 
 
         await Product.findOneAndUpdate({ title: title }, { $set: prodData }, { upsert: true, new: true });
         importedCount++;
-      } catch (rowErr) {
-        console.error('Row import error:', rowErr.message);
-      }
+      } catch (rowErr) {}
     }
 
-    res.json({
-      success: true,
-      message: `Successfully imported ${importedCount} products into MongoDB!`,
-      importedCount
-    });
+    res.json({ success: true, message: `Successfully imported ${importedCount} products into MongoDB!`, importedCount });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
