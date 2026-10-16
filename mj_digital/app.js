@@ -151,7 +151,7 @@ function processCSV() {
     alert('Kripya pehle CSV file select karein!');
     return;
   }
-  alert('CSV File upload ho rahi hai...');
+  
   closeModal('csvModal');
 }
 

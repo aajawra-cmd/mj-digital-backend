@@ -7414,5 +7414,66 @@ async function handleCustomerAccountDeletion(e) {
   }
 }
 </script>
+<script>
+// AUTO RESET FILE INPUTS AND FORM WHEN MODAL CLOSES
+const originalCloseModal = window.closeModal || function(mId) {
+  const m = document.getElementById(mId);
+  if (m) { m.classList.add('hidden'); m.style.display = 'none'; }
+};
+
+window.closeModal = function(modalId) {
+  originalCloseModal(modalId);
+  const modalEl = document.getElementById(modalId);
+  if (modalEl) {
+    modalEl.querySelectorAll('input[type="file"]').forEach(input => {
+      input.value = '';
+    });
+    modalEl.querySelectorAll('form').forEach(f => f.reset());
+  }
+};
+</script>
+<script>
+async function handleBulkCsvUploadSubmit(event) {
+  if (event) event.preventDefault();
+  const fileInput = document.getElementById('csvFileInput') || document.querySelector('input[type="file"][accept*="csv"]') || document.querySelector('#csvModal input[type="file"]');
+  if (!fileInput || !fileInput.files[0]) {
+    alert('Kripya pehle .csv file select karein!');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('csvFile', fileInput.files[0]);
+
+  const btn = document.getElementById('csvImportSubmitBtn') || document.querySelector('#csvModal button[type="submit"]') || event?.target?.querySelector('button');
+  if (btn) { btn.disabled = true; btn.innerText = 'Importing to Database...'; }
+
+  try {
+    const res = await fetch('/api/products/import-csv', {
+      method: 'POST',
+      headers: {
+        ...(typeof getAdminAuthHeaders === 'function' ? getAdminAuthHeaders() : {})
+      },
+      body: formData
+    });
+    const data = await res.json();
+    if (btn) { btn.disabled = false; btn.innerText = 'Import Now'; }
+
+    if (res.ok && data.success) {
+      alert('🎉 ' + data.message);
+      fileInput.value = '';
+      if (typeof closeModal === 'function') closeModal('csvModal');
+      if (typeof loadAdminProducts === 'function') loadAdminProducts();
+      if (typeof loadProductsCatalog === 'function') loadProductsCatalog();
+      window.location.reload();
+    } else {
+      alert('❌ Import failed: ' + (data.message || 'Server error'));
+    }
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.innerText = 'Import Now'; }
+    alert('Server connection error during CSV import: ' + err.message);
+  }
+}
+window.handleBulkCsvUploadSubmit = handleBulkCsvUploadSubmit;
+</script>
 </body>
 </html>

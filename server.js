@@ -1719,6 +1719,124 @@ app.delete('/api/customer/delete-account', async (req, res) => {
   }
 });
 
+app.post('/api/products/import-csv', upload.single('csvFile'), async (req, res) => {
+  try {
+    let rawCsvText = '';
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      rawCsvText = fs.readFileSync(req.file.path, 'utf8');
+    } else if (req.body && req.body.csvData) {
+      rawCsvText = req.body.csvData;
+    } else if (req.body && typeof req.body === 'object') {
+      // If JSON payload was sent
+      const items = req.body.products || req.body.items || [];
+      if (Array.isArray(items) && items.length > 0) {
+        let count = 0;
+        for (let it of items) {
+          await Product.create({
+            type: 'ecommerce',
+            title: it.title || it['Product Title'] || 'Product',
+            brand: it.brand || it['Brand Name'] || '',
+            category: it.category || it['Category'] || 'Electronics',
+            price: Number(it.price || it['Price (₹)'] || 0),
+            discountPrice: it.discountPrice || it['Discount Price (₹)'] ? Number(it.discountPrice || it['Discount Price (₹)']) : null,
+            stock: Number(it.stock || it['Stock Quantity'] || 10),
+            imageUrl: it.imageUrl || it['Product Image'] || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800',
+            description: it.description || it['Detailed Description'] || '',
+            detailedDescription: it.description || it['Detailed Description'] || '',
+            specifications: Array.isArray(it.specifications) ? it.specifications : [],
+            variants: typeof it.variants === 'object' ? it.variants : {},
+            status: 'Active'
+          });
+          count++;
+        }
+        return res.json({ success: true, message: `Successfully imported ${count} products!`, importedCount: count });
+      }
+    }
+
+    if (!rawCsvText || !rawCsvText.trim()) {
+      return res.status(400).json({ success: false, message: 'CSV file data not found in request' });
+    }
+
+    const lines = rawCsvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length < 2) {
+      return res.status(400).json({ success: false, message: 'CSV file is empty or missing rows' });
+    }
+
+    const parseCSVLine = (text) => {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    };
+
+    const headers = parseCSVLine(lines[0]).map(h => h.replace(/^["']|["']$/g, '').toLowerCase());
+    let importedCount = 0;
+
+    for (let i = 1; i < lines.length; i++) {
+      try {
+        const vals = parseCSVLine(lines[i]).map(v => v.replace(/^["']|["']$/g, ''));
+        const rowObj = {};
+        headers.forEach((h, idx) => { rowObj[h] = vals[idx] !== undefined ? vals[idx] : ''; });
+
+        const title = rowObj['product title'] || rowObj['title'] || rowObj['name'] || '';
+        if (!title) continue;
+
+        const brand = rowObj['brand name'] || rowObj['brand'] || '';
+        const category = rowObj['category'] || 'Electronics';
+        const imageUrl = rowObj['product image'] || rowObj['image'] || rowObj['imageurl'] || '';
+        const price = Number(rowObj['price (₹)'] || rowObj['price'] || 0);
+        const discountPrice = rowObj['discount price (₹)'] || rowObj['discountprice'] || '';
+        const stock = Number(rowObj['stock quantity'] || rowObj['stock'] || 10);
+        const description = rowObj['detailed description'] || rowObj['description'] || '';
+        const specsRaw = rowObj['technical specifications'] || rowObj['specifications'] || '[]';
+        const variantsRaw = rowObj['configuration & pricing matrix (live variant builder)'] || rowObj['variants'] || '{}';
+
+        let specifications = [];
+        try { specifications = JSON.parse(specsRaw); } catch(e) { specifications = []; }
+
+        let variants = {};
+        try { variants = JSON.parse(variantsRaw); } catch(e) { variants = {}; }
+
+        const numDisc = (discountPrice !== '' && !isNaN(Number(discountPrice))) ? Number(discountPrice) : null;
+
+        await Product.create({
+          type: 'ecommerce',
+          title,
+          brand,
+          category,
+          price,
+          discountPrice: (numDisc !== null && numDisc < price) ? numDisc : null,
+          stock,
+          imageUrl: imageUrl || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800',
+          images: imageUrl ? [imageUrl] : [],
+          description,
+          detailedDescription: description,
+          specifications,
+          variants,
+          status: stock > 0 ? 'Active' : 'Out of Stock'
+        });
+        importedCount++;
+      } catch (rowErr) {}
+    }
+
+    res.json({ success: true, message: `Successfully imported ${importedCount} products into MongoDB!`, importedCount });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
