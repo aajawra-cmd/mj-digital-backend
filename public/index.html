@@ -2723,7 +2723,7 @@ async function getActiveRazorpayKey() {
             cachedAllProducts = PRODUCT_FALLBACK_ITEMS;
 
             if (typeof loadOrdersTable === 'function') loadOrdersTable();
-            //// loadMainSitePolicies();
+            loadMainSitePolicies();
             if (typeof syncLiveStoreSettings === 'function') syncLiveStoreSettings();
             if (typeof updateCartBadge === 'function') updateCartBadge();
             if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
@@ -2844,6 +2844,7 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
     } else if (pageId === 'page-utility-hub') {
         if (typeof switchUtilityTab === 'function') switchUtilityTab(typeof fpCurrentService !== 'undefined' ? fpCurrentService : 'mobile');
     }
+    if (typeof loadMainSitePolicies === 'function') loadMainSitePolicies();
 }
 
 function routeCurrentPath() {

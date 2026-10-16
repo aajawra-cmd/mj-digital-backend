@@ -2723,7 +2723,7 @@ async function getActiveRazorpayKey() {
             cachedAllProducts = PRODUCT_FALLBACK_ITEMS;
 
             if (typeof loadOrdersTable === 'function') loadOrdersTable();
-            //// loadMainSitePolicies();
+            loadMainSitePolicies();
             if (typeof syncLiveStoreSettings === 'function') syncLiveStoreSettings();
             if (typeof updateCartBadge === 'function') updateCartBadge();
             if (typeof updateWishlistBadge === 'function') updateWishlistBadge();
