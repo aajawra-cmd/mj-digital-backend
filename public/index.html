@@ -2844,7 +2844,6 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
     } else if (pageId === 'page-utility-hub') {
         if (typeof switchUtilityTab === 'function') switchUtilityTab(typeof fpCurrentService !== 'undefined' ? fpCurrentService : 'mobile');
     }
-    if (typeof loadMainSitePolicies === 'function') loadMainSitePolicies();
 }
 
 function routeCurrentPath() {
