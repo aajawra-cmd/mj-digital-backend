@@ -7686,7 +7686,18 @@ window.renderVariantPillsHTML = function(item, configs, opts) {
 
 <script id="mjMultiUserAuthAndLogoutFix">
 (function() {
-  // 1. Check real logged-in user from localStorage (Default: NOT logged in for new visitors!)
+  // 1. Add Password Field inside Sign Up Form dynamically if not present
+  document.addEventListener('DOMContentLoaded', function() {
+    const signupForm = document.getElementById('signupForm');
+    if (signupForm && !document.getElementById('signupPassword')) {
+      const passDiv = document.createElement('div');
+      passDiv.className = 'mb-3';
+      passDiv.innerHTML = '<label class="small fw-bold">Create Password *</label><input type="password" id="signupPassword" class="form-control" placeholder="Min 6 characters" minlength="6" required>';
+      const submitBtn = signupForm.querySelector('button[type="submit"]');
+      signupForm.insertBefore(passDiv, submitBtn);
+    }
+  });
+
   function getActiveSessionUser() {
     try {
       const raw = localStorage.getItem('mj_active_customer');
@@ -7694,6 +7705,20 @@ window.renderVariantPillsHTML = function(item, configs, opts) {
     } catch (e) {
       return null;
     }
+  }
+
+  function getLocalRegisteredUsers() {
+    try {
+      return JSON.parse(localStorage.getItem('mj_registered_users_db') || '[]');
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveLocalRegisteredUser(u) {
+    const list = getLocalRegisteredUsers().filter(x => x.phone !== u.phone && x.email !== u.email);
+    list.push(u);
+    localStorage.setItem('mj_registered_users_db', JSON.stringify(list));
   }
 
   function applyUserSessionToUI() {
@@ -7713,18 +7738,91 @@ window.renderVariantPillsHTML = function(item, configs, opts) {
       if (document.getElementById('profileNameInput')) document.getElementById('profileNameInput').value = user.name || 'Customer';
       if (document.getElementById('profileEmailInput')) document.getElementById('profileEmailInput').value = user.email || '';
       if (document.getElementById('profilePhoneInput')) document.getElementById('profilePhoneInput').value = cleanPhone ? ('+91 ' + cleanPhone) : '';
-
       if (document.getElementById('fpCheckoutName')) document.getElementById('fpCheckoutName').value = user.name || '';
       if (document.getElementById('fpCheckoutPhone')) document.getElementById('fpCheckoutPhone').value = cleanPhone ? ('+91 ' + cleanPhone) : '';
     } else {
-      // Clear inputs for logged-out / guest users
       if (document.getElementById('loginEmail')) document.getElementById('loginEmail').value = '';
       if (document.getElementById('loginPassword')) document.getElementById('loginPassword').value = '';
     }
   }
 
-  // 2. Override verifyOtpAndProceed so Login & Signup save the specific user's ID/Phone
-  window.verifyOtpAndProceed = function() {
+  // 2. Intercept requestOtp: Block Login if user has NOT signed up yet!
+  window.pendingVerifiedUser = null;
+  window.requestOtp = async function(e, actionType) {
+    if (e) e.preventDefault();
+    pendingAction = actionType;
+
+    if (actionType === 'login') {
+      const identifier = (document.getElementById('loginEmail')?.value || '').trim();
+      const password = (document.getElementById('loginPassword')?.value || '').trim();
+
+      if (!identifier || !password) {
+        return alert('Kripya Mobile/Email aur Password dono bharein.');
+      }
+
+      // Check on Backend MongoDB first
+      try {
+        const res = await fetch('/api/customer/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier, password })
+        });
+        if (res.status !== 404 || res.headers.get('content-type')?.includes('application/json')) {
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            alert(data.message || '⚠️ Account nahi mila! Pehle Sign Up karein.');
+            if (data.notRegistered && typeof toggleAuthMode === 'function') {
+              toggleAuthMode('signup');
+            }
+            return;
+          }
+          window.pendingVerifiedUser = data.user;
+          if (otpModal) otpModal.show();
+          return;
+        }
+      } catch (err) {}
+
+      // Fallback local registry check if server route not yet deployed
+      const cleanPhone = identifier.replace(/[^0-9]/g, '').slice(-10);
+      const cleanEmail = identifier.toLowerCase();
+      const localMatch = getLocalRegisteredUsers().find(u =>
+        (cleanPhone.length === 10 && u.phone === cleanPhone) || (u.email && u.email === cleanEmail)
+      );
+
+      if (!localMatch) {
+        alert('⚠️ Yeh Mobile/Email registered nahi hai!\n\nKripya pehle "Sign Up" tab par click karke apna account banayein.');
+        if (typeof toggleAuthMode === 'function') toggleAuthMode('signup');
+        return;
+      }
+      if (localMatch.password !== password) {
+        alert('❌ Password galat hai! Kripya sahi password daalein.');
+        return;
+      }
+      window.pendingVerifiedUser = { name: localMatch.name, email: localMatch.email, phone: localMatch.phone };
+      if (otpModal) otpModal.show();
+      return;
+    }
+
+    if (actionType === 'signup') {
+      const name = (document.getElementById('signupName')?.value || '').trim();
+      const email = (document.getElementById('signupEmail')?.value || '').trim().toLowerCase();
+      const phone = String(document.getElementById('signupPhone')?.value || '').replace(/[^0-9]/g, '').slice(-10);
+      const password = (document.getElementById('signupPassword')?.value || '').trim();
+
+      if (!name || phone.length !== 10 || !password) {
+        return alert('Kripya Full Name, valid 10-digit Mobile Number aur Password bharein.');
+      }
+
+      window.pendingSignupPayload = { name, email, phone, password };
+      if (otpModal) otpModal.show();
+      return;
+    }
+
+    if (otpModal) otpModal.show();
+  };
+
+  // 3. Verify OTP & Complete Signup or Login
+  window.verifyOtpAndProceed = async function() {
     if (otpModal) otpModal.hide();
 
     if (pendingAction === 'update-profile') {
@@ -7739,36 +7837,49 @@ window.renderVariantPillsHTML = function(item, configs, opts) {
       return;
     }
 
-    let userObj = {};
-    if (pendingAction === 'signup') {
-      const name = document.getElementById('signupName')?.value?.trim() || 'Customer';
-      const email = document.getElementById('signupEmail')?.value?.trim() || '';
-      const phone = String(document.getElementById('signupPhone')?.value || '').replace(/[^0-9]/g, '').slice(-10);
-      userObj = { name, email, phone };
-    } else {
-      // Login mode
-      const rawLogin = document.getElementById('loginEmail')?.value?.trim() || '';
-      const isEmail = rawLogin.includes('@');
-      const cleanPhone = rawLogin.replace(/[^0-9]/g, '').slice(-10);
-      userObj = {
-        name: isEmail ? rawLogin.split('@')[0] : ('User ' + cleanPhone.slice(-4)),
-        email: isEmail ? rawLogin : '',
-        phone: cleanPhone
-      };
+    if (pendingAction === 'signup' && window.pendingSignupPayload) {
+      const payload = window.pendingSignupPayload;
+      try {
+        const res = await fetch('/api/customer/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.headers.get('content-type')?.includes('application/json')) {
+          const data = await res.json();
+          if (!res.ok && !data.success) {
+            alert(data.message || 'Signup failed');
+            return;
+          }
+        }
+      } catch (e) {}
+
+      saveLocalRegisteredUser(payload);
+      const activeUser = { name: payload.name, email: payload.email, phone: payload.phone };
+      localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
+      isLoggedIn = true;
+      applyUserSessionToUI();
+      alert('🎉 Account Successfully Created! Welcome, ' + payload.name);
+      if (typeof fetchLiveWalletFromServer === 'function') fetchLiveWalletFromServer();
+      if (typeof loadOrdersTable === 'function') loadOrdersTable();
+      navigateTo('page-profile');
+      return;
     }
 
-    localStorage.setItem('mj_active_customer', JSON.stringify(userObj));
-    isLoggedIn = true;
-    applyUserSessionToUI();
-
-    if (typeof fetchLiveWalletFromServer === 'function') fetchLiveWalletFromServer();
-    if (typeof loadOrdersTable === 'function') loadOrdersTable();
-    navigateTo('page-profile');
+    if (pendingAction === 'login' && window.pendingVerifiedUser) {
+      localStorage.setItem('mj_active_customer', JSON.stringify(window.pendingVerifiedUser));
+      isLoggedIn = true;
+      applyUserSessionToUI();
+      if (typeof fetchLiveWalletFromServer === 'function') fetchLiveWalletFromServer();
+      if (typeof loadOrdersTable === 'function') loadOrdersTable();
+      navigateTo('page-profile');
+    }
   };
 
-  // 3. Fix Logout so it clears session, resets UI, and redirects to Sign In / Home page!
+  // 4. Clean Logout
   window.logout = function() {
     isLoggedIn = false;
+    window.pendingVerifiedUser = null;
     localStorage.removeItem('mj_active_customer');
     localStorage.removeItem('mj_wallet_bal');
     userOrders = [];
@@ -7782,7 +7893,7 @@ window.renderVariantPillsHTML = function(item, configs, opts) {
     try { history.pushState({ pageId: 'page-auth' }, '', '/'); } catch (e) {}
   };
 
-  // 4. Filter Orders so each logged-in user ONLY sees their own orders!
+  // 5. Strict Per-User Orders Filtering
   const origLoadOrdersTable = window.loadOrdersTable;
   window.loadOrdersTable = async function() {
     const container = document.getElementById('amazonOrdersContainer');
@@ -7791,7 +7902,7 @@ window.renderVariantPillsHTML = function(item, configs, opts) {
     const user = getActiveSessionUser();
     if (!user || (!user.phone && !user.email)) {
       userOrders = [];
-      container.innerHTML = `<div class="text-center text-muted py-5"><i class="fa-solid fa-lock fs-2 mb-2 d-block"></i>Please Sign In to view your orders.</div>`;
+      container.innerHTML = '<div class="text-center text-muted py-5"><i class="fa-solid fa-lock fs-2 mb-2 d-block"></i>Please Sign In to view your orders.</div>';
       return;
     }
 
@@ -7811,7 +7922,6 @@ window.renderVariantPillsHTML = function(item, configs, opts) {
     if (typeof filterCustomerOrders === 'function') filterCustomerOrders();
   };
 
-  // 5. Guard /account/orders route on initial page load if not logged in
   document.addEventListener('DOMContentLoaded', function() {
     applyUserSessionToUI();
     if (!isLoggedIn && (window.location.pathname.includes('/account') || window.location.pathname.includes('/profile'))) {

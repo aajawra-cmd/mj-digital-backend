@@ -1849,6 +1849,97 @@ app.put('/api/cms/policies/:key', async (req, res) => {
   }
 });
 
+// ==========================================
+// CUSTOMER ACCOUNT SIGNUP & LOGIN API (MONGODB)
+// ==========================================
+const customerAccountSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+  email: { type: String, required: true, lowercase: true, trim: true },
+  phone: { type: String, required: true, unique: true, index: true },
+  password: { type: String, required: true }
+}, { timestamps: true });
+
+const CustomerAccount = mongoose.models.CustomerAccount || mongoose.model('CustomerAccount', customerAccountSchema);
+
+// 1. Customer Sign Up
+app.post('/api/customer/signup', async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+    const cleanPhone = String(phone || '').replace(/[^0-9]/g, '').slice(-10);
+    const cleanEmail = String(email || '').toLowerCase().trim();
+
+    if (!name || cleanPhone.length !== 10 || !password) {
+      return res.status(400).json({ success: false, message: 'Name, 10-digit Mobile Number aur Password zaroori hai.' });
+    }
+
+    const existing = await CustomerAccount.findOne({
+      $or: [{ phone: cleanPhone }, { email: cleanEmail }]
+    });
+
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'Yeh Mobile Number ya Email pehle se registered hai! Kripya Sign In karein.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(String(password).trim(), salt);
+
+    const newCustomer = await CustomerAccount.create({
+      name: name.trim(),
+      email: cleanEmail,
+      phone: cleanPhone,
+      password: hashedPassword
+    });
+
+    res.json({
+      success: true,
+      message: 'Account created successfully!',
+      user: { name: newCustomer.name, email: newCustomer.email, phone: newCustomer.phone }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 2. Customer Sign In (Login Check)
+app.post('/api/customer/login', async (req, res) => {
+  try {
+    const { identifier, password } = req.body;
+    const rawId = String(identifier || '').trim();
+    const cleanPhone = rawId.replace(/[^0-9]/g, '').slice(-10);
+    const cleanEmail = rawId.toLowerCase();
+
+    const customer = await CustomerAccount.findOne({
+      $or: [
+        ...(cleanPhone.length === 10 ? [{ phone: cleanPhone }] : []),
+        { email: cleanEmail }
+      ]
+    });
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        notRegistered: true,
+        message: '⚠️ Yeh Mobile/Email registered nahi hai! Kripya pehle Sign Up karke account banayein.'
+      });
+    }
+
+    const isMatch = await bcrypt.compare(String(password || '').trim(), customer.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: '❌ Password galat hai! Kripya sahi password daalein.'
+      });
+    }
+
+    res.json({
+      success: true,
+      user: { name: customer.name, email: customer.email, phone: customer.phone }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);
 });
