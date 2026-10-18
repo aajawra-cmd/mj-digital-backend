@@ -2139,7 +2139,20 @@ async function getActiveRazorpayKey() {
                     <div class="mb-3"><label class="small fw-bold">Full Name</label><input type="text" id="signupName" class="form-control" placeholder="M J Customer" required></div>
                     <div class="mb-3"><label class="small fw-bold">Email Address</label><input type="email" id="signupEmail" class="form-control" placeholder="mjdigitalworlds@gmail.com" required></div>
                     <div class="mb-3"><label class="small fw-bold">Mobile Number</label><input type="tel" id="signupPhone" class="form-control" placeholder="+91 830 666 9999" required></div>
-                    <button type="submit" class="btn btn-brand w-100 py-2 mt-2">Send OTP Verification</button>
+                    <div class="mb-3">
+                        <label class="small fw-bold">Create Secure Password</label>
+                        <input type="password" id="signupPassword" class="form-control" placeholder="Min 12 chars (A-Z, a-z, 0-9, $!@#%)" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
+                        
+                        <!-- Live Strength Meter -->
+                        <div class="d-flex gap-1 mt-2" style="height: 6px;">
+                            <div id="meter-1" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
+                            <div id="meter-2" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
+                            <div id="meter-3" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
+                            <div id="meter-4" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
+                        </div>
+                        <small id="pwdHelper" class="text-muted d-block mt-1" style="font-size: 11px;">12+ chars, uppercase, lowercase, number & symbol required.</small>
+                    </div>
+                    <button type="submit" id="signupSubmitBtn" class="btn btn-brand w-100 py-2 mt-2" disabled>Send OTP Verification</button>
                 </form>
             </div>
         </div>
@@ -7929,6 +7942,34 @@ window.renderVariantPillsHTML = function(item, configs, opts) {
     }
   });
 })();
+</script>
+
+<script>
+// Live Password Strength Script
+function evaluatePasswordStrength(pass) {
+    let score = 0;
+    if (pass.length >= 12) score++;
+    if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[$!@#%^&*(),.?":{}|<>]/.test(pass)) score++;
+
+    const meters = [document.getElementById('meter-1'), document.getElementById('meter-2'), document.getElementById('meter-3'), document.getElementById('meter-4')];
+    
+    meters.forEach((m, i) => {
+        if(m) m.className = 'flex-grow-1 rounded-pill ' + (i < score ? (score < 3 ? 'bg-danger' : score === 3 ? 'bg-warning' : 'bg-success') : 'bg-secondary opacity-25');
+    });
+
+    const helper = document.getElementById('pwdHelper');
+    const btn = document.getElementById('signupSubmitBtn');
+    
+    if (score === 4) {
+        if(helper) helper.innerHTML = '<span class="text-success"><i class="fa-solid fa-circle-check"></i> Perfect! Password is highly secure.</span>';
+        if(btn) btn.disabled = false;
+    } else {
+        if(helper) helper.innerText = '12+ chars, uppercase, lowercase, number & symbol required.';
+        if(btn) btn.disabled = true;
+    }
+}
 </script>
 
 </body>

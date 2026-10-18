@@ -1850,88 +1850,6 @@ app.put('/api/cms/policies/:key', async (req, res) => {
 });
 
 // ==========================================
-// CUSTOMER ACCOUNT SIGNUP & LOGIN API (MONGODB)
-// ==========================================
-// 1. Customer Sign Up
-app.post('/api/customer/signup', async (req, res) => {
-  try {
-    const { name, email, phone, password } = req.body;
-    const cleanPhone = String(phone || '').replace(/[^0-9]/g, '').slice(-10);
-    const cleanEmail = String(email || '').toLowerCase().trim();
-
-    if (!name || cleanPhone.length !== 10 || !password) {
-      return res.status(400).json({ success: false, message: 'Name, 10-digit Mobile Number aur Password zaroori hai.' });
-    }
-
-    const existing = await CustomerAccount.findOne({
-      $or: [{ phone: cleanPhone }, { email: cleanEmail }]
-    });
-
-    if (existing) {
-      return res.status(400).json({ success: false, message: 'Yeh Mobile Number ya Email pehle se registered hai! Kripya Sign In karein.' });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(String(password).trim(), salt);
-
-    const newCustomer = await CustomerAccount.create({
-      name: name.trim(),
-      email: cleanEmail,
-      phone: cleanPhone,
-      password: hashedPassword
-    });
-
-    res.json({
-      success: true,
-      message: 'Account created successfully!',
-      user: { name: newCustomer.name, email: newCustomer.email, phone: newCustomer.phone }
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// 2. Customer Sign In (Login Check)
-app.post('/api/customer/login', async (req, res) => {
-  try {
-    const { identifier, password } = req.body;
-    const rawId = String(identifier || '').trim();
-    const cleanPhone = rawId.replace(/[^0-9]/g, '').slice(-10);
-    const cleanEmail = rawId.toLowerCase();
-
-    const customer = await CustomerAccount.findOne({
-      $or: [
-        ...(cleanPhone.length === 10 ? [{ phone: cleanPhone }] : []),
-        { email: cleanEmail }
-      ]
-    });
-
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        notRegistered: true,
-        message: '⚠️ Yeh Mobile/Email registered nahi hai! Kripya pehle Sign Up karke account banayein.'
-      });
-    }
-
-    const isMatch = await bcrypt.compare(String(password || '').trim(), customer.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: '❌ Password galat hai! Kripya sahi password daalein.'
-      });
-    }
-
-    res.json({
-      success: true,
-      user: { name: customer.name, email: customer.email, phone: customer.phone }
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// ==========================================
 // SECURE CUSTOMER AUTH ENGINE (12+ CHARS & COMPLEXITY)
 // ==========================================
 const customerOtpMap = new Map();
@@ -1945,6 +1863,7 @@ const customerAccountSchema = new mongoose.Schema({
 
 const CustomerAccount = mongoose.models.CustomerAccount || mongoose.model('CustomerAccount', customerAccountSchema);
 
+// Strict Password Validation Helper
 function validateStrongPassword(pwd) {
   const password = String(pwd || '');
   if (password.length < 12) {
@@ -1980,6 +1899,7 @@ app.post('/api/customer/request-otp', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Full Name aur valid 10-digit Mobile Number zaroori hai.' });
       }
 
+      // Apply 12-char strict validation
       const pwdError = validateStrongPassword(passStr);
       if (pwdError) {
         return res.status(400).json({ success: false, message: pwdError });
@@ -2003,7 +1923,7 @@ app.post('/api/customer/request-otp', async (req, res) => {
       const passStr = String(password || '').trim();
 
       if (!rawId || passStr.length < 12) {
-        return res.status(400).json({ success: false, message: 'Kripya valid Mobile/Email aur apna password daalein.' });
+        return res.status(400).json({ success: false, message: 'Kripya valid Mobile/Email aur apna 12-digit password daalein.' });
       }
 
       const customer = await CustomerAccount.findOne({ $or: [...(cleanPhone.length === 10 ? [{ phone: cleanPhone }] : []), { email: cleanEmail }] });
@@ -2058,205 +1978,6 @@ app.post('/api/customer/verify-otp', async (req, res) => {
     }
 
     return res.json({ success: true, user: record.payload });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-async function sendRealCustomerOtp(phone, email, name, otp) {
-  let sentVia = [];
-  const cleanPhone = String(phone || '').replace(/[^0-9]/g, '').slice(-10);
-  const safeName = name || 'Customer';
-
-  // 1. Send via Fast2SMS
-  if (process.env.FAST2SMS_API_KEY && cleanPhone.length === 10) {
-    try {
-      await axios.post('https://www.fast2sms.com/dev/bulkV2', {
-        route: 'q',
-        message: 'Your M J DIGITAL verification OTP is ' + otp + '. Valid for 5 minutes. Do not share this code.',
-        language: 'english',
-        flash: 0,
-        numbers: cleanPhone
-      }, {
-        headers: { 'authorization': process.env.FAST2SMS_API_KEY }
-      });
-      sentVia.push('Mobile SMS');
-    } catch (smsErr) {
-      console.error('Fast2SMS OTP error:', smsErr.message);
-    }
-  }
-
-  // 2. Send via Nodemailer Email
-  if (email && email.includes('@') && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    try {
-      const htmlBody = '<div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px;">' +
-        '<h2 style="color: #2563eb; margin-top: 0;">M J DIGITAL - 2FA Security</h2>' +
-        '<p>Hello <strong>' + safeName + '</strong>,</p>' +
-        '<p>Use the following 4-digit One-Time Password (OTP) to complete your verification:</p>' +
-        '<div style="background: #f1f5f9; padding: 16px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 8px; color: #0f172a; border-radius: 8px; margin: 20px 0;">' + otp + '</div>' +
-        '<p style="font-size: 12px; color: #64748b;">This code expires in 5 minutes. Never share your OTP with anyone.</p>' +
-        '</div>';
-
-      await mailTransporter.sendMail({
-        from: '"M J DIGITAL Security" <' + process.env.EMAIL_USER + '>',
-        to: email,
-        subject: otp + ' is your M J DIGITAL Verification Code',
-        html: htmlBody
-      });
-      sentVia.push('Email');
-    } catch (mailErr) {
-      console.error('Email OTP error:', mailErr.message);
-    }
-  }
-
-  // 3. Send Alert to Admin Telegram Bot
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (botToken && chatId) {
-    const tgText = 'M J DIGITAL - CUSTOMER OTP DISPATCH\n' +
-      'User: ' + safeName + '\n' +
-      'Phone: ' + (cleanPhone || 'N/A') + '\n' +
-      'Email: ' + (email || 'N/A') + '\n' +
-      'OTP: ' + otp;
-
-    axios.post('https://api.telegram.org/bot' + botToken + '/sendMessage', {
-      chat_id: chatId,
-      text: tgText
-    }).catch(function() {});
-  }
-
-  return sentVia;
-}
-
-// STEP 1: Request OTP for Signup or Login
-app.post('/api/customer/request-otp', async (req, res) => {
-  try {
-    const { action, name, email, phone, identifier, password } = req.body;
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000;
-
-    if (action === 'signup') {
-      const cleanPhone = String(phone || '').replace(/[^0-9]/g, '').slice(-10);
-      const cleanEmail = String(email || '').toLowerCase().trim();
-
-      if (!name || cleanPhone.length !== 10 || !password) {
-        return res.status(400).json({ success: false, message: 'Full Name, 10-digit Mobile Number aur Password zaroori hai.' });
-      }
-
-      const orQuery = [{ phone: cleanPhone }];
-      if (cleanEmail) orQuery.push({ email: cleanEmail });
-
-      const existing = await CustomerAccount.findOne({ $or: orQuery });
-      if (existing) {
-        return res.status(400).json({ success: false, message: 'Yeh Mobile ya Email pehle se registered hai! Kripya Sign In karein.' });
-      }
-
-      const key = cleanPhone || cleanEmail;
-      customerOtpMap.set(key, {
-        otp: otp,
-        expiresAt: expiresAt,
-        action: 'signup',
-        payload: { name: name.trim(), email: cleanEmail, phone: cleanPhone, password: String(password).trim() }
-      });
-
-      const channels = await sendRealCustomerOtp(cleanPhone, cleanEmail, name, otp);
-      const viaText = channels.length ? channels.join(' & ') : 'Mobile/Email';
-      return res.json({
-        success: true,
-        key: key,
-        message: 'OTP aapke registered ' + viaText + ' par bhej diya gaya hai!'
-      });
-    }
-
-    if (action === 'login') {
-      const rawId = String(identifier || '').trim();
-      const cleanPhone = rawId.replace(/[^0-9]/g, '').slice(-10);
-      const cleanEmail = rawId.toLowerCase();
-
-      const orList = [{ email: cleanEmail }];
-      if (cleanPhone.length === 10) orList.push({ phone: cleanPhone });
-
-      const customer = await CustomerAccount.findOne({ $or: orList });
-
-      if (!customer) {
-        return res.status(404).json({
-          success: false,
-          notRegistered: true,
-          message: 'Yeh Mobile/Email registered nahi hai! Kripya pehle Sign Up karke apna account banayein.'
-        });
-      }
-
-      const isMatch = await bcrypt.compare(String(password || '').trim(), customer.password);
-      if (!isMatch) {
-        return res.status(401).json({ success: false, message: 'Password galat hai! Kripya sahi password daalein.' });
-      }
-
-      const key = customer.phone || customer.email;
-      customerOtpMap.set(key, {
-        otp: otp,
-        expiresAt: expiresAt,
-        action: 'login',
-        payload: { name: customer.name, email: customer.email, phone: customer.phone }
-      });
-
-      const channels = await sendRealCustomerOtp(customer.phone, customer.email, customer.name, otp);
-      const viaText = channels.length ? channels.join(' & ') : 'Mobile/Email';
-      return res.json({
-        success: true,
-        key: key,
-        message: 'OTP aapke registered ' + viaText + ' par bhej diya gaya hai!'
-      });
-    }
-
-    res.status(400).json({ success: false, message: 'Invalid action' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// STEP 2: Verify OTP & Complete Signup/Login
-app.post('/api/customer/verify-otp', async (req, res) => {
-  try {
-    const { key, otp } = req.body;
-    const record = customerOtpMap.get(String(key || '').trim());
-
-    if (!record) {
-      return res.status(400).json({ success: false, message: 'OTP session expire ho gaya hai. Kripya dobara try karein.' });
-    }
-
-    if (Date.now() > record.expiresAt) {
-      customerOtpMap.delete(key);
-      return res.status(400).json({ success: false, message: 'OTP expire ho chuka hai! Kripya naya OTP mangwayein.' });
-    }
-
-    if (String(otp || '').trim() !== record.otp) {
-      return res.status(400).json({ success: false, message: 'Galat OTP! Kripya apne SMS/Email mein aaya hua sahi 4-digit code daalein.' });
-    }
-
-    customerOtpMap.delete(key);
-
-    if (record.action === 'signup') {
-      const { name, email, phone, password } = record.payload;
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      const created = await CustomerAccount.create({
-        name: name,
-        email: email,
-        phone: phone,
-        password: hashedPassword
-      });
-
-      return res.json({
-        success: true,
-        user: { name: created.name, email: created.email, phone: created.phone }
-      });
-    }
-
-    return res.json({
-      success: true,
-      user: record.payload
-    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
