@@ -2127,15 +2127,15 @@ async function getActiveRazorpayKey() {
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
-            margin-top: 5vh !important; /* Perfect vertical drop */
-            margin-bottom: 5vh !important;
+            min-height: 75vh !important; /* <-- Yeh line perfect center ke liye hai */
             padding: 20px 15px !important;
+            background: transparent !important;
         }
         .auth-card-premium {
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 24px !important;
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1), 0 0 20px rgba(37, 99, 235, 0.05) !important;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1), 0 0 20px rgba(1, 1, 2, 0.05) !important;
             width: 100% !important;
             max-width: 440px !important;
             padding: 40px !important;
@@ -2702,14 +2702,14 @@ async function getActiveRazorpayKey() {
             <div class="modal-content rounded-4 text-center p-4">
                 <i class="fa-solid fa-shield-halved text-primary display-4 mb-3"></i>
                 <h4 class="fw-bold mb-1">2FA OTP Verification</h4>
-                <p class="text-muted small">Enter the 4-digit code sent to your registered mobile/email</p>
+                <p class="text-muted small" id="otpModalMessage">Enter the 4-digit code sent to your registered mobile/email</p>
                 <div class="d-flex justify-content-center gap-2 my-3">
-                    <input type="text" class="otp-input" maxlength="1" value="5">
-                    <input type="text" class="otp-input" maxlength="1" value="2">
-                    <input type="text" class="otp-input" maxlength="1" value="8">
-                    <input type="text" class="otp-input" maxlength="1" value="9">
+                    <input type="text" class="otp-input" maxlength="1" id="otp1">
+                    <input type="text" class="otp-input" maxlength="1" id="otp2">
+                    <input type="text" class="otp-input" maxlength="1" id="otp3">
+                    <input type="text" class="otp-input" maxlength="1" id="otp4">
                 </div>
-                <button class="btn btn-brand w-100 py-2 mt-2" onclick="verifyOtpAndProceed()">Verify & Confirm</button>
+                <button class="btn btn-brand w-100 py-2 mt-2" onclick="verifyOtpAndProceed()" id="verifyOtpBtn">Verify & Confirm</button>
             </div>
         </div>
     </div>
@@ -5220,10 +5220,108 @@ window.addEventListener('popstate', function(e) {
             toggleAuthMode('login');
         });
 
-        function requestOtp(e, actionType) {
+        let activeOtpKey = '';
+
+        // 1. Backend server se OTP request karna
+        async function requestOtp(e, actionType) {
             e.preventDefault();
-            pendingAction = actionType;
-            if (otpModal) otpModal.show();
+            
+            let payload = { action: actionType };
+            
+            if (actionType === 'login') {
+                payload.identifier = document.getElementById('loginEmail').value;
+                payload.password = document.getElementById('loginPassword').value;
+            } else if (actionType === 'signup') {
+                payload.name = document.getElementById('signupName').value;
+                payload.email = document.getElementById('signupEmail').value;
+                payload.phone = document.getElementById('signupPhone').value;
+                payload.password = document.getElementById('signupPassword').value;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Sending...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/customer/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                btn.innerHTML = origText;
+                btn.disabled = false;
+
+                if (res.ok && data.success) {
+                    activeOtpKey = data.key;
+                    document.getElementById('otpModalMessage').innerText = data.message;
+                    
+                    // Empty OTP boxes before opening
+                    document.getElementById('otp1').value = '';
+                    document.getElementById('otp2').value = '';
+                    document.getElementById('otp3').value = '';
+                    document.getElementById('otp4').value = '';
+                    
+                    if (otpModal) otpModal.show();
+                    
+                    // TESTING KE LIYE: Jab tak aapki Fast2SMS API key nahi lagti, 
+                    // screen par ek alert aayega jisme 4-digit code dikhega testing ke liye
+                    if(data.debugOtp) alert("Test Mode OTP Code: " + data.debugOtp);
+
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                alert('Server connect error: ' + err.message);
+            }
+        }
+
+        // 2. Backend server par OTP verify karna
+        async function verifyOtpAndProceed() {
+            const otpVal = document.getElementById('otp1').value + 
+                           document.getElementById('otp2').value + 
+                           document.getElementById('otp3').value + 
+                           document.getElementById('otp4').value;
+                           
+            if(otpVal.length !== 4) return alert('Kripya 4-digit OTP daalein');
+
+            const btn = document.getElementById('verifyOtpBtn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Verifying...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/customer/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
+                });
+                const data = await res.json();
+                
+                btn.innerHTML = 'Verify & Confirm';
+                btn.disabled = false;
+
+                if (res.ok && data.success) {
+                    if (otpModal) otpModal.hide();
+                    isLoggedIn = true;
+                    
+                    // Login data local storage mein save karein
+                    localStorage.setItem('mj_active_customer', JSON.stringify(data.user));
+                    alert('✅ Login Successful! Welcome ' + data.user.name);
+                    
+                    // Login ke baad My Account (Profile) tab par redirect
+                    checkAuthAndNavigate(); 
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (err) {
+                btn.innerHTML = 'Verify & Confirm';
+                btn.disabled = false;
+                alert('Server error: ' + err.message);
+            }
         }
 
         function verifyOtpAndProceed() {
