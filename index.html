@@ -2122,127 +2122,130 @@ async function getActiveRazorpayKey() {
         </div>
 
         <!-- AUTHENTICATION -->
-        <style>
-        /* Premium High-Tech Auth UI */
-        .auth-wrapper-3d {
-            perspective: 1000px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 40px 15px;
-        }
-        .auth-card-premium {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(203, 213, 225, 0.6);
-            border-radius: 28px;
-            box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.15), inset 0 2px 4px rgba(255,255,255,0.8);
-            width: 100%;
-            max-width: 480px;
-            padding: 45px 40px;
-            position: relative;
-            overflow: hidden;
-        }
-        .auth-card-premium::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 6px;
-            background: linear-gradient(90deg, #0ea5e9, #2563eb, #4f46e5);
-        }
-        .auth-nav-pills {
-            background: #f1f5f9;
-            padding: 6px;
-            border-radius: 20px;
-            margin-bottom: 35px;
-            display: flex;
-            gap: 6px;
-        }
-        .auth-nav-pills .nav-link {
-            border-radius: 16px;
-            font-weight: 800;
-            color: #64748b !important;
-            padding: 12px 20px;
-            border: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .auth-nav-pills .nav-link:hover {
-            color: #0f172a !important;
-        }
-        .auth-nav-pills .nav-link.active {
-            background: #ffffff !important;
-            color: #2563eb !important;
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-        }
-        .auth-input-group {
-            position: relative;
-            margin-bottom: 22px;
-        }
-        .auth-input-group i {
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            font-size: 18px;
-            transition: all 0.3s ease;
-        }
-        .auth-input-premium {
-            width: 100%;
-            background: #f8fafc;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 15px 20px 15px 50px;
-            font-size: 14.5px;
-            font-weight: 600;
-            color: #0f172a;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .auth-input-premium:focus {
-            background: #ffffff;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-            outline: none;
-        }
-        .auth-input-premium:focus + i, .auth-input-group:focus-within i {
-            color: #2563eb;
-        }
-        .auth-input-premium::placeholder {
-            color: #94a3b8;
-            font-weight: 500;
-        }
-        .auth-btn-premium {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #ffffff;
-            font-weight: 800;
-            font-size: 16px;
-            border: none;
-            border-radius: 16px;
-            padding: 16px;
-            width: 100%;
-            margin-top: 10px;
-            box-shadow: 0 10px 25px -6px rgba(37, 99, 235, 0.5), inset 0 2px 2px rgba(255,255,255,0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .auth-btn-premium:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px -6px rgba(37, 99, 235, 0.6), inset 0 2px 2px rgba(255,255,255,0.3);
-        }
-        .auth-btn-premium:disabled {
-            background: #cbd5e1;
-            color: #64748b;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
-        .auth-shield-icon {
-            font-size: 42px;
-            background: linear-gradient(135deg, #38bdf8, #2563eb);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 16px;
-            display: inline-block;
-        }
-        </style>
+        <style id="mjPremiumAuthStyles">
+/* Premium High-Tech Auth UI - Centered & Fixed */
+.auth-wrapper-3d {
+    perspective: 1000px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 120px); /* This ensures perfect vertical centering */
+    padding: 20px 15px;
+}
+.auth-card-premium {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(203, 213, 225, 0.6);
+    border-radius: 28px;
+    box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.15), inset 0 2px 4px rgba(255,255,255,0.8);
+    width: 100%;
+    max-width: 480px;
+    padding: 45px 40px;
+    position: relative;
+    overflow: hidden;
+}
+.auth-card-premium::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 6px;
+    background: linear-gradient(90deg, #0ea5e9, #2563eb, #4f46e5);
+}
+.auth-nav-pills {
+    background: #e2e8f0; /* Darker grey for better contrast */
+    padding: 6px;
+    border-radius: 20px;
+    margin-bottom: 35px;
+    display: flex;
+    gap: 6px;
+}
+.auth-nav-pills .nav-link {
+    border-radius: 16px;
+    font-weight: 800;
+    color: #64748b !important;
+    padding: 12px 20px;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+}
+.auth-nav-pills .nav-link:hover {
+    color: #0f172a !important;
+}
+/* This fixes the Active Tab Selection issue */
+.auth-nav-pills .nav-link.active {
+    background: #ffffff !important;
+    color: #2563eb !important;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.12) !important;
+}
+.auth-input-group {
+    position: relative;
+    margin-bottom: 22px;
+}
+.auth-input-group i {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+.auth-input-premium {
+    width: 100%;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 15px 20px 15px 50px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: #0f172a;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.auth-input-premium:focus {
+    background: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    outline: none;
+}
+.auth-input-premium:focus + i, .auth-input-group:focus-within i {
+    color: #2563eb;
+}
+.auth-input-premium::placeholder {
+    color: #94a3b8;
+    font-weight: 500;
+}
+.auth-btn-premium {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 16px;
+    border: none;
+    border-radius: 16px;
+    padding: 16px;
+    width: 100%;
+    margin-top: 10px;
+    box-shadow: 0 10px 25px -6px rgba(37, 99, 235, 0.5), inset 0 2px 2px rgba(255,255,255,0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.auth-btn-premium:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px -6px rgba(37, 99, 235, 0.6), inset 0 2px 2px rgba(255,255,255,0.3);
+}
+.auth-btn-premium:disabled {
+    background: #cbd5e1;
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+.auth-shield-icon {
+    font-size: 42px;
+    background: linear-gradient(135deg, #38bdf8, #2563eb);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+    display: inline-block;
+}
+</style>
 
         <div id="page-auth" class="page-view">
             <div class="auth-wrapper-3d">
