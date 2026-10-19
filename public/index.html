@@ -2123,65 +2123,89 @@ async function getActiveRazorpayKey() {
 
         <!-- AUTHENTICATION -->
         <style id="mjPremiumAuthStyles">
-        /* Premium High-Tech Auth UI - Centered & Fixed */
         .auth-wrapper-3d {
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
-            min-height: 85vh !important; /* Forces perfect vertical center */
-            padding: 20px 15px;
+            min-height: calc(100vh - 100px) !important; 
+            padding: 40px 15px !important;
+            background: transparent !important;
         }
         .auth-card-premium {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(203, 213, 225, 0.6);
-            border-radius: 28px;
-            box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.15), inset 0 2px 4px rgba(255,255,255,0.8);
-            width: 100%;
-            max-width: 480px;
-            padding: 45px 40px;
-            position: relative;
-            overflow: hidden;
-            margin: auto;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 24px !important;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1), 0 0 20px rgba(37, 99, 235, 0.05) !important;
+            width: 100% !important;
+            max-width: 440px !important;
+            padding: 40px !important;
+            position: relative !important;
+            margin: auto !important;
         }
         .auth-card-premium::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; height: 6px;
+            top: 0; left: 0; right: 0; height: 5px;
             background: linear-gradient(90deg, #0ea5e9, #2563eb, #4f46e5);
         }
         .auth-nav-pills {
-            background: #e2e8f0 !important; 
+            background: #f1f5f9 !important; 
             padding: 6px !important;
-            border-radius: 20px !important;
-            margin-bottom: 35px !important;
+            border-radius: 14px !important;
+            margin-bottom: 30px !important;
             display: flex !important;
-            gap: 6px !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            justify-content: space-between !important;
+            gap: 4px;
         }
         .auth-nav-pills .nav-link {
-            border-radius: 16px !important;
-            font-weight: 800 !important;
+            flex: 1 !important;
+            text-align: center !important;
+            border-radius: 10px !important;
+            font-weight: 700 !important;
             color: #64748b !important;
-            padding: 12px 20px !important;
+            padding: 10px 0 !important;
+            font-size: 15px !important;
             border: none !important;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            background-color: transparent !important;
-            width: 50% !important;
+            background: transparent !important;
+            white-space: nowrap !important; /* Forces text on one line */
         }
-        /* Strict Active State */
-        .auth-nav-pills .nav-link.active,
-        .auth-nav-pills .nav-link[aria-selected="true"] {
+        .auth-nav-pills .nav-link.active {
             background-color: #ffffff !important;
             color: #2563eb !important;
-            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.15) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
         }
-        .auth-input-group { position: relative; margin-bottom: 22px; }
-        .auth-input-group i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px; }
-        .auth-input-premium { width: 100%; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 15px 20px 15px 50px; font-size: 14.5px; font-weight: 600; color: #0f172a; }
-        .auth-input-premium:focus { background: #ffffff; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); outline: none; }
-        .auth-btn-premium { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; font-weight: 800; font-size: 16px; border: none; border-radius: 16px; padding: 16px; width: 100%; box-shadow: 0 10px 25px -6px rgba(37, 99, 235, 0.5); }
-        .auth-btn-premium:disabled { background: #cbd5e1; color: #64748b; box-shadow: none; cursor: not-allowed; }
-        .auth-shield-icon { font-size: 42px; background: linear-gradient(135deg, #38bdf8, #2563eb); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
+        .auth-input-group { position: relative; margin-bottom: 20px; }
+        .auth-input-group i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 16px; }
+        .auth-input-premium { 
+            width: 100%; 
+            background: #ffffff; 
+            border: 1.5px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 14px 14px 14px 44px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            color: #0f172a; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            transition: border-color 0.2s;
+        }
+        .auth-input-premium:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); outline: none; }
+        .auth-btn-premium { 
+            background: linear-gradient(135deg, #2563eb, #1d4ed8); 
+            color: #ffffff; 
+            font-weight: 700; 
+            font-size: 15px; 
+            border: none; 
+            border-radius: 12px; 
+            padding: 14px; 
+            width: 100%; 
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); 
+            transition: all 0.2s ease;
+        }
+        .auth-btn-premium:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4); }
+        .auth-btn-premium:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; color: #64748b; }
+        .auth-shield-icon { font-size: 40px; color: #2563eb; margin-bottom: 12px; display: inline-block; }
         </style>
 
         <div id="page-auth" class="page-view">
@@ -2189,24 +2213,24 @@ async function getActiveRazorpayKey() {
                 <div class="auth-card-premium">
                     <div class="text-center mb-4">
                         <i class="fa-solid fa-shield-halved auth-shield-icon"></i>
-                        <h3 class="fw-extrabold text-dark mb-1">Welcome to M J DIGITAL</h3>
-                        <p class="text-muted small fw-semibold">Enterprise-Grade Secure Authentication</p>
+                        <h4 class="fw-extrabold text-dark mb-1">M J DIGITAL</h4>
+                        <p class="text-muted small fw-semibold">Secure Authentication</p>
                     </div>
 
-                    <ul class="nav nav-pills nav-justified auth-nav-pills">
-                        <li class="nav-item"><button class="nav-link active" id="tab-login" aria-selected="true" onclick="toggleAuthMode('login')">Sign In</button></li>
-                        <li class="nav-item"><button class="nav-link" id="tab-signup" aria-selected="false" onclick="toggleAuthMode('signup')">Sign Up</button></li>
-                    </ul>
+                    <div class="auth-nav-pills">
+                        <button class="nav-link active" id="tab-login" onclick="toggleAuthMode('login')">Sign In</button>
+                        <button class="nav-link" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</button>
+                    </div>
 
                     <!-- LOGIN FORM -->
                     <form id="loginForm" onsubmit="requestOtp(event, 'login')">
                         <div class="auth-input-group">
-                            <input type="text" id="loginEmail" class="auth-input-premium" placeholder="Registered Mobile / Email" required>
                             <i class="fa-solid fa-user"></i>
+                            <input type="text" id="loginEmail" class="auth-input-premium" placeholder="Mobile or Email" required>
                         </div>
                         <div class="auth-input-group">
-                            <input type="password" id="loginPassword" class="auth-input-premium" placeholder="Secure Password" required>
                             <i class="fa-solid fa-lock"></i>
+                            <input type="password" id="loginPassword" class="auth-input-premium" placeholder="Password" required>
                         </div>
                         <button type="submit" class="auth-btn-premium">Secure Login &rarr;</button>
                     </form>
@@ -2214,24 +2238,24 @@ async function getActiveRazorpayKey() {
                     <!-- SIGNUP FORM -->
                     <form id="signupForm" style="display: none;" onsubmit="requestOtp(event, 'signup')">
                         <div class="auth-input-group">
-                            <input type="text" id="signupName" class="auth-input-premium" placeholder="Full Legal Name" required>
                             <i class="fa-solid fa-id-card"></i>
+                            <input type="text" id="signupName" class="auth-input-premium" placeholder="Full Name" required>
                         </div>
                         <div class="auth-input-group">
-                            <input type="email" id="signupEmail" class="auth-input-premium" placeholder="Email Address" required>
                             <i class="fa-solid fa-envelope"></i>
+                            <input type="email" id="signupEmail" class="auth-input-premium" placeholder="Email Address" required>
                         </div>
                         <div class="auth-input-group">
-                            <input type="tel" id="signupPhone" class="auth-input-premium" placeholder="10-digit Mobile Number" maxlength="10" required>
                             <i class="fa-solid fa-mobile-screen"></i>
+                            <input type="tel" id="signupPhone" class="auth-input-premium" placeholder="10-digit Mobile Number" maxlength="10" required>
                         </div>
                         <div class="mb-4">
                             <div class="auth-input-group mb-2">
-                                <input type="password" id="signupPassword" class="auth-input-premium" placeholder="Create Secure Password" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
                                 <i class="fa-solid fa-key"></i>
+                                <input type="password" id="signupPassword" class="auth-input-premium" placeholder="Create Password (Min 12)" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
                             </div>
                             <!-- Live Strength Meter -->
-                            <div class="d-flex gap-1" style="height: 6px;">
+                            <div class="d-flex gap-1" style="height: 5px;">
                                 <div id="meter-1" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
                                 <div id="meter-2" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
                                 <div id="meter-3" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
@@ -2239,7 +2263,7 @@ async function getActiveRazorpayKey() {
                             </div>
                             <small id="pwdHelper" class="text-muted d-block mt-2 fw-semibold" style="font-size: 11px;">Min 12 chars, uppercase, lowercase, number & symbol.</small>
                         </div>
-                        <button type="submit" id="signupSubmitBtn" class="auth-btn-premium" disabled>Create Account & Verify &rarr;</button>
+                        <button type="submit" id="signupSubmitBtn" class="auth-btn-premium" disabled>Create Account</button>
                     </form>
                 </div>
             </div>
@@ -2726,7 +2750,15 @@ async function getActiveRazorpayKey() {
     <!-- JAVASCRIPT CONTROLLER -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let isLoggedIn = true;
+        let isLoggedIn = false;
+        try {
+            // Check if user actually logged in via local storage
+            const rawUser = localStorage.getItem('mj_active_customer');
+            if (rawUser && JSON.parse(rawUser).phone) {
+                isLoggedIn = true;
+            }
+        } catch(e) {}
+        
         let pendingAction = '';
         let trackingModal, otpModal, cancelModal;
         let activeCheckoutData = null;
@@ -5164,16 +5196,12 @@ window.addEventListener('popstate', function(e) {
     
             if (mode === 'login') {
                 loginBtn.classList.add('active');
-                loginBtn.setAttribute('aria-selected', 'true');
                 signupBtn.classList.remove('active');
-                signupBtn.setAttribute('aria-selected', 'false');
                 document.getElementById('loginForm').style.display = 'block';
                 document.getElementById('signupForm').style.display = 'none';
             } else {
                 signupBtn.classList.add('active');
-                signupBtn.setAttribute('aria-selected', 'true');
                 loginBtn.classList.remove('active');
-                loginBtn.setAttribute('aria-selected', 'false');
                 document.getElementById('signupForm').style.display = 'block';
                 document.getElementById('loginForm').style.display = 'none';
             }
