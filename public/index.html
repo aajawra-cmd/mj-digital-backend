@@ -2122,38 +2122,215 @@ async function getActiveRazorpayKey() {
         </div>
 
         <!-- AUTHENTICATION -->
+        <style>
+        /* Premium High-Tech Auth UI */
+        .auth-wrapper-3d {
+            perspective: 1000px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 15px;
+        }
+        .auth-card-premium {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(203, 213, 225, 0.6);
+            border-radius: 28px;
+            box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.15), inset 0 2px 4px rgba(255,255,255,0.8);
+            width: 100%;
+            max-width: 480px;
+            padding: 45px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-card-premium::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 6px;
+            background: linear-gradient(90deg, #0ea5e9, #2563eb, #4f46e5);
+        }
+        .auth-nav-pills {
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 20px;
+            margin-bottom: 35px;
+            display: flex;
+            gap: 6px;
+        }
+        .auth-nav-pills .nav-link {
+            border-radius: 16px;
+            font-weight: 800;
+            color: #64748b !important;
+            padding: 12px 20px;
+            border: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .auth-nav-pills .nav-link:hover {
+            color: #0f172a !important;
+        }
+        .auth-nav-pills .nav-link.active {
+            background: #ffffff !important;
+            color: #2563eb !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+        .auth-input-group {
+            position: relative;
+            margin-bottom: 22px;
+        }
+        .auth-input-group i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        .auth-input-premium {
+            width: 100%;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 15px 20px 15px 50px;
+            font-size: 14.5px;
+            font-weight: 600;
+            color: #0f172a;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .auth-input-premium:focus {
+            background: #ffffff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            outline: none;
+        }
+        .auth-input-premium:focus + i, .auth-input-group:focus-within i {
+            color: #2563eb;
+        }
+        .auth-input-premium::placeholder {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .auth-btn-premium {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 16px;
+            border: none;
+            border-radius: 16px;
+            padding: 16px;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 10px 25px -6px rgba(37, 99, 235, 0.5), inset 0 2px 2px rgba(255,255,255,0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .auth-btn-premium:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -6px rgba(37, 99, 235, 0.6), inset 0 2px 2px rgba(255,255,255,0.3);
+        }
+        .auth-btn-premium:disabled {
+            background: #cbd5e1;
+            color: #64748b;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        .auth-shield-icon {
+            font-size: 42px;
+            background: linear-gradient(135deg, #38bdf8, #2563eb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+        </style>
+
         <div id="page-auth" class="page-view">
-            <div class="auth-card card-custom p-4">
-                <ul class="nav nav-pills nav-justified mb-4">
-                    <li class="nav-item"><button class="nav-link active fw-bold" id="tab-login" onclick="toggleAuthMode('login')">Sign In</button></li>
-                    <li class="nav-item"><button class="nav-link fw-bold" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</button></li>
-                </ul>
-
-                <form id="loginForm" onsubmit="requestOtp(event, 'login')">
-                    <div class="mb-3"><label class="small fw-bold">Mobile / Email</label><input type="text" id="loginEmail" class="form-control" value="8306669999" required></div>
-                    <div class="mb-3"><label class="small fw-bold">Password</label><input type="password" id="loginPassword" class="form-control" value="123456" required></div>
-                    <button type="submit" class="btn btn-brand w-100 py-2 mt-2">Get OTP & Login</button>
-                </form>
-
-                <form id="signupForm" style="display: none;" onsubmit="requestOtp(event, 'signup')">
-                    <div class="mb-3"><label class="small fw-bold">Full Name</label><input type="text" id="signupName" class="form-control" placeholder="M J Customer" required></div>
-                    <div class="mb-3"><label class="small fw-bold">Email Address</label><input type="email" id="signupEmail" class="form-control" placeholder="mjdigitalworlds@gmail.com" required></div>
-                    <div class="mb-3"><label class="small fw-bold">Mobile Number</label><input type="tel" id="signupPhone" class="form-control" placeholder="+91 830 666 9999" required></div>
-                    <div class="mb-3">
-                        <label class="small fw-bold">Create Secure Password</label>
-                        <input type="password" id="signupPassword" class="form-control" placeholder="Min 12 chars (A-Z, a-z, 0-9, $!@#%)" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
-                        
-                        <!-- Live Strength Meter -->
-                        <div class="d-flex gap-1 mt-2" style="height: 6px;">
-                            <div id="meter-1" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
-                            <div id="meter-2" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
-                            <div id="meter-3" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
-                            <div id="meter-4" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
-                        </div>
-                        <small id="pwdHelper" class="text-muted d-block mt-1" style="font-size: 11px;">12+ chars, uppercase, lowercase, number & symbol required.</small>
+            <div class="auth-wrapper-3d">
+                <div class="auth-card-premium">
+                    <div class="text-center mb-4">
+                        <i class="fa-solid fa-shield-halved auth-shield-icon"></i>
+                        <h3 class="fw-extrabold text-dark mb-1" style="letter-spacing: -0.5px;">Welcome to M J DIGITAL</h3>
+                        <p class="text-muted small fw-semibold">Enterprise-Grade Secure Authentication</p>
                     </div>
-                    <button type="submit" id="signupSubmitBtn" class="btn btn-brand w-100 py-2 mt-2" disabled>Send OTP Verification</button>
-                </form>
+
+                    <ul class="nav nav-pills nav-justified auth-nav-pills">
+                        <li class="nav-item"><button class="nav-link active" id="tab-login" onclick="toggleAuthMode('login')">Sign In</button></li>
+                        <li class="nav-item"><button class="nav-link" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</button></li>
+                    </ul>
+
+                    <!-- LOGIN FORM -->
+                    <form id="loginForm" onsubmit="requestOtp(event, 'login')">
+                        <div class="auth-input-group">
+                            <input type="text" id="loginEmail" class="auth-input-premium" placeholder="Registered Mobile / Email" required>
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="auth-input-group">
+                            <input type="password" id="loginPassword" class="auth-input-premium" placeholder="Secure Password" required>
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-4 px-1">
+                            <label class="small text-muted fw-semibold cursor-pointer d-flex align-items-center gap-2">
+                                <input type="checkbox" style="width:16px; height:16px; accent-color: #2563eb;"> Remember me
+                            </label>
+                            <a href="#" class="small fw-bold text-primary text-decoration-none hover-shadow">Forgot Password?</a>
+                        </div>
+                        
+                        <button type="submit" class="auth-btn-premium">Secure Login &rarr;</button>
+                        
+                        <div class="text-center mt-4 pt-4 border-top">
+                            <p class="small text-muted fw-semibold mb-3">Or continue with</p>
+                            <div class="d-flex gap-3 justify-content-center">
+                                <button type="button" class="btn btn-light border rounded-pill px-4 py-2.5 fw-bold text-dark d-flex align-items-center gap-2 shadow-xs transition hover-bg">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="18"> Google
+                                </button>
+                                <button type="button" class="btn btn-light border rounded-pill px-4 py-2.5 fw-bold text-dark d-flex align-items-center gap-2 shadow-xs transition hover-bg">
+                                    <i class="fa-brands fa-apple fs-5"></i> Apple
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- SIGNUP FORM -->
+                    <form id="signupForm" style="display: none;" onsubmit="requestOtp(event, 'signup')">
+                        <div class="auth-input-group">
+                            <input type="text" id="signupName" class="auth-input-premium" placeholder="Full Legal Name" required>
+                            <i class="fa-solid fa-id-card"></i>
+                        </div>
+                        <div class="auth-input-group">
+                            <input type="email" id="signupEmail" class="auth-input-premium" placeholder="Email Address" required>
+                            <i class="fa-solid fa-envelope"></i>
+                        </div>
+                        <div class="auth-input-group">
+                            <input type="tel" id="signupPhone" class="auth-input-premium" placeholder="10-digit Mobile Number" maxlength="10" required>
+                            <i class="fa-solid fa-mobile-screen"></i>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="auth-input-group mb-2">
+                                <input type="password" id="signupPassword" class="auth-input-premium" placeholder="Create Secure Password" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
+                                <i class="fa-solid fa-key"></i>
+                            </div>
+                            <!-- Live Strength Meter -->
+                            <div class="d-flex gap-1" style="height: 6px;">
+                                <div id="meter-1" class="flex-grow-1 bg-secondary rounded-pill opacity-25 transition"></div>
+                                <div id="meter-2" class="flex-grow-1 bg-secondary rounded-pill opacity-25 transition"></div>
+                                <div id="meter-3" class="flex-grow-1 bg-secondary rounded-pill opacity-25 transition"></div>
+                                <div id="meter-4" class="flex-grow-1 bg-secondary rounded-pill opacity-25 transition"></div>
+                            </div>
+                            <small id="pwdHelper" class="text-muted d-block mt-2 fw-semibold" style="font-size: 11px;">
+                                <i class="fa-solid fa-circle-info me-1"></i>Min 12 chars, uppercase, lowercase, number & symbol.
+                            </small>
+                        </div>
+                        
+                        <div class="d-flex align-items-start gap-2 mb-4 px-1">
+                            <input type="checkbox" required class="mt-1" style="width:16px; height:16px; accent-color: #2563eb;">
+                            <label class="small text-muted fw-semibold" style="font-size: 11.5px; line-height: 1.5;">I verify that the provided information is accurate and I agree to the <a href="javascript:void(0)" onclick="navigateTo('page-terms')" class="text-primary fw-bold text-decoration-none">Terms of Service</a> & Privacy Policy.</label>
+                        </div>
+
+                        <button type="submit" id="signupSubmitBtn" class="auth-btn-premium" disabled>Create Account & Verify &rarr;</button>
+                    </form>
+                </div>
             </div>
         </div>
 
