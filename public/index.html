@@ -2132,16 +2132,22 @@ async function getActiveRazorpayKey() {
             --auth-input-bg: #f8fafc;
         }
 
-        /* Perfect Vertical Centering & Transparent Background */
+        /* YAHAN FIX HAI: Full Screen & Perfect Center Lock */
         #page-auth:not(.active) { display: none !important; }
         #page-auth.active {
             display: flex !important;
             align-items: center;
             justify-content: center;
-            min-height: 75vh;
-            background: transparent !important; /* Dark background removed */
-            margin: 0;
-            padding: 20px 15px;
+            position: fixed; /* Yeh page ko lock kar dega */
+            top: 76px; /* Navbar ke theek neeche se start hoga */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #f8fafc !important; /* Pura background clean light grey */
+            z-index: 1040; /* Footer aur baaki cheezon ke upar dikhega */
+            margin: 0 !important;
+            padding: 20px;
+            overflow-y: auto; /* Chhoti screen par scroll allow karega */
         }
 
         .light-auth-card {
@@ -2154,7 +2160,7 @@ async function getActiveRazorpayKey() {
             padding: 40px;
             position: relative;
             color: var(--auth-text);
-            margin: auto;
+            margin: auto; /* Card ko dabbe ke beecho-beech rakhega */
         }
         .light-auth-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
