@@ -2121,11 +2121,11 @@ async function getActiveRazorpayKey() {
             </form>
         </div>
 
-        <!-- AUTHENTICATION (LIGHT PREMIUM THEME) -->
+        <!-- AUTHENTICATION (LIGHT PREMIUM THEME FIXED) -->
         <style id="mjLightPremiumAuthStyles">
         :root {
-            --auth-primary: #2563eb;   /* Premium Blue */
-            --auth-secondary: #0ea5e9; /* Light Blue Accent */
+            --auth-primary: #2563eb;
+            --auth-secondary: #0ea5e9;
             --auth-text: #0f172a;
             --auth-muted: #64748b;
             --auth-border: #e2e8f0;
@@ -2138,16 +2138,16 @@ async function getActiveRazorpayKey() {
             display: flex !important;
             align-items: center;
             justify-content: center;
-            position: fixed; /* Yeh page ko lock kar dega */
-            top: 76px; /* Navbar ke theek neeche se start hoga */
+            position: fixed;
+            top: 76px;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #f8fafc !important; /* Pura background clean light grey */
-            z-index: 1040; /* Footer aur baaki cheezon ke upar dikhega */
+            background-color: #f8fafc !important;
+            z-index: 1040;
             margin: 0 !important;
             padding: 20px;
-            overflow-y: auto; /* Chhoti screen par scroll allow karega */
+            overflow-y: auto;
         }
 
         .light-auth-card {
@@ -2160,7 +2160,7 @@ async function getActiveRazorpayKey() {
             padding: 40px;
             position: relative;
             color: var(--auth-text);
-            margin: auto; /* Card ko dabbe ke beecho-beech rakhega */
+            margin: auto;
         }
         .light-auth-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
@@ -2204,7 +2204,6 @@ async function getActiveRazorpayKey() {
         .light-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.35); }
         .light-btn:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; color: #f8fafc; }
         
-        /* Authentic ReCAPTCHA Clone */
         .rc-widget { background: #fafafa; border: 1px solid #d3d3d3; border-radius: 4px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; color: #555; font-family: Arial, sans-serif; cursor: pointer; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto;}
         .rc-box { width: 28px; height: 28px; border: 2px solid #c1c1c1; background: #fff; border-radius: 2px; display: flex; align-items: center; justify-content: center; }
         .rc-box.checked { border-color: #009688; }
@@ -2227,7 +2226,7 @@ async function getActiveRazorpayKey() {
                 </div>
 
                 <!-- LOGIN FORM -->
-                <form id="loginForm" style="display: block;" onsubmit="handleRecaptchaSubmit(event, 'login')">
+                <form id="loginForm" style="display: block;" onsubmit="handleAuthSubmit(event, 'login')">
                     <div class="light-input-group">
                         <i class="fa-solid fa-user"></i>
                         <input type="text" id="loginEmail" class="light-input" placeholder="Mobile or Email" required>
@@ -2253,7 +2252,7 @@ async function getActiveRazorpayKey() {
                 </form>
 
                 <!-- SIGNUP FORM -->
-                <form id="signupForm" style="display: none;" onsubmit="handleRecaptchaSubmit(event, 'signup')">
+                <form id="signupForm" style="display: none;" onsubmit="handleAuthSubmit(event, 'signup')">
                     <div class="light-input-group">
                         <i class="fa-solid fa-id-card"></i>
                         <input type="text" id="signupName" class="light-input" placeholder="Full Legal Name" required>
@@ -2271,7 +2270,6 @@ async function getActiveRazorpayKey() {
                             <i class="fa-solid fa-key"></i>
                             <input type="password" id="signupPassword" class="light-input" placeholder="Create Password (Min 12)" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
                         </div>
-                        <!-- Live Strength Meter -->
                         <div class="d-flex gap-1" style="height: 5px;">
                             <div id="meter-1" class="flex-grow-1 rounded-pill bg-secondary opacity-25"></div>
                             <div id="meter-2" class="flex-grow-1 rounded-pill bg-secondary opacity-25"></div>
@@ -2299,7 +2297,6 @@ async function getActiveRazorpayKey() {
         </div>
 
         <script>
-        // Dummy reCAPTCHA Visual Logic
         function toggleRecaptcha(widgetEl) {
             const box = widgetEl.querySelector('.rc-box');
             if (box.classList.contains('checked')) return;
@@ -2310,22 +2307,125 @@ async function getActiveRazorpayKey() {
             }, 800);
         }
 
-        function handleRecaptchaSubmit(e, type) {
+        // Dummy toast if not defined
+        function showToast(title, msg, type) {
+            alert(title + ": " + msg);
+        }
+
+        let activeOtpKey = '';
+        let currentAuthAction = '';
+
+        async function handleAuthSubmit(e, type) {
             e.preventDefault();
-            const form = e.target;
-            const rcBox = form.querySelector('.rc-box');
-            if (!rcBox.classList.contains('checked')) {
-                alert('⚠️ Security Alert: Please verify you are not a robot (Tick the reCAPTCHA box).');
+            const formId = type === 'login' ? 'loginForm' : 'signupForm';
+            const rcBox = document.querySelector(`#${formId} .rc-box`);
+            
+            if (!rcBox || !rcBox.classList.contains('checked')) {
+                alert('⚠️ Please verify you are not a robot (Tick the reCAPTCHA box).');
                 return;
             }
-            if (typeof requestOtp === 'function') {
-                requestOtp(e, type);
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> PROCESSING...';
+            btn.disabled = true;
+
+            currentAuthAction = type;
+            let payload = { action: type };
+            
+            if (type === 'login') {
+                payload.identifier = document.getElementById('loginEmail').value;
+                payload.password = document.getElementById('loginPassword').value;
             } else {
-                alert("Security verified! Backend API calling...");
+                payload.name = document.getElementById('signupName').value;
+                payload.email = document.getElementById('signupEmail').value;
+                payload.phone = document.getElementById('signupPhone').value;
+                payload.password = document.getElementById('signupPassword').value;
+            }
+
+            try {
+                const res = await fetch('/api/customer/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                btn.innerHTML = origText;
+                btn.disabled = false;
+
+                if (res.ok && data.success) {
+                    activeOtpKey = data.key;
+                    
+                    const otpMod = document.getElementById('otpVerificationModal');
+                    if (otpMod) {
+                       const m = bootstrap.Modal.getOrCreateInstance(otpMod);
+                       m.show();
+                    }
+                    
+                    document.getElementById('otp1').value = '';
+                    document.getElementById('otp2').value = '';
+                    document.getElementById('otp3').value = '';
+                    document.getElementById('otp4').value = '';
+                    setTimeout(() => document.getElementById('otp1').focus(), 400);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                alert('Network Error: ' + err.message);
             }
         }
-        </script>
 
+        async 
+
+            const btn = document.getElementById('verifyOtpBtn');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> VERIFYING...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/customer/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: activeOtpKey, otp: code })
+                });
+                const data = await res.json();
+                
+                btn.innerHTML = origText;
+                btn.disabled = false;
+
+                if (res.ok && data.success) {
+                    const otpMod = document.getElementById('otpVerificationModal');
+                    if (otpMod) {
+                       bootstrap.Modal.getInstance(otpMod).hide();
+                    }
+                    isLoggedIn = true;
+                    localStorage.setItem('mj_active_customer', JSON.stringify(data.user));
+                    
+                    alert('✅ Login Successful! Welcome ' + (data.user.name || ''));
+                    
+                    if (typeof checkAuthAndNavigate === 'function') {
+                        checkAuthAndNavigate();
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    alert('❌ ' + (data.message || 'Invalid OTP'));
+                    document.getElementById('otp1').value = '';
+                    document.getElementById('otp2').value = '';
+                    document.getElementById('otp3').value = '';
+                    document.getElementById('otp4').value = '';
+                    document.getElementById('otp1').focus();
+                }
+            } catch (err) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                alert('Server Error: ' + err.message);
+            }
+        </script>
+        
         <!-- ACCOUNT DASHBOARD -->
         <div id="page-profile" class="page-view">
             <h3 class="fw-bold mb-4"><i class="fa-solid fa-user-gear text-primary me-2"></i>My Account Dashboard</h3>
@@ -5293,134 +5393,6 @@ window.addEventListener('popstate', function(e) {
             toggleAuthMode('login');
         });
 
-        let activeOtpKey = '';
-        let currentAuthAction = '';
-
-        // 1. ASLI OTP BHEJNE KI REQUEST (Fast2SMS API Trigger hogi)
-        async function handleAuthSubmit(e, type) {
-            e.preventDefault();
-            const formId = type === 'login' ? 'loginForm' : 'signupForm';
-            const rcBox = document.querySelector(`#${formId} .rc-box`);
-            
-            if (!rcBox || !rcBox.classList.contains('checked')) {
-                showToast('Verification Failed', 'Please verify you are not a robot.', 'error');
-                return;
-            }
-
-            const btn = e.target.querySelector('button[type="submit"]');
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> PROCESSING...';
-            btn.disabled = true;
-
-            currentAuthAction = type;
-            let payload = { action: type };
-            
-            if (type === 'login') {
-                payload.identifier = document.getElementById('loginEmail').value;
-                payload.password = document.getElementById('loginPassword').value;
-            } else {
-                payload.name = document.getElementById('signupName').value;
-                payload.email = document.getElementById('signupEmail').value;
-                payload.phone = document.getElementById('signupPhone').value;
-                payload.password = document.getElementById('signupPassword').value;
-            }
-
-            try {
-                // BACKEND SE LIVE CONNECTION
-                const res = await fetch('/api/customer/request-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                
-                btn.innerHTML = origText;
-                btn.disabled = false;
-
-                if (res.ok && data.success) {
-                    activeOtpKey = data.key;
-                    document.getElementById('otpModal').classList.add('active');
-                    showToast('OTP Sent', data.message || 'OTP dispatched to your device.', 'success');
-                    
-                    const otpInputs = document.querySelectorAll('.otp-digit');
-                    otpInputs.forEach(inp => inp.value = '');
-                    setTimeout(() => otpInputs[0].focus(), 400);
-                } else {
-                    showToast('Error', data.message, 'error');
-                }
-            } catch (err) {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                showToast('Network Error', err.message, 'error');
-            }
-        }
-
-        // 2. ASLI OTP VERIFY KARNA (Galat OTP par Dashboard block rahega!)
-        async function verifyOTP() {
-            const otpInputs = document.querySelectorAll('.otp-digit');
-            let code = '';
-            otpInputs.forEach(inp => code += inp.value);
-            
-            if (code.length < 4) {
-                showToast('Error', 'Please enter complete 4-digit code.', 'error');
-                return;
-            }
-
-            const btn = document.querySelector('#otpModal button.light-btn') || document.querySelector('#otpModal button');
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> VERIFYING...';
-            btn.disabled = true;
-
-            try {
-                // SERVER SE OTP CHECK KARWANA
-                const res = await fetch('/api/customer/verify-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: activeOtpKey, otp: code })
-                });
-                const data = await res.json();
-                
-                btn.innerHTML = origText;
-                btn.disabled = false;
-
-                // AGAR BACKEND NE BOLA OTP SAHI HAI TABHI LOGIN HOGA
-                if (res.ok && data.success) {
-                    document.getElementById('otpModal').classList.remove('active');
-                    isLoggedIn = true;
-                    localStorage.setItem('mj_active_customer', JSON.stringify(data.user));
-                    
-                    showToast('Authentication Successful', 'Welcome ' + (data.user.name || ''), 'success');
-                    
-                    setTimeout(() => {
-                        if (typeof checkAuthAndNavigate === 'function') {
-                            checkAuthAndNavigate();
-                        } else {
-                            window.location.reload();
-                        }
-                    }, 1000);
-                } else {
-                    // GALAT OTP PAR RED ALERT AUR BOX KHALI HOGA
-                    showToast('Verification Failed', data.message || 'Invalid OTP', 'error');
-                    otpInputs.forEach(inp => inp.value = '');
-                    otpInputs[0].focus();
-                }
-            } catch (err) {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                showToast('Server Error', err.message, 'error');
-            }
-        }
-
-        // 3. RESEND OTP FIX
-        function resendOTP() {
-            if (!currentAuthAction) return;
-            const formId = currentAuthAction === 'login' ? 'loginForm' : 'signupForm';
-            const form = document.getElementById(formId);
-            if (form) {
-                form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-            }
-        }
-        
         function logout() {
             isLoggedIn = false;
             
