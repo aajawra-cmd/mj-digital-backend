@@ -2121,137 +2121,196 @@ async function getActiveRazorpayKey() {
             </form>
         </div>
 
-        <!-- AUTHENTICATION -->
-        <style id="mjPremiumAuthStyles">
-        .auth-wrapper-3d {
+        <!-- AUTHENTICATION (DARK PREMIUM THEME) -->
+        <style id="mjDarkPremiumAuthStyles">
+        #page-auth {
+            background-color: #0b0f19;
+            background-image: radial-gradient(circle at 15% 50%, rgba(14, 165, 233, 0.15), transparent 25%),
+                              radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.15), transparent 25%);
+            min-height: calc(100vh - 70px);
             display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            min-height: 75vh !important; /* <-- Yeh line perfect center ke liye hai */
-            padding: 20px 15px !important;
-            background: transparent !important;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 15px;
         }
-        .auth-card-premium {
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
-            border-radius: 24px !important;
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1), 0 0 20px rgba(1, 1, 2, 0.05) !important;
-            width: 100% !important;
-            max-width: 440px !important;
-            padding: 40px !important;
-            position: relative !important;
+        .dark-auth-card {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(14, 165, 233, 0.15);
+            width: 100%;
+            max-width: 460px;
+            padding: 40px;
+            position: relative;
+            color: #f8fafc;
+            margin: auto;
         }
-        .auth-card-premium::before {
+        .dark-auth-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; height: 5px;
-            background: linear-gradient(90deg, #0ea5e9, #2563eb, #4f46e5);
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, transparent, #0ea5e9, #06b6d4, transparent);
+            box-shadow: 0 0 15px #0ea5e9;
         }
-        /* Custom Auth Tabs (No Bootstrap Interference) */
-        .custom-auth-tabs {
-            background: #f1f5f9 !important; 
-            padding: 6px !important;
-            border-radius: 14px !important;
-            margin-bottom: 30px !important;
-            display: flex !important;
-            justify-content: space-between !important;
+        .dark-nav-pills {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            border: 1px solid rgba(255,255,255,0.05);
         }
-        .custom-auth-btn {
-            flex: 1 !important;
-            text-align: center !important;
-            border-radius: 10px !important;
-            font-weight: 700 !important;
-            color: #64748b !important;
-            padding: 10px 0 !important;
-            font-size: 15px !important;
-            border: none !important;
-            background: transparent !important;
-            transition: all 0.2s ease !important;
+        .dark-nav-pills .custom-auth-btn {
+            flex: 1; text-align: center; border-radius: 8px; font-weight: 600;
+            color: #94a3b8 !important; padding: 12px 0; font-size: 15px;
+            background: transparent; border: none; transition: all 0.3s ease;
         }
-        /* The Default Active Look! */
-        .custom-auth-btn.active-tab {
-            background-color: #ffffff !important;
-            color: #2563eb !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        .dark-nav-pills .custom-auth-btn.active-tab {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.8), rgba(99, 102, 241, 0.8)) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
-        .auth-input-group { position: relative; margin-bottom: 20px; }
-        .auth-input-group i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 16px; }
-        .auth-input-premium { 
-            width: 100%; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; 
-            padding: 14px 14px 14px 44px; font-size: 14px; font-weight: 600; color: #0f172a; 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: border-color 0.2s;
+        .dark-input-group { position: relative; margin-bottom: 20px; }
+        .dark-input-group i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 16px; }
+        .dark-input {
+            width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 12px; padding: 14px 14px 14px 44px; font-size: 14px; font-weight: 500;
+            color: #f8fafc; transition: all 0.3s;
         }
-        .auth-input-premium:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); outline: none; }
-        .auth-btn-premium { 
-            background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; font-weight: 700; 
-            font-size: 15px; border: none; border-radius: 12px; padding: 14px; width: 100%; 
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); transition: all 0.2s ease;
+        .dark-input:focus {
+            border-color: #0ea5e9; background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15); outline: none;
         }
-        .auth-btn-premium:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4); }
-        .auth-btn-premium:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; color: #64748b; }
-        .auth-shield-icon { font-size: 40px; color: #2563eb; margin-bottom: 12px; display: inline-block; }
+        .dark-input::placeholder { color: rgba(148, 163, 184, 0.6); }
+        .dark-btn {
+            background: linear-gradient(90deg, #0ea5e9, #4f46e5); color: #fff; font-weight: 700;
+            border: none; border-radius: 12px; padding: 14px; width: 100%; margin-top: 5px;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); transition: all 0.3s;
+        }
+        .dark-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.6); }
+        
+        /* Authentic ReCAPTCHA Clone */
+        .rc-widget { background: #fafafa; border: 1px solid #d3d3d3; border-radius: 3px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; color: #555; font-family: Arial, sans-serif; cursor: pointer; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto;}
+        .rc-box { width: 28px; height: 28px; border: 2px solid #c1c1c1; background: #fff; border-radius: 2px; display: flex; align-items: center; justify-content: center; }
+        .rc-box.checked { border-color: #009688; }
+        .rc-box.checked::after { content: ''; width: 6px; height: 12px; border: solid #009688; border-width: 0 3px 3px 0; transform: rotate(45deg); margin-bottom: 4px; }
+        .auth-logo-text { font-size: 28px; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 900; letter-spacing: 1px; }
         </style>
 
         <div id="page-auth" class="page-view">
-            <div class="auth-wrapper-3d">
-                <div class="auth-card-premium">
-                    <div class="text-center mb-4">
-                        <i class="fa-solid fa-shield-halved auth-shield-icon"></i>
-                        <h4 class="fw-extrabold text-dark mb-1">M J DIGITAL</h4>
-                        <p class="text-muted small fw-semibold">Secure Authentication</p>
-                    </div>
-
-                    <!-- Fixed Custom Tabs -->
-                    <div class="custom-auth-tabs">
-                        <button class="custom-auth-btn active-tab" id="tab-login" onclick="toggleAuthMode('login')">Sign In</button>
-                        <button class="custom-auth-btn" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</button>
-                    </div>
-
-                    <!-- LOGIN FORM -->
-                    <form id="loginForm" style="display: block;" onsubmit="requestOtp(event, 'login')">
-                        <div class="auth-input-group">
-                            <i class="fa-solid fa-user"></i>
-                            <input type="text" id="loginEmail" class="auth-input-premium" placeholder="Mobile or Email" required>
-                        </div>
-                        <div class="auth-input-group">
-                            <i class="fa-solid fa-lock"></i>
-                            <input type="password" id="loginPassword" class="auth-input-premium" placeholder="Password" required>
-                        </div>
-                        <button type="submit" class="auth-btn-premium">Secure Login &rarr;</button>
-                    </form>
-
-                    <!-- SIGNUP FORM -->
-                    <form id="signupForm" style="display: none;" onsubmit="requestOtp(event, 'signup')">
-                        <div class="auth-input-group">
-                            <i class="fa-solid fa-id-card"></i>
-                            <input type="text" id="signupName" class="auth-input-premium" placeholder="Full Name" required>
-                        </div>
-                        <div class="auth-input-group">
-                            <i class="fa-solid fa-envelope"></i>
-                            <input type="email" id="signupEmail" class="auth-input-premium" placeholder="Email Address" required>
-                        </div>
-                        <div class="auth-input-group">
-                            <i class="fa-solid fa-mobile-screen"></i>
-                            <input type="tel" id="signupPhone" class="auth-input-premium" placeholder="10-digit Mobile Number" maxlength="10" required>
-                        </div>
-                        <div class="mb-4">
-                            <div class="auth-input-group mb-2">
-                                <i class="fa-solid fa-key"></i>
-                                <input type="password" id="signupPassword" class="auth-input-premium" placeholder="Create Password (Min 12)" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
-                            </div>
-                            <div class="d-flex gap-1" style="height: 5px;">
-                                <div id="meter-1" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
-                                <div id="meter-2" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
-                                <div id="meter-3" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
-                                <div id="meter-4" class="flex-grow-1 bg-secondary rounded-pill opacity-25"></div>
-                            </div>
-                            <small id="pwdHelper" class="text-muted d-block mt-2 fw-semibold" style="font-size: 11px;">Min 12 chars, uppercase, lowercase, number & symbol.</small>
-                        </div>
-                        <button type="submit" id="signupSubmitBtn" class="auth-btn-premium" disabled>Create Account</button>
-                    </form>
+            <div class="dark-auth-card">
+                <div class="text-center mb-4">
+                    <i class="fa-brands fa-connectdevelop" style="font-size: 40px; color: #0ea5e9; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(14,165,233,0.5));"></i>
+                    <h3 class="auth-logo-text mb-1">NEXUS SECURE</h3>
+                    <p class="small" style="color: #94a3b8;">Encrypted Access Portal</p>
                 </div>
+
+                <div class="dark-nav-pills">
+                    <button class="custom-auth-btn active-tab" id="tab-login" onclick="toggleAuthMode('login')">Sign In</button>
+                    <button class="custom-auth-btn" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</button>
+                </div>
+
+                <!-- LOGIN FORM (Connected to Real Backend) -->
+                <form id="loginForm" style="display: block;" onsubmit="handleRecaptchaSubmit(event, 'login')">
+                    <div class="dark-input-group">
+                        <i class="fa-solid fa-user"></i>
+                        <input type="text" id="loginEmail" class="dark-input" placeholder="Registered Mobile / Email" required>
+                    </div>
+                    <div class="dark-input-group">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="loginPassword" class="dark-input" placeholder="Secure Password" required>
+                    </div>
+
+                    <!-- Dummy ReCAPTCHA -->
+                    <div class="rc-widget" onclick="toggleRecaptcha(this)">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rc-box"></div>
+                            <span style="font-size: 14px; font-weight: 500;">I'm not a robot</span>
+                        </div>
+                        <div class="text-center">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/RecaptchaLogo.svg/1200px-RecaptchaLogo.svg.png" height="24" style="opacity: 0.8;">
+                            <div style="font-size: 8px; color: #999;">Privacy - Terms</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="dark-btn">INITIALIZE UPLINK &rarr;</button>
+                </form>
+
+                <!-- SIGNUP FORM (Connected to Real Backend) -->
+                <form id="signupForm" style="display: none;" onsubmit="handleRecaptchaSubmit(event, 'signup')">
+                    <div class="dark-input-group">
+                        <i class="fa-solid fa-id-card"></i>
+                        <input type="text" id="signupName" class="dark-input" placeholder="Full Legal Name" required>
+                    </div>
+                    <div class="dark-input-group">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input type="email" id="signupEmail" class="dark-input" placeholder="Email Address" required>
+                    </div>
+                    <div class="dark-input-group">
+                        <i class="fa-solid fa-mobile-screen"></i>
+                        <input type="tel" id="signupPhone" class="dark-input" placeholder="10-digit Mobile Number" maxlength="10" required>
+                    </div>
+                    <div class="mb-4">
+                        <div class="dark-input-group mb-2">
+                            <i class="fa-solid fa-key"></i>
+                            <input type="password" id="signupPassword" class="dark-input" placeholder="Create Password (Min 12)" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
+                        </div>
+                        <!-- Live Strength Meter -->
+                        <div class="d-flex gap-1" style="height: 5px;">
+                            <div id="meter-1" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
+                            <div id="meter-2" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
+                            <div id="meter-3" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
+                            <div id="meter-4" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
+                        </div>
+                        <small id="pwdHelper" class="d-block mt-2 fw-semibold" style="font-size: 11px; color: #94a3b8;">Min 12 chars, uppercase, lowercase, number & symbol.</small>
+                    </div>
+
+                    <!-- Dummy ReCAPTCHA -->
+                    <div class="rc-widget" onclick="toggleRecaptcha(this)">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rc-box"></div>
+                            <span style="font-size: 14px; font-weight: 500;">I'm not a robot</span>
+                        </div>
+                        <div class="text-center">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/RecaptchaLogo.svg/1200px-RecaptchaLogo.svg.png" height="24" style="opacity: 0.8;">
+                            <div style="font-size: 8px; color: #999;">Privacy - Terms</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="signupSubmitBtn" class="dark-btn" disabled>REGISTER OPERATIVE</button>
+                </form>
             </div>
         </div>
+
+        <script>
+        // Dummy reCAPTCHA Visual Logic
+        function toggleRecaptcha(widgetEl) {
+            const box = widgetEl.querySelector('.rc-box');
+            if (box.classList.contains('checked')) return;
+            box.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-primary"></i>';
+            setTimeout(() => {
+                box.innerHTML = '';
+                box.classList.add('checked');
+            }, 800);
+        }
+
+        // Intercept submit to enforce reCAPTCHA before calling real OTP API
+        function handleRecaptchaSubmit(e, type) {
+            e.preventDefault();
+            const form = e.target;
+            const rcBox = form.querySelector('.rc-box');
+            
+            if (!rcBox.classList.contains('checked')) {
+                alert('⚠️ Security Alert: Please verify you are not a robot (Tick the reCAPTCHA box).');
+                return;
+            }
+            
+            // If checked, route it to our REAL backend logic!
+            requestOtp(e, type);
+        }
+        </script>
 
         <!-- ACCOUNT DASHBOARD -->
         <div id="page-profile" class="page-view">
