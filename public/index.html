@@ -5294,29 +5294,39 @@ window.addEventListener('popstate', function(e) {
         });
 
         let activeOtpKey = '';
+        let currentAuthAction = '';
 
-        // 1. Backend server se OTP request karna
-        async function requestOtp(e, actionType) {
+        // 1. ASLI OTP BHEJNE KI REQUEST (Fast2SMS API Trigger hogi)
+        async function handleAuthSubmit(e, type) {
             e.preventDefault();
+            const formId = type === 'login' ? 'loginForm' : 'signupForm';
+            const rcBox = document.querySelector(`#${formId} .rc-box`);
             
-            let payload = { action: actionType };
+            if (!rcBox || !rcBox.classList.contains('checked')) {
+                showToast('Verification Failed', 'Please verify you are not a robot.', 'error');
+                return;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> PROCESSING...';
+            btn.disabled = true;
+
+            currentAuthAction = type;
+            let payload = { action: type };
             
-            if (actionType === 'login') {
+            if (type === 'login') {
                 payload.identifier = document.getElementById('loginEmail').value;
                 payload.password = document.getElementById('loginPassword').value;
-            } else if (actionType === 'signup') {
+            } else {
                 payload.name = document.getElementById('signupName').value;
                 payload.email = document.getElementById('signupEmail').value;
                 payload.phone = document.getElementById('signupPhone').value;
                 payload.password = document.getElementById('signupPassword').value;
             }
 
-            const btn = e.target.querySelector('button[type="submit"]');
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Sending...';
-            btn.disabled = true;
-
             try {
+                // BACKEND SE LIVE CONNECTION
                 const res = await fetch('/api/customer/request-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -5329,84 +5339,88 @@ window.addEventListener('popstate', function(e) {
 
                 if (res.ok && data.success) {
                     activeOtpKey = data.key;
-                    document.getElementById('otpModalMessage').innerText = data.message;
+                    document.getElementById('otpModal').classList.add('active');
+                    showToast('OTP Sent', data.message || 'OTP dispatched to your device.', 'success');
                     
-                    // Empty OTP boxes before opening
-                    document.getElementById('otp1').value = '';
-                    document.getElementById('otp2').value = '';
-                    document.getElementById('otp3').value = '';
-                    document.getElementById('otp4').value = '';
-                    
-                    if (otpModal) otpModal.show();
-                    
-                    // TESTING KE LIYE: Jab tak aapki Fast2SMS API key nahi lagti, 
-                    // screen par ek alert aayega jisme 4-digit code dikhega testing ke liye
-                    if(data.debugOtp) alert("Test Mode OTP Code: " + data.debugOtp);
-
+                    const otpInputs = document.querySelectorAll('.otp-digit');
+                    otpInputs.forEach(inp => inp.value = '');
+                    setTimeout(() => otpInputs[0].focus(), 400);
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error', data.message, 'error');
                 }
             } catch (err) {
                 btn.innerHTML = origText;
                 btn.disabled = false;
-                alert('Server connect error: ' + err.message);
+                showToast('Network Error', err.message, 'error');
             }
         }
 
-        // 2. Backend server par OTP verify karna
-        async function verifyOtpAndProceed() {
-            const otpVal = document.getElementById('otp1').value + 
-                           document.getElementById('otp2').value + 
-                           document.getElementById('otp3').value + 
-                           document.getElementById('otp4').value;
-                           
-            if(otpVal.length !== 4) return alert('Kripya 4-digit OTP daalein');
+        // 2. ASLI OTP VERIFY KARNA (Galat OTP par Dashboard block rahega!)
+        async function verifyOTP() {
+            const otpInputs = document.querySelectorAll('.otp-digit');
+            let code = '';
+            otpInputs.forEach(inp => code += inp.value);
+            
+            if (code.length < 4) {
+                showToast('Error', 'Please enter complete 4-digit code.', 'error');
+                return;
+            }
 
-            const btn = document.getElementById('verifyOtpBtn');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Verifying...';
+            const btn = document.querySelector('#otpModal button.light-btn') || document.querySelector('#otpModal button');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> VERIFYING...';
             btn.disabled = true;
 
             try {
+                // SERVER SE OTP CHECK KARWANA
                 const res = await fetch('/api/customer/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
+                    body: JSON.stringify({ key: activeOtpKey, otp: code })
                 });
                 const data = await res.json();
                 
-                btn.innerHTML = 'Verify & Confirm';
+                btn.innerHTML = origText;
                 btn.disabled = false;
 
+                // AGAR BACKEND NE BOLA OTP SAHI HAI TABHI LOGIN HOGA
                 if (res.ok && data.success) {
-                    if (otpModal) otpModal.hide();
+                    document.getElementById('otpModal').classList.remove('active');
                     isLoggedIn = true;
-                    
-                    // Login data local storage mein save karein
                     localStorage.setItem('mj_active_customer', JSON.stringify(data.user));
-                    alert('✅ Login Successful! Welcome ' + data.user.name);
                     
-                    // Login ke baad My Account (Profile) tab par redirect
-                    checkAuthAndNavigate(); 
+                    showToast('Authentication Successful', 'Welcome ' + (data.user.name || ''), 'success');
+                    
+                    setTimeout(() => {
+                        if (typeof checkAuthAndNavigate === 'function') {
+                            checkAuthAndNavigate();
+                        } else {
+                            window.location.reload();
+                        }
+                    }, 1000);
                 } else {
-                    alert('❌ Error: ' + data.message);
+                    // GALAT OTP PAR RED ALERT AUR BOX KHALI HOGA
+                    showToast('Verification Failed', data.message || 'Invalid OTP', 'error');
+                    otpInputs.forEach(inp => inp.value = '');
+                    otpInputs[0].focus();
                 }
             } catch (err) {
-                btn.innerHTML = 'Verify & Confirm';
+                btn.innerHTML = origText;
                 btn.disabled = false;
-                alert('Server error: ' + err.message);
+                showToast('Server Error', err.message, 'error');
             }
         }
 
-        function verifyOtpAndProceed() {
-            if (otpModal) otpModal.hide();
-            if (pendingAction === 'update-profile') {
-                alert('Profile Updated!');
-            } else {
-                isLoggedIn = true;
-                navigateTo('page-profile');
+        // 3. RESEND OTP FIX
+        function resendOTP() {
+            if (!currentAuthAction) return;
+            const formId = currentAuthAction === 'login' ? 'loginForm' : 'signupForm';
+            const form = document.getElementById(formId);
+            if (form) {
+                form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
             }
         }
-
+        
         function logout() {
             isLoggedIn = false;
             
