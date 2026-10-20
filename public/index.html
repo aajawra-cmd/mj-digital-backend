@@ -2222,8 +2222,8 @@ async function getActiveRazorpayKey() {
                 </div>
 
                 <div class="light-nav-pills">
-                    <button class="custom-auth-btn active-tab" id="tab-login" onclick="toggleAuthMode('login')">Sign In</button>
-                    <button class="custom-auth-btn" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</button>
+                    <button class="custom-auth-btn active-tab" id="tab-login" onclick="toggleAuthMode('login'); document.getElementById('tab-signup').classList.remove('active-tab', 'active'); this.classList.add('active-tab');">Sign In</button>
+                    <button class="custom-auth-btn" id="tab-signup" onclick="toggleAuthMode('signup'); document.getElementById('tab-login').classList.remove('active-tab', 'active'); this.classList.add('active-tab');">Sign Up</button>
                 </div>
 
                 <!-- LOGIN FORM -->
