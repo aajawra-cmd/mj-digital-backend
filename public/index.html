@@ -2121,120 +2121,85 @@ async function getActiveRazorpayKey() {
             </form>
         </div>
 
-        <!-- AUTHENTICATION (LIGHT PREMIUM THEME FIXED) -->
-        <style id="mjLightPremiumAuthStyles">
+        <!-- AUTHENTICATION (DARK PREMIUM THEME) -->
+        <style id="mjDarkPremiumAuthStyles">
+        /* SMART THEME ENGINE - CHANGE COLORS HERE 👇 */
         :root {
-            --auth-primary: #2563eb;
-            --auth-secondary: #0ea5e9;
-            --auth-text: #0f172a;
-            --auth-muted: #64748b;
-            --auth-border: #e2e8f0;
-            --auth-input-bg: #f8fafc;
+            --auth-primary: #a855f7;   /* Main Color (Currently Purple) */
+            --auth-secondary: #ec4899; /* Gradient Color (Currently Pink) */
+            --auth-glow: rgba(168, 85, 247, 0.4);
+            --auth-bg-glow1: rgba(168, 85, 247, 0.15);
+            --auth-bg-glow2: rgba(236, 72, 153, 0.15);
         }
+        /* ----------------------------------------- */
 
-        #page-auth:not(.active) { display: none !important; }
-        #page-auth.active {
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            top: 76px;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #f8fafc !important;
-            z-index: 1040;
-            margin: 0 !important;
-            padding: 20px;
-            overflow-y: auto;
+        #page-auth.active { display: flex !important; align-items: center; justify-content: center; }
+        #page-auth {
+            background-color: #0b0f19;
+            background-image: radial-gradient(circle at 15% 50%, var(--auth-bg-glow1), transparent 25%),
+                              radial-gradient(circle at 85% 30%, var(--auth-bg-glow2), transparent 25%);
+            min-height: calc(100vh - 70px); padding: 40px 15px;
         }
-
-        .light-auth-card {
-            background: #ffffff;
-            border: 1px solid var(--auth-border);
-            border-radius: 24px;
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.08), 0 0 20px rgba(37, 99, 235, 0.04);
-            width: 100%;
-            max-width: 440px;
-            padding: 40px;
-            position: relative;
-            color: var(--auth-text);
-            margin: auto;
+        .dark-auth-card {
+            background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px var(--auth-bg-glow1);
+            width: 100%; max-width: 460px; padding: 40px; position: relative; color: #f8fafc; margin: auto;
         }
-        .light-nav-pills {
-            background: #f1f5f9; padding: 6px; border-radius: 14px; margin-bottom: 30px; 
-            display: flex; gap: 4px;
+        .dark-auth-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, transparent, var(--auth-primary), var(--auth-secondary), transparent);
+            box-shadow: 0 0 15px var(--auth-primary);
         }
-        .light-nav-pills .custom-auth-btn {
-            flex: 1; text-align: center; border-radius: 10px; font-weight: 700;
-            color: var(--auth-muted) !important; padding: 10px 0; font-size: 15px;
-            background: transparent; border: none; transition: all 0.3s ease; white-space: nowrap;
+        .dark-nav-pills { background: rgba(0, 0, 0, 0.3); padding: 6px; border-radius: 12px; margin-bottom: 25px; display: flex; border: 1px solid rgba(255,255,255,0.05); }
+        .dark-nav-pills .custom-auth-btn { flex: 1; text-align: center; border-radius: 8px; font-weight: 600; color: #94a3b8 !important; padding: 12px 0; font-size: 15px; background: transparent; border: none; transition: all 0.3s ease; }
+        .dark-nav-pills .custom-auth-btn.active-tab {
+            background: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary)) !important;
+            color: #ffffff !important; box-shadow: 0 4px 12px var(--auth-glow);
         }
-        .light-nav-pills .custom-auth-btn.active-tab {
-            background: #ffffff !important;
-            color: var(--auth-primary) !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        .light-input-group { position: relative; margin-bottom: 20px; }
-        .light-input-group i { 
-            position: absolute; left: 16px; top: 50%; transform: translateY(-50%); 
-            color: var(--auth-muted); font-size: 16px; transition: color 0.3s; 
-        }
-        .light-input {
-            width: 100%; background: var(--auth-input-bg); border: 1.5px solid var(--auth-border);
-            border-radius: 12px; padding: 14px 14px 14px 44px; font-size: 14px; font-weight: 600;
-            color: var(--auth-text); transition: all 0.3s;
-        }
-        .light-input:focus {
-            border-color: var(--auth-primary); background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); outline: none;
-        }
-        .light-btn {
-            background: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary)); color: #fff; font-weight: 700;
-            border: none; border-radius: 12px; padding: 14px; width: 100%; margin-top: 5px;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); transition: all 0.3s;
-        }
-        .light-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.35); }
-        .light-btn:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; color: #f8fafc; }
+        .dark-input-group { position: relative; margin-bottom: 20px; }
+        .dark-input-group i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 16px; }
+        .dark-input { width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 12px; padding: 14px 14px 14px 44px; font-size: 14px; font-weight: 500; color: #f8fafc; transition: all 0.3s; }
+        .dark-input:focus { border-color: var(--auth-primary); background: rgba(15, 23, 42, 0.8); box-shadow: 0 0 0 3px var(--auth-bg-glow1); outline: none; }
+        .dark-input::placeholder { color: rgba(148, 163, 184, 0.6); }
+        .dark-btn { background: linear-gradient(90deg, var(--auth-primary), var(--auth-secondary)); color: #fff; font-weight: 700; border: none; border-radius: 12px; padding: 14px; width: 100%; margin-top: 5px; box-shadow: 0 4px 15px var(--auth-glow); transition: all 0.3s; }
+        .dark-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px var(--auth-glow); }
         
-        .rc-widget { background: #fafafa; border: 1px solid #d3d3d3; border-radius: 4px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; color: #555; font-family: Arial, sans-serif; cursor: pointer; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto;}
+        /* Authentic ReCAPTCHA Clone */
+        .rc-widget { background: #fafafa; border: 1px solid #d3d3d3; border-radius: 3px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; color: #555; font-family: Arial, sans-serif; cursor: pointer; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto;}
         .rc-box { width: 28px; height: 28px; border: 2px solid #c1c1c1; background: #fff; border-radius: 2px; display: flex; align-items: center; justify-content: center; }
         .rc-box.checked { border-color: #009688; }
         .rc-box.checked::after { content: ''; width: 6px; height: 12px; border: solid #009688; border-width: 0 3px 3px 0; transform: rotate(45deg); margin-bottom: 4px; }
+        .auth-logo-text { font-size: 28px; background: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 900; letter-spacing: 1px; }
+        .auth-top-icon { font-size: 40px; color: var(--auth-primary); margin-bottom: 10px; filter: drop-shadow(0 0 10px var(--auth-glow)); }
         </style>
 
         <div id="page-auth" class="page-view">
-            <div class="light-auth-card">
+            <div class="dark-auth-card">
                 <div class="text-center mb-4">
-                    <i class="fa-solid fa-shield-halved" style="font-size: 36px; color: #2563eb; margin-bottom: 10px;"></i>
-                    <h3 style="font-size: 24px; color: #0f172a; font-weight: 800;">M J DIGITAL</h3>
-                    <p class="small" style="color: #64748b;">Secure Authentication Portal</p>
+                    <!-- Icon ko dynamic color de diya hai -->
+                    <i class="fa-solid fa-cube auth-top-icon"></i>
+                    <h3 class="auth-logo-text mb-1">M J DIGITAL</h3>
+                    <p class="small" style="color: #94a3b8;">Encrypted Access Portal</p>
                 </div>
 
-                <div class="light-nav-pills">
-                    <button class="custom-auth-btn active-tab" id="tab-login" onclick="toggleAuthMode('login'); document.getElementById('tab-signup').classList.remove('active-tab'); this.classList.add('active-tab');">Sign In</button>
-                    <button class="custom-auth-btn" id="tab-signup" onclick="toggleAuthMode('signup'); document.getElementById('tab-login').classList.remove('active-tab'); this.classList.add('active-tab');">Sign Up</button>
+                <div class="dark-nav-pills">
+                    <button class="custom-auth-btn active-tab" id="tab-login" onclick="toggleAuthMode('login')">Sign In</button>
+                    <button class="custom-auth-btn" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</button>
                 </div>
 
                 <!-- LOGIN FORM -->
-                <form id="loginForm" style="display: block;" onsubmit="handleAuthSubmit(event, 'login')">
-                    <div class="light-input-group">
+                <form id="loginForm" style="display: block;" onsubmit="handleRecaptchaSubmit(event, 'login')">
+                    <div class="dark-input-group">
                         <i class="fa-solid fa-user"></i>
-                        <input type="text" id="loginEmail" class="light-input" placeholder="Mobile or Email" required>
+                        <input type="text" id="loginEmail" class="dark-input" placeholder="Registered Mobile / Email" required>
                     </div>
-                    <div class="light-input-group mb-2">
+                    <div class="dark-input-group">
                         <i class="fa-solid fa-lock"></i>
-                        <input type="password" id="loginPassword" class="light-input" placeholder="Secure Password" required>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-3 px-1" style="font-size: 13px;">
-                        <div>
-                            <input type="checkbox" id="rememberMeCheck" class="me-1">
-                            <label for="rememberMeCheck" style="color: #64748b; font-weight: 600;">Remember me</label>
-                        </div>
-                        <a href="#" class="text-primary fw-bold text-decoration-none" onclick="alert('Forgot Password Link Sent to Email!')">Forgot Password?</a>
+                        <input type="password" id="loginPassword" class="dark-input" placeholder="Secure Password" required>
                     </div>
 
+                    <!-- Dummy ReCAPTCHA -->
                     <div class="rc-widget" onclick="toggleRecaptcha(this)">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rc-box"></div>
@@ -2246,28 +2211,38 @@ async function getActiveRazorpayKey() {
                         </div>
                     </div>
 
-                    <button type="submit" class="light-btn">SECURE LOGIN &rarr;</button>
+                    <button type="submit" class="dark-btn">SECURE LOGIN &rarr;</button>
                 </form>
 
                 <!-- SIGNUP FORM -->
-                <form id="signupForm" style="display: none;" onsubmit="handleAuthSubmit(event, 'signup')">
-                    <div class="light-input-group">
+                <form id="signupForm" style="display: none;" onsubmit="handleRecaptchaSubmit(event, 'signup')">
+                    <div class="dark-input-group">
                         <i class="fa-solid fa-id-card"></i>
-                        <input type="text" id="signupName" class="light-input" placeholder="Full Legal Name" required>
+                        <input type="text" id="signupName" class="dark-input" placeholder="Full Legal Name" required>
                     </div>
-                    <div class="light-input-group">
+                    <div class="dark-input-group">
                         <i class="fa-solid fa-envelope"></i>
-                        <input type="email" id="signupEmail" class="light-input" placeholder="Email Address" required>
+                        <input type="email" id="signupEmail" class="dark-input" placeholder="Email Address" required>
                     </div>
-                    <div class="light-input-group">
+                    <div class="dark-input-group">
                         <i class="fa-solid fa-mobile-screen"></i>
-                        <input type="tel" id="signupPhone" class="light-input" placeholder="10-digit Mobile Number" maxlength="10" required>
+                        <input type="tel" id="signupPhone" class="dark-input" placeholder="10-digit Mobile Number" maxlength="10" required>
                     </div>
-                    <div class="light-input-group mb-4">
-                        <i class="fa-solid fa-key"></i>
-                        <input type="password" id="signupPassword" class="light-input" placeholder="Create Password (Min 8)" minlength="8" required>
+                    <div class="mb-4">
+                        <div class="dark-input-group mb-2">
+                            <i class="fa-solid fa-key"></i>
+                            <input type="password" id="signupPassword" class="dark-input" placeholder="Create Password (Min 12)" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
+                        </div>
+                        <div class="d-flex gap-1" style="height: 5px;">
+                            <div id="meter-1" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
+                            <div id="meter-2" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
+                            <div id="meter-3" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
+                            <div id="meter-4" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
+                        </div>
+                        <small id="pwdHelper" class="d-block mt-2 fw-semibold" style="font-size: 11px; color: #94a3b8;">Min 12 chars, uppercase, lowercase, number & symbol.</small>
                     </div>
 
+                    <!-- Dummy ReCAPTCHA -->
                     <div class="rc-widget" onclick="toggleRecaptcha(this)">
                         <div class="d-flex align-items-center gap-3">
                             <div class="rc-box"></div>
@@ -2279,12 +2254,13 @@ async function getActiveRazorpayKey() {
                         </div>
                     </div>
 
-                    <button type="submit" class="light-btn">REGISTER ACCOUNT</button>
+                    <button type="submit" id="signupSubmitBtn" class="dark-btn" disabled>REGISTER ACCOUNT</button>
                 </form>
             </div>
         </div>
 
         <script>
+        // Dummy reCAPTCHA Visual Logic
         function toggleRecaptcha(widgetEl) {
             const box = widgetEl.querySelector('.rc-box');
             if (box.classList.contains('checked')) return;
@@ -2295,117 +2271,22 @@ async function getActiveRazorpayKey() {
             }, 800);
         }
 
-        let activeOtpKey = '';
-
-        // YAHAN PAR ERROR THI, AB 100% FIXED HAI
-        async function handleAuthSubmit(e, type) {
+        function handleRecaptchaSubmit(e, type) {
             e.preventDefault();
-            const formId = type === 'login' ? 'loginForm' : 'signupForm';
-            const rcBox = document.querySelector(`#${formId} .rc-box`);
-            
-            if (!rcBox || !rcBox.classList.contains('checked')) {
-                alert('⚠️ Please verify you are not a robot (Tick the reCAPTCHA box).');
+            const form = e.target;
+            const rcBox = form.querySelector('.rc-box');
+            if (!rcBox.classList.contains('checked')) {
+                alert('⚠️ Security Alert: Please verify you are not a robot (Tick the reCAPTCHA box).');
                 return;
             }
-
-            const btn = e.target.querySelector('button[type="submit"]');
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> PROCESSING...';
-            btn.disabled = true;
-
-            let payload = { action: type };
-            if (type === 'login') {
-                payload.identifier = document.getElementById('loginEmail').value;
-                payload.password = document.getElementById('loginPassword').value;
+            if (typeof requestOtp === 'function') {
+                requestOtp(e, type);
             } else {
-                payload.name = document.getElementById('signupName').value;
-                payload.email = document.getElementById('signupEmail').value;
-                payload.phone = document.getElementById('signupPhone').value;
-                payload.password = document.getElementById('signupPassword').value;
-            }
-
-            try {
-                const res = await fetch('/api/customer/request-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                
-                btn.innerHTML = origText;
-                btn.disabled = false;
-
-                if (res.ok && data.success) {
-                    activeOtpKey = data.key;
-                    const otpMod = document.getElementById('otpVerificationModal');
-                    if (otpMod) {
-                       const m = bootstrap.Modal.getOrCreateInstance(otpMod);
-                       m.show();
-                    }
-                    setTimeout(() => document.getElementById('otp1').focus(), 400);
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            } catch (err) {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                alert('Network Error: ' + err.message);
+                alert("Security verified! Backend API calling...");
             }
         }
-
-        // YEH FUNCTION MISSING THA, JISSE POORA CODE FAIL HO RAHA THA
-        async function verifyOtpAndProceed() {
-            const code = (document.getElementById('otp1').value || '') + 
-                         (document.getElementById('otp2').value || '') + 
-                         (document.getElementById('otp3').value || '') + 
-                         (document.getElementById('otp4').value || '');
-            
-            if (code.length < 4) {
-                alert('Please enter complete 4-digit code.');
-                return;
-            }
-
-            const btn = document.getElementById('verifyOtpBtn');
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> VERIFYING...';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('/api/customer/verify-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: activeOtpKey, otp: code })
-                });
-                const data = await res.json();
-                
-                btn.innerHTML = origText;
-                btn.disabled = false;
-
-                if (res.ok && data.success) {
-                    const otpMod = document.getElementById('otpVerificationModal');
-                    if (otpMod) {
-                       bootstrap.Modal.getInstance(otpMod).hide();
-                    }
-                    isLoggedIn = true;
-                    localStorage.setItem('mj_active_customer', JSON.stringify(data.user));
-                    alert('✅ Login Successful! Welcome ' + (data.user.name || ''));
-                    if (typeof checkAuthAndNavigate === 'function') checkAuthAndNavigate();
-                } else {
-                    alert('❌ Invalid OTP: ' + (data.message || 'Please try again.'));
-                    document.getElementById('otp1').value = '';
-                    document.getElementById('otp2').value = '';
-                    document.getElementById('otp3').value = '';
-                    document.getElementById('otp4').value = '';
-                }
-            } catch (err) {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                alert('Server Error: ' + err.message);
-            }
-        }
-        </script>
-        
-        <!-- ACCOUNT DASHBOARD -->
+</script>
+<!-- ACCOUNT DASHBOARD -->
         <div id="page-profile" class="page-view">
             <h3 class="fw-bold mb-4"><i class="fa-solid fa-user-gear text-primary me-2"></i>My Account Dashboard</h3>
             <div class="row g-4">
@@ -2413,7 +2294,6 @@ async function getActiveRazorpayKey() {
                     <div class="card-custom p-3">
                         <button class="profile-nav-btn active mb-2" onclick="switchProfileTab('p-orders', this)"><i class="fa-solid fa-box-open me-2"></i> Orders & Bookings</button>
                         <button class="profile-nav-btn mb-2" onclick="switchProfileTab('p-personal', this)"><i class="fa-solid fa-id-card me-2"></i> Profile Details</button>
-                        <button class="profile-nav-btn mb-2" onclick="alert('Change Password feature is currently sent to your registered Email!')"><i class="fa-solid fa-lock me-2"></i> Change Password</button>
                         <button class="profile-nav-btn mb-2" onclick="switchProfileTab('p-address', this)"><i class="fa-solid fa-location-dot me-2"></i> Saved Addresses</button>
                         <button class="profile-nav-btn mb-2" onclick="switchProfileTab('p-cards', this)"><i class="fa-solid fa-credit-card me-2"></i> Saved Cards</button>
                         <hr class="my-2">
@@ -5372,6 +5252,120 @@ window.addEventListener('popstate', function(e) {
         document.addEventListener("DOMContentLoaded", function() {
             toggleAuthMode('login');
         });
+
+        let activeOtpKey = '';
+
+        // 1. Backend server se OTP request karna
+        async function requestOtp(e, actionType) {
+            e.preventDefault();
+            
+            let payload = { action: actionType };
+            
+            if (actionType === 'login') {
+                payload.identifier = document.getElementById('loginEmail').value;
+                payload.password = document.getElementById('loginPassword').value;
+            } else if (actionType === 'signup') {
+                payload.name = document.getElementById('signupName').value;
+                payload.email = document.getElementById('signupEmail').value;
+                payload.phone = document.getElementById('signupPhone').value;
+                payload.password = document.getElementById('signupPassword').value;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Sending...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/customer/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                btn.innerHTML = origText;
+                btn.disabled = false;
+
+                if (res.ok && data.success) {
+                    activeOtpKey = data.key;
+                    document.getElementById('otpModalMessage').innerText = data.message;
+                    
+                    // Empty OTP boxes before opening
+                    document.getElementById('otp1').value = '';
+                    document.getElementById('otp2').value = '';
+                    document.getElementById('otp3').value = '';
+                    document.getElementById('otp4').value = '';
+                    
+                    if (otpModal) otpModal.show();
+                    
+                    // TESTING KE LIYE: Jab tak aapki Fast2SMS API key nahi lagti, 
+                    // screen par ek alert aayega jisme 4-digit code dikhega testing ke liye
+                    if(data.debugOtp) alert("Test Mode OTP Code: " + data.debugOtp);
+
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                alert('Server connect error: ' + err.message);
+            }
+        }
+
+        // 2. Backend server par OTP verify karna
+        async function verifyOtpAndProceed() {
+            const otpVal = document.getElementById('otp1').value + 
+                           document.getElementById('otp2').value + 
+                           document.getElementById('otp3').value + 
+                           document.getElementById('otp4').value;
+                           
+            if(otpVal.length !== 4) return alert('Kripya 4-digit OTP daalein');
+
+            const btn = document.getElementById('verifyOtpBtn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Verifying...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/customer/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
+                });
+                const data = await res.json();
+                
+                btn.innerHTML = 'Verify & Confirm';
+                btn.disabled = false;
+
+                if (res.ok && data.success) {
+                    if (otpModal) otpModal.hide();
+                    isLoggedIn = true;
+                    
+                    // Login data local storage mein save karein
+                    localStorage.setItem('mj_active_customer', JSON.stringify(data.user));
+                    alert('✅ Login Successful! Welcome ' + data.user.name);
+                    
+                    // Login ke baad My Account (Profile) tab par redirect
+                    checkAuthAndNavigate(); 
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (err) {
+                btn.innerHTML = 'Verify & Confirm';
+                btn.disabled = false;
+                alert('Server error: ' + err.message);
+            }
+        }
+
+        function verifyOtpAndProceed() {
+            if (otpModal) otpModal.hide();
+            if (pendingAction === 'update-profile') {
+                alert('Profile Updated!');
+            } else {
+                isLoggedIn = true;
+                navigateTo('page-profile');
+            }
+        }
 
         function logout() {
             isLoggedIn = false;
