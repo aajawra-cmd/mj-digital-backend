@@ -2121,82 +2121,126 @@ async function getActiveRazorpayKey() {
             </form>
         </div>
 
-        <!-- AUTHENTICATION (DARK PREMIUM THEME) -->
-        <style id="mjDarkPremiumAuthStyles">
-        /* SMART THEME ENGINE - CHANGE COLORS HERE 👇 */
+        <!-- AUTHENTICATION (LIGHT PREMIUM THEME FIXED) -->
+        <style id="mjLightPremiumAuthStyles">
         :root {
-            --auth-primary: #a855f7;   /* Main Color (Currently Purple) */
-            --auth-secondary: #ec4899; /* Gradient Color (Currently Pink) */
-            --auth-glow: rgba(168, 85, 247, 0.4);
-            --auth-bg-glow1: rgba(168, 85, 247, 0.15);
-            --auth-bg-glow2: rgba(236, 72, 153, 0.15);
+            --auth-primary: #2563eb;
+            --auth-secondary: #0ea5e9;
+            --auth-text: #0f172a;
+            --auth-muted: #64748b;
+            --auth-border: #e2e8f0;
+            --auth-input-bg: #f8fafc;
         }
-        /* ----------------------------------------- */
 
-        #page-auth.active { display: flex !important; align-items: center; justify-content: center; }
-        #page-auth {
-            background-color: #0b0f19;
-            background-image: radial-gradient(circle at 15% 50%, var(--auth-bg-glow1), transparent 25%),
-                              radial-gradient(circle at 85% 30%, var(--auth-bg-glow2), transparent 25%);
-            min-height: calc(100vh - 70px); padding: 40px 15px;
+        #page-auth:not(.active) { display: none !important; }
+        #page-auth.active {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 76px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #f8fafc !important;
+            z-index: 1040;
+            margin: 0 !important;
+            padding: 20px;
+            overflow-y: auto;
         }
-        .dark-auth-card {
-            background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px var(--auth-bg-glow1);
-            width: 100%; max-width: 460px; padding: 40px; position: relative; color: #f8fafc; margin: auto;
+
+        .light-auth-card {
+            background: #ffffff;
+            border: 1px solid var(--auth-border);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.08), 0 0 20px rgba(37, 99, 235, 0.04);
+            width: 100%;
+            max-width: 440px;
+            padding: 40px;
+            position: relative;
+            color: var(--auth-text);
+            margin: auto;
         }
-        .dark-auth-card::before {
+        .light-auth-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
             background: linear-gradient(90deg, transparent, var(--auth-primary), var(--auth-secondary), transparent);
-            box-shadow: 0 0 15px var(--auth-primary);
         }
-        .dark-nav-pills { background: rgba(0, 0, 0, 0.3); padding: 6px; border-radius: 12px; margin-bottom: 25px; display: flex; border: 1px solid rgba(255,255,255,0.05); }
-        .dark-nav-pills .custom-auth-btn { flex: 1; text-align: center; border-radius: 8px; font-weight: 600; color: #94a3b8 !important; padding: 12px 0; font-size: 15px; background: transparent; border: none; transition: all 0.3s ease; }
-        .dark-nav-pills .custom-auth-btn.active-tab {
-            background: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary)) !important;
-            color: #ffffff !important; box-shadow: 0 4px 12px var(--auth-glow);
+        .light-nav-pills {
+            background: #f1f5f9; padding: 6px; border-radius: 14px; margin-bottom: 30px; 
+            display: flex; gap: 4px;
         }
-        .dark-input-group { position: relative; margin-bottom: 20px; }
-        .dark-input-group i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 16px; }
-        .dark-input { width: 100%; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 12px; padding: 14px 14px 14px 44px; font-size: 14px; font-weight: 500; color: #f8fafc; transition: all 0.3s; }
-        .dark-input:focus { border-color: var(--auth-primary); background: rgba(15, 23, 42, 0.8); box-shadow: 0 0 0 3px var(--auth-bg-glow1); outline: none; }
-        .dark-input::placeholder { color: rgba(148, 163, 184, 0.6); }
-        .dark-btn { background: linear-gradient(90deg, var(--auth-primary), var(--auth-secondary)); color: #fff; font-weight: 700; border: none; border-radius: 12px; padding: 14px; width: 100%; margin-top: 5px; box-shadow: 0 4px 15px var(--auth-glow); transition: all 0.3s; }
-        .dark-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px var(--auth-glow); }
+        .light-nav-pills .custom-auth-btn {
+            flex: 1; text-align: center; border-radius: 10px; font-weight: 700;
+            color: var(--auth-muted) !important; padding: 10px 0; font-size: 15px;
+            background: transparent; border: none; transition: all 0.3s ease; white-space: nowrap;
+        }
+        .light-nav-pills .custom-auth-btn.active-tab {
+            background: #ffffff !important;
+            color: var(--auth-primary) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .light-input-group { position: relative; margin-bottom: 20px; }
+        .light-input-group i { 
+            position: absolute; left: 16px; top: 50%; transform: translateY(-50%); 
+            color: var(--auth-muted); font-size: 16px; transition: color 0.3s; 
+        }
+        .light-input {
+            width: 100%; background: var(--auth-input-bg); border: 1.5px solid var(--auth-border);
+            border-radius: 12px; padding: 14px 14px 14px 44px; font-size: 14px; font-weight: 600;
+            color: var(--auth-text); transition: all 0.3s;
+        }
+        .light-input:focus {
+            border-color: var(--auth-primary); background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); outline: none;
+        }
+        .light-input:focus + i { color: var(--auth-primary); }
+        .light-input::placeholder { color: #94a3b8; font-weight: 500; }
+        .light-btn {
+            background: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary)); color: #fff; font-weight: 700;
+            border: none; border-radius: 12px; padding: 14px; width: 100%; margin-top: 5px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); transition: all 0.3s;
+        }
+        .light-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(37, 99, 235, 0.35); }
+        .light-btn:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; color: #f8fafc; }
         
-        /* Authentic ReCAPTCHA Clone */
-        .rc-widget { background: #fafafa; border: 1px solid #d3d3d3; border-radius: 3px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; color: #555; font-family: Arial, sans-serif; cursor: pointer; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto;}
+        .rc-widget { background: #fafafa; border: 1px solid #d3d3d3; border-radius: 4px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; color: #555; font-family: Arial, sans-serif; cursor: pointer; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto;}
         .rc-box { width: 28px; height: 28px; border: 2px solid #c1c1c1; background: #fff; border-radius: 2px; display: flex; align-items: center; justify-content: center; }
         .rc-box.checked { border-color: #009688; }
         .rc-box.checked::after { content: ''; width: 6px; height: 12px; border: solid #009688; border-width: 0 3px 3px 0; transform: rotate(45deg); margin-bottom: 4px; }
-        .auth-logo-text { font-size: 28px; background: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 900; letter-spacing: 1px; }
-        .auth-top-icon { font-size: 40px; color: var(--auth-primary); margin-bottom: 10px; filter: drop-shadow(0 0 10px var(--auth-glow)); }
+        .auth-logo-text { font-size: 24px; color: var(--auth-text); font-weight: 800; letter-spacing: 0.5px; }
+        .auth-top-icon { font-size: 36px; color: var(--auth-primary); margin-bottom: 10px; }
         </style>
 
         <div id="page-auth" class="page-view">
-            <div class="dark-auth-card">
+            <div class="light-auth-card">
                 <div class="text-center mb-4">
-                    <!-- Icon ko dynamic color de diya hai -->
-                    <i class="fa-solid fa-cube auth-top-icon"></i>
+                    <i class="fa-solid fa-shield-halved auth-top-icon"></i>
                     <h3 class="auth-logo-text mb-1">M J DIGITAL</h3>
-                    <p class="small" style="color: #94a3b8;">Encrypted Access Portal</p>
+                    <p class="small" style="color: var(--auth-muted);">Secure Authentication Portal</p>
                 </div>
 
-                <div class="dark-nav-pills">
-                    <button class="custom-auth-btn active-tab" id="tab-login" onclick="toggleAuthMode('login')">Sign In</button>
-                    <button class="custom-auth-btn" id="tab-signup" onclick="toggleAuthMode('signup')">Sign Up</button>
+                <div class="light-nav-pills">
+                    <button class="custom-auth-btn active-tab" id="tab-login" onclick="toggleAuthMode('login'); document.getElementById('tab-signup').classList.remove('active-tab', 'active'); this.classList.add('active-tab');">Sign In</button>
+                    <button class="custom-auth-btn" id="tab-signup" onclick="toggleAuthMode('signup'); document.getElementById('tab-login').classList.remove('active-tab', 'active'); this.classList.add('active-tab');">Sign Up</button>
                 </div>
 
                 <!-- LOGIN FORM -->
-                <form id="loginForm" style="display: block;" onsubmit="handleRecaptchaSubmit(event, 'login')">
-                    <div class="dark-input-group">
+                <form id="loginForm" style="display: block;" onsubmit="handleAuthSubmit(event, 'login')">
+                    <div class="light-input-group">
                         <i class="fa-solid fa-user"></i>
-                        <input type="text" id="loginEmail" class="dark-input" placeholder="Registered Mobile / Email" required>
+                        <input type="text" id="loginEmail" class="light-input" placeholder="Mobile or Email" required>
                     </div>
-                    <div class="dark-input-group">
+                    <div class="light-input-group mb-2">
                         <i class="fa-solid fa-lock"></i>
-                        <input type="password" id="loginPassword" class="dark-input" placeholder="Secure Password" required>
+                        <input type="password" id="loginPassword" class="light-input" placeholder="Secure Password" required>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 px-1" style="font-size: 13px;">
+                        <div>
+                            <input type="checkbox" id="rememberMeCheck" class="me-1">
+                            <label for="rememberMeCheck" style="color: #64748b; font-weight: 600;">Remember me</label>
+                        </div>
+                        <a href="javascript:void(0)" class="text-primary fw-bold text-decoration-none" onclick="openForgotPasswordModal()">Forgot Password?</a>
                     </div>
 
                     <!-- Dummy ReCAPTCHA -->
@@ -2211,35 +2255,35 @@ async function getActiveRazorpayKey() {
                         </div>
                     </div>
 
-                    <button type="submit" class="dark-btn">SECURE LOGIN &rarr;</button>
+                    <button type="submit" class="light-btn">SECURE LOGIN &rarr;</button>
                 </form>
 
                 <!-- SIGNUP FORM -->
-                <form id="signupForm" style="display: none;" onsubmit="handleRecaptchaSubmit(event, 'signup')">
-                    <div class="dark-input-group">
+                <form id="signupForm" style="display: none;" onsubmit="handleAuthSubmit(event, 'signup')">
+                    <div class="light-input-group">
                         <i class="fa-solid fa-id-card"></i>
-                        <input type="text" id="signupName" class="dark-input" placeholder="Full Legal Name" required>
+                        <input type="text" id="signupName" class="light-input" placeholder="Full Legal Name" required>
                     </div>
-                    <div class="dark-input-group">
+                    <div class="light-input-group">
                         <i class="fa-solid fa-envelope"></i>
-                        <input type="email" id="signupEmail" class="dark-input" placeholder="Email Address" required>
+                        <input type="email" id="signupEmail" class="light-input" placeholder="Email Address" required>
                     </div>
-                    <div class="dark-input-group">
+                    <div class="light-input-group">
                         <i class="fa-solid fa-mobile-screen"></i>
-                        <input type="tel" id="signupPhone" class="dark-input" placeholder="10-digit Mobile Number" maxlength="10" required>
+                        <input type="tel" id="signupPhone" class="light-input" placeholder="10-digit Mobile Number" maxlength="10" required>
                     </div>
                     <div class="mb-4">
-                        <div class="dark-input-group mb-2">
+                        <div class="light-input-group mb-2">
                             <i class="fa-solid fa-key"></i>
-                            <input type="password" id="signupPassword" class="dark-input" placeholder="Create Password (Min 12)" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
+                            <input type="password" id="signupPassword" class="light-input" placeholder="Create Password (Min 12)" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
                         </div>
                         <div class="d-flex gap-1" style="height: 5px;">
-                            <div id="meter-1" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
-                            <div id="meter-2" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
-                            <div id="meter-3" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
-                            <div id="meter-4" class="flex-grow-1 rounded-pill" style="background: rgba(255,255,255,0.1);"></div>
+                            <div id="meter-1" class="flex-grow-1 rounded-pill bg-secondary opacity-25"></div>
+                            <div id="meter-2" class="flex-grow-1 rounded-pill bg-secondary opacity-25"></div>
+                            <div id="meter-3" class="flex-grow-1 rounded-pill bg-secondary opacity-25"></div>
+                            <div id="meter-4" class="flex-grow-1 rounded-pill bg-secondary opacity-25"></div>
                         </div>
-                        <small id="pwdHelper" class="d-block mt-2 fw-semibold" style="font-size: 11px; color: #94a3b8;">Min 12 chars, uppercase, lowercase, number & symbol.</small>
+                        <small id="pwdHelper" class="d-block mt-2 fw-semibold" style="font-size: 11px; color: var(--auth-muted);">Min 12 chars, uppercase, lowercase, number & symbol.</small>
                     </div>
 
                     <!-- Dummy ReCAPTCHA -->
@@ -2254,12 +2298,12 @@ async function getActiveRazorpayKey() {
                         </div>
                     </div>
 
-                    <button type="submit" id="signupSubmitBtn" class="dark-btn" disabled>REGISTER ACCOUNT</button>
+                    <button type="submit" id="signupSubmitBtn" class="light-btn" disabled>REGISTER ACCOUNT</button>
                 </form>
             </div>
         </div>
 
-        <script>
+<script>
         // Dummy reCAPTCHA Visual Logic
         function toggleRecaptcha(widgetEl) {
             const box = widgetEl.querySelector('.rc-box');
@@ -2286,7 +2330,7 @@ async function getActiveRazorpayKey() {
             }
         }
 </script>
-<!-- ACCOUNT DASHBOARD -->
+        <!-- ACCOUNT DASHBOARD -->
         <div id="page-profile" class="page-view">
             <h3 class="fw-bold mb-4"><i class="fa-solid fa-user-gear text-primary me-2"></i>My Account Dashboard</h3>
             <div class="row g-4">
@@ -8440,49 +8484,6 @@ function evaluatePasswordStrength(pass) {
             }
         }
 
-        async function verifyProfileUpdateOtp(btn) {
-            const code = (document.getElementById('f_otp1').value || '') + 
-                         (document.getElementById('f_otp2').value || '') + 
-                         (document.getElementById('f_otp3').value || '') + 
-                         (document.getElementById('f_otp4').value || '');
-            
-            if (code.length < 4) return alert('Please enter 4-digit OTP');
-
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-            btn.disabled = true;
-
-            try {
-                // Hitting standard verify-otp endpoint for profile update
-                const res = await fetch('/api/customer/verify-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: profileUpdateOtpKey, otp: code, action: 'update-profile' })
-                });
-                const data = await res.json();
-                
-                btn.innerHTML = origText;
-                btn.disabled = false;
-
-                if (res.ok && data.success) {
-                    if (forgotModalInstance) forgotModalInstance.hide();
-                    alert('✅ Profile Updated Successfully!');
-                    
-                    // Reset modal back to normal Forgot Password state
-                    document.querySelector('#forgotPasswordModal h4').innerText = 'Reset Password';
-                    document.getElementById('newResetPassword').style.display = 'block';
-                    document.querySelector('#forgotStep2 button').setAttribute('onclick', 'verifyForgotOtpAndReset(this)');
-                    document.querySelector('#forgotStep2 button').innerText = 'Verify & Reset Password';
-                } else {
-                    alert('❌ Invalid OTP: ' + (data.message || 'Please try again.'));
-                }
-            } catch (err) {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                alert('Server Error: ' + err.message);
-            }
-        }
-
         // Auto tab for forgot OTP inputs
         document.addEventListener('DOMContentLoaded', () => {
             const f_inputs = document.querySelectorAll('.forgot-otp');
@@ -8496,6 +8497,64 @@ function evaluatePasswordStrength(pass) {
                 });
             });
         });
+
+        async function verifyProfileUpdateOtp(btn) {
+            const code = (document.getElementById('f_otp1').value || '') + 
+                         (document.getElementById('f_otp2').value || '') + 
+                         (document.getElementById('f_otp3').value || '') + 
+                         (document.getElementById('f_otp4').value || '');
+            
+            if (code.length < 4) return alert('Please enter 4-digit OTP');
+
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/customer/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: profileUpdateOtpKey, otp: code, action: 'update-profile' })
+                });
+                const data = await res.json();
+                
+                btn.innerHTML = origText;
+                btn.disabled = false;
+
+                if (res.ok && data.success) {
+                    if (typeof forgotModalInstance !== 'undefined') forgotModalInstance.hide();
+                    alert('✅ Profile Updated Successfully!');
+                    
+                    // Reset fields
+                    document.getElementById('profileOldPassword').value = '';
+                    document.getElementById('profileNewPassword').value = '';
+
+                    // Reset modal back to normal Forgot Password state for future use
+                    const modalEl = document.getElementById('forgotPasswordModal');
+                    if(modalEl) {
+                        modalEl.querySelector('h4').innerText = 'Reset Password';
+                        const newPwdField = document.getElementById('newResetPassword');
+                        if(newPwdField) newPwdField.style.display = 'block';
+                        const verifyBtn = document.querySelector('#forgotStep2 button.btn-success');
+                        if (verifyBtn) {
+                            verifyBtn.setAttribute('onclick', 'verifyForgotOtpAndReset(this)');
+                            verifyBtn.innerText = 'Verify & Reset Password';
+                        }
+                    }
+                } else {
+                    alert('❌ Invalid OTP: ' + (data.message || 'Please try again.'));
+                    ['f_otp1','f_otp2','f_otp3','f_otp4'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if(el) el.value = '';
+                    });
+                    document.getElementById('f_otp1').focus();
+                }
+            } catch (err) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                alert('Server Error: ' + err.message);
+            }
+        }
 
 // MAGIC SCRIPT - YEH SAB KUCH AUTOMATIC THEEK KAR DEGA!
 document.addEventListener("DOMContentLoaded", function() {
