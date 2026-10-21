@@ -2729,6 +2729,36 @@ async function getActiveRazorpayKey() {
         </div>
     </div>
 
+    
+    <!-- FORGOT PASSWORD MODAL -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 p-4 shadow text-center">
+                <i class="fa-solid fa-unlock-keyhole text-primary display-4 mb-3"></i>
+                <h4 class="fw-bold mb-1">Reset Password</h4>
+                <p class="text-muted small mb-4" id="forgotModalMessage">Enter your registered Mobile or Email to receive an OTP.</p>
+                
+                <!-- Step 1: Request OTP -->
+                <div id="forgotStep1">
+                    <input type="text" id="forgotIdentifier" class="form-control mb-3 py-2 text-center" placeholder="Registered Mobile or Email" required>
+                    <button class="btn btn-brand w-100 py-2 fw-bold" onclick="requestForgotOtp(this)">Send Verification OTP</button>
+                </div>
+
+                <!-- Step 2: Verify OTP & Set New Password -->
+                <div id="forgotStep2" style="display: none;">
+                    <div class="d-flex justify-content-center gap-2 my-3">
+                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp1">
+                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp2">
+                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp3">
+                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp4">
+                    </div>
+                    <input type="password" id="newResetPassword" class="form-control mb-3 py-2 text-center" placeholder="Enter New Password (Min 12)" required>
+                    <button class="btn btn-success w-100 py-2 fw-bold" onclick="verifyForgotOtpAndReset(this)">Verify & Reset Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 2FA OTP MODAL -->
     <div class="modal fade" id="otpVerificationModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -8247,6 +8277,125 @@ function evaluatePasswordStrength(pass) {
 </script>
 
 <script>
+
+        let forgotOtpKey = '';
+        let forgotModalInstance;
+
+        function openForgotPasswordModal() {
+            const modalEl = document.getElementById('forgotPasswordModal');
+            if (modalEl) {
+                forgotModalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                document.getElementById('forgotStep1').style.display = 'block';
+                document.getElementById('forgotStep2').style.display = 'none';
+                document.getElementById('forgotIdentifier').value = document.getElementById('loginEmail').value;
+                document.getElementById('forgotModalMessage').innerText = 'Enter your registered Mobile or Email to receive an OTP.';
+                forgotModalInstance.show();
+            }
+        }
+
+        async function requestForgotOtp(btn) {
+            const identifier = document.getElementById('forgotIdentifier').value;
+            if (!identifier) return alert('Please enter Mobile or Email');
+            
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+            btn.disabled = true;
+
+            try {
+                // Assuming backend /api/customer/request-otp can handle action: 'forgot' or just 'login'
+                const res = await fetch('/api/customer/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'login', identifier: identifier, password: 'dummy_for_otp_bypass' }) 
+                });
+                
+                // Even if password check fails, if your backend supports a dedicated forgot route, we hit that instead.
+                // Best to hit a dedicated route:
+                const forgotRes = await fetch('/api/customer/forgot-password-request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: identifier })
+                });
+                
+                const data = await forgotRes.json();
+                btn.innerHTML = origText;
+                btn.disabled = false;
+
+                if (forgotRes.ok && data.success) {
+                    forgotOtpKey = data.key;
+                    document.getElementById('forgotStep1').style.display = 'none';
+                    document.getElementById('forgotStep2').style.display = 'block';
+                    document.getElementById('forgotModalMessage').innerText = data.message || 'OTP sent successfully. Enter OTP and new password.';
+                    setTimeout(() => document.getElementById('f_otp1').focus(), 400);
+                } else {
+                    alert('❌ ' + (data.message || 'Account not found.'));
+                }
+            } catch (err) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                alert('Server Error: ' + err.message);
+            }
+        }
+
+        async function verifyForgotOtpAndReset(btn) {
+            const code = (document.getElementById('f_otp1').value || '') + 
+                         (document.getElementById('f_otp2').value || '') + 
+                         (document.getElementById('f_otp3').value || '') + 
+                         (document.getElementById('f_otp4').value || '');
+            
+            const newPassword = document.getElementById('newResetPassword').value;
+
+            if (code.length < 4) return alert('Please enter 4-digit OTP');
+            if (newPassword.length < 8) return alert('Password must be at least 8 characters long');
+
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resetting...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/customer/forgot-password-reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: forgotOtpKey, otp: code, newPassword: newPassword, identifier: document.getElementById('forgotIdentifier').value })
+                });
+                const data = await res.json();
+                
+                btn.innerHTML = origText;
+                btn.disabled = false;
+
+                if (res.ok && data.success) {
+                    if (forgotModalInstance) forgotModalInstance.hide();
+                    alert('✅ Password Reset Successful! You can now login with your new password.');
+                    document.getElementById('loginPassword').value = '';
+                } else {
+                    alert('❌ ' + (data.message || 'Invalid OTP.'));
+                    document.getElementById('f_otp1').value = '';
+                    document.getElementById('f_otp2').value = '';
+                    document.getElementById('f_otp3').value = '';
+                    document.getElementById('f_otp4').value = '';
+                    document.getElementById('f_otp1').focus();
+                }
+            } catch (err) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                alert('Server Error: ' + err.message);
+            }
+        }
+
+        // Auto tab for forgot OTP inputs
+        document.addEventListener('DOMContentLoaded', () => {
+            const f_inputs = document.querySelectorAll('.forgot-otp');
+            f_inputs.forEach((input, index) => {
+                input.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                    if (this.value !== '' && index < f_inputs.length - 1) f_inputs[index + 1].focus();
+                });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && this.value === '' && index > 0) f_inputs[index - 1].focus();
+                });
+            });
+        });
+
 // MAGIC SCRIPT - YEH SAB KUCH AUTOMATIC THEEK KAR DEGA!
 document.addEventListener("DOMContentLoaded", function() {
     
