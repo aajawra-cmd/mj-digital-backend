@@ -8607,7 +8607,7 @@ function evaluatePasswordStrength(pass) {
                     console.warn("Backend missing 'update-profile' action. Enabling Mock Mode for UI demonstration.");
                     isMockMode = true;
                     res = { ok: true };
-                    data = { success: true, key: 'mock-key-1234', message: 'Test Mode: Check your phone for OTP (Use 1234)', debugOtp: '1234' };
+                    data = { success: true, key: 'mock-key-1234', message: 'Test Mode: Enter ANY 4-digit OTP to proceed', debugOtp: '1234' };
                 }
                 
                 btn.innerHTML = origText;
@@ -8671,7 +8671,7 @@ function evaluatePasswordStrength(pass) {
                 if (isMockMode) {
                     // Simulate successful verification
                     await new Promise(r => setTimeout(r, 800)); // fake delay
-                    if (code === '1234') {
+                    if (code.length === 4) { // Accept any 4-digit code in test mode
                         res = { ok: true };
                         data = { success: true };
                     } else {
