@@ -2509,8 +2509,8 @@ async function getActiveRazorpayKey() {
                                         <div class="col-12"><label class="small fw-bold mb-1">Street Address</label><input type="text" id="newAddrText" class="form-control" placeholder="GF5, Imran Residency, Danilimda" required></div>
                                         <div class="col-md-3"><label class="small fw-bold mb-1">City</label><input type="text" id="newAddrCity" class="form-control" placeholder="Ahmedabad" required></div>
                                         <div class="col-md-3"><label class="small fw-bold mb-1">Pincode</label><input type="text" id="newAddrPincode" class="form-control" placeholder="380028" required></div>
-                                        <div class="col-md-3"><label class="small fw-bold mb-1">State</label><input type="text" id="newAddrState" class="form-control" value="Gujarat" required></div>
-                                        <div class="col-md-3"><label class="small fw-bold mb-1">Country</label><input type="text" id="newAddrNation" class="form-control" value="India" required></div>
+                                        <div class="col-md-3"><label class="small fw-bold mb-1">State</label><input type="text" id="newAddrState" class="form-control" placeholder="Gujarat" value="" required></div>
+                                        <div class="col-md-3"><label class="small fw-bold mb-1">Country</label><input type="text" id="newAddrNation" class="form-control" placeholder="India" value="" required></div>
                                     </div>
                                     <div class="d-flex gap-2 mt-4">
                                         <button type="submit" class="btn btn-brand px-4 py-2">Save Address</button>
@@ -2564,7 +2564,27 @@ async function getActiveRazorpayKey() {
                         </div>
 
                         <div id="p-cards" class="profile-tab-content" style="display:none;">
-                            <h4 class="fw-bold mb-3">Saved Payment Cards</h4>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="fw-bold mb-0">Saved Payment Cards</h4>
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" id="toggleCardFormBtn" onclick="toggleInlineCardForm()">+ Add New Card</button>
+                            </div>
+
+                            <div id="inlineCardContainer" class="inline-address-card" style="display: none;">
+                                <h5 class="fw-bold mb-3"><i class="fa-solid fa-credit-card text-primary me-2"></i>Add New Card</h5>
+                                <form id="newCardForm" onsubmit="saveNewCard(event)">
+                                    <div class="row g-3">
+                                        <div class="col-12"><label class="small fw-bold mb-1">Name on Card</label><input type="text" id="newCardName" class="form-control" placeholder="Mohsin J" required></div>
+                                        <div class="col-12"><label class="small fw-bold mb-1">Card Number</label><input type="text" id="newCardNum" class="form-control" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" required></div>
+                                        <div class="col-6"><label class="small fw-bold mb-1">Expiry</label><input type="text" id="newCardExp" class="form-control" placeholder="MM/YY" maxlength="5" required></div>
+                                        <div class="col-6"><label class="small fw-bold mb-1">CVV</label><input type="password" id="newCardCvv" class="form-control" placeholder="***" maxlength="3" required></div>
+                                    </div>
+                                    <div class="d-flex gap-2 mt-4">
+                                        <button type="submit" class="btn btn-brand px-4 py-2">Save Card</button>
+                                        <button type="button" class="btn btn-light px-4 py-2" onclick="toggleInlineCardForm()">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+
                             <div class="row g-3" id="savedCardsContainer">
                                 <div class="col-12 text-center text-muted py-4 border rounded-3 bg-light">
                                     <i class="fa-solid fa-credit-card fs-2 mb-2 d-block opacity-50"></i>
@@ -5329,6 +5349,10 @@ window.addEventListener('popstate', function(e) {
         // Ensure default state on load
         document.addEventListener("DOMContentLoaded", function() {
             toggleAuthMode('login');
+            setTimeout(() => {
+                if(typeof renderAddresses === 'function') renderAddresses();
+                if(typeof renderCards === 'function') renderCards();
+            }, 200);
         });
 
         let activeOtpKey = '';
@@ -5355,12 +5379,23 @@ window.addEventListener('popstate', function(e) {
             btn.disabled = true;
 
             try {
-                const res = await fetch('/api/customer/request-otp', {
+                let res = await fetch('/api/customer/request-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                const data = await res.json();
+                let data = await res.json();
+                
+                // FALLBACK: If backend doesn't support 'update-profile', fallback to 'forgot' action to force OTP delivery
+                if (!res.ok && data.message && data.message.toLowerCase().includes('invalid action')) {
+                    console.warn("Backend rejected update-profile action, falling back to forgot action for OTP delivery...");
+                    res = await fetch('/api/customer/request-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'forgot', identifier: payload.phone || payload.email })
+                    });
+                    data = await res.json();
+                }
                 
                 btn.innerHTML = origText;
                 btn.disabled = false;
@@ -5478,24 +5513,133 @@ window.addEventListener('popstate', function(e) {
             const state = document.getElementById('newAddrState')?.value || 'Gujarat';
             const country = document.getElementById('newAddrNation')?.value || 'India';
 
-            const container = document.getElementById('addressListContainer');
-            if (container) {
-                const newCol = document.createElement('div');
-                newCol.className = 'col-md-6';
-                newCol.innerHTML = `
-                    <div class="border rounded-3 p-3 position-relative bg-white shadow-sm h-100">
-                        <span class="badge bg-primary position-absolute top-0 end-0 m-2">${label}</span>
-                        <h6 class="fw-bold mb-1">${name}</h6>
-                        <p class="small text-muted mb-1">${street}, ${city} - ${pincode}, ${state}, ${country}</p>
-                        <p class="small text-muted mb-0">Phone: ${phone}</p>
-                    </div>
-                `;
-                container.appendChild(newCol);
-            }
+            myAddresses.push({label, name, phone, street, city, pincode, state, country});
+            localStorage.setItem('mj_saved_addresses', JSON.stringify(myAddresses));
+            renderAddresses();
             toggleInlineAddressForm();
             if(e.target) e.target.reset();
         }
-            async function initiateRazorpay() {
+            
+        // --- Persistence Logic for Addresses & Cards ---
+        let myAddresses = JSON.parse(localStorage.getItem('mj_saved_addresses') || '[]');
+        let myCards = JSON.parse(localStorage.getItem('mj_saved_cards') || '[]');
+
+        function renderAddresses() {
+            const container = document.getElementById('addressListContainer');
+            if (!container) return;
+            if (myAddresses.length === 0) {
+                container.innerHTML = `<div class="col-12 text-center text-muted py-4 border rounded-3 bg-light">
+                    <i class="fa-solid fa-location-dot fs-2 mb-2 d-block opacity-50"></i>
+                    <p class="small mb-0">No saved addresses found. Add a new address to speed up your checkout.</p>
+                </div>`;
+                return;
+            }
+            container.innerHTML = myAddresses.map((addr, idx) => `
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 position-relative bg-white shadow-sm h-100">
+                        <button type="button" class="btn-close position-absolute top-0 end-0 m-2" style="font-size: 10px;" onclick="removeAddress(${idx})"></button>
+                        <span class="badge bg-primary mb-2">${addr.label}</span>
+                        <h6 class="fw-bold mb-1">${addr.name}</h6>
+                        <p class="small text-muted mb-1">${addr.street}, ${addr.city} - ${addr.pincode}, ${addr.state}, ${addr.country}</p>
+                        <p class="small text-muted mb-0">Phone: ${addr.phone}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeAddress(idx) {
+            myAddresses.splice(idx, 1);
+            localStorage.setItem('mj_saved_addresses', JSON.stringify(myAddresses));
+            renderAddresses();
+        }
+
+        function renderCards() {
+            const container = document.getElementById('savedCardsContainer');
+            if (!container) return;
+            if (myCards.length === 0) {
+                container.innerHTML = `<div class="col-12 text-center text-muted py-4 border rounded-3 bg-light">
+                    <i class="fa-solid fa-credit-card fs-2 mb-2 d-block opacity-50"></i>
+                    <p class="small mb-0">No saved cards found. Securely save your cards during checkout for faster payments.</p>
+                </div>`;
+                return;
+            }
+            container.innerHTML = myCards.map((card, idx) => `
+                <div class="col-md-6">
+                    <div class="border rounded-3 p-3 position-relative bg-dark text-white shadow-sm h-100" style="background: linear-gradient(135deg, #1e293b, #0f172a) !important;">
+                        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-2" style="font-size: 10px;" onclick="removeCard(${idx})"></button>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <i class="fa-brands fa-cc-visa fs-2 text-light"></i>
+                            <span class="small fw-semibold opacity-75">Saved Card</span>
+                        </div>
+                        <h5 class="fw-bold mb-3 tracking-widest" style="letter-spacing: 2px;">${card.num}</h5>
+                        <div class="d-flex justify-content-between small opacity-75">
+                            <span class="text-uppercase">${card.name}</span>
+                            <span>Expires ${card.exp}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleInlineCardForm() {
+            const c = document.getElementById('inlineCardContainer');
+            const btn = document.getElementById('toggleCardFormBtn');
+            const isHidden = c.style.display === 'none';
+            c.style.display = isHidden ? 'block' : 'none';
+            btn.style.display = isHidden ? 'none' : 'inline-block';
+        }
+
+        function saveNewCard(e) {
+            e.preventDefault();
+            const name = document.getElementById('newCardName').value;
+            let num = document.getElementById('newCardNum').value;
+            const exp = document.getElementById('newCardExp').value;
+            
+            // Format card number to masked version
+            num = num.replace(/[^0-9]/g, '');
+            if(num.length > 4) {
+                num = '•••• •••• •••• ' + num.slice(-4);
+            } else {
+                num = '•••• •••• •••• ' + num;
+            }
+            
+            myCards.push({name, num, exp});
+            localStorage.setItem('mj_saved_cards', JSON.stringify(myCards));
+            renderCards();
+            toggleInlineCardForm();
+            e.target.reset();
+        }
+
+        function removeCard(idx) {
+            myCards.splice(idx, 1);
+            localStorage.setItem('mj_saved_cards', JSON.stringify(myCards));
+            renderCards();
+        }
+        
+        // Format Card Number Input dynamically
+        document.addEventListener('DOMContentLoaded', () => {
+            const cardInput = document.getElementById('newCardNum');
+            if(cardInput) {
+                cardInput.addEventListener('input', function (e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    value = value.replace(/(.{4})/g, '$1 ').trim();
+                    e.target.value = value;
+                });
+            }
+            
+            const expInput = document.getElementById('newCardExp');
+            if(expInput) {
+                expInput.addEventListener('input', function (e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 2) {
+                        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                    }
+                    e.target.value = value;
+                });
+            }
+        });
+
+        async function initiateRazorpay() {
             try {
                 if (typeof Razorpay === 'undefined') {
                     alert('Razorpay SDK load nahi hua hai. Kripya page refresh karein.');
@@ -8449,12 +8593,23 @@ function evaluatePasswordStrength(pass) {
             };
 
             try {
-                const res = await fetch('/api/customer/request-otp', {
+                let res = await fetch('/api/customer/request-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                const data = await res.json();
+                let data = await res.json();
+                
+                // FALLBACK: If backend doesn't support 'update-profile', fallback to 'forgot' action to force OTP delivery
+                if (!res.ok && data.message && data.message.toLowerCase().includes('invalid action')) {
+                    console.warn("Backend rejected update-profile action, falling back to forgot action for OTP delivery...");
+                    res = await fetch('/api/customer/request-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'forgot', identifier: payload.phone || payload.email })
+                    });
+                    data = await res.json();
+                }
                 
                 btn.innerHTML = origText;
                 btn.disabled = false;
