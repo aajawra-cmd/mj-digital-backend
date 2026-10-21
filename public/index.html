@@ -2410,13 +2410,27 @@ async function getActiveRazorpayKey() {
                                 <h4 class="fw-bold mb-0">Editable Profile Details</h4>
                                 <span class="badge bg-success"><i class="fa-solid fa-shield-check me-1"></i>2FA Active</span>
                             </div>
-                            <form onsubmit="requestOtp(event, 'update-profile')">
+                            <form id="profileUpdateForm" onsubmit="handleProfileUpdateSubmit(event)">
                                 <div class="row g-3">
-                                    <div class="col-md-6"><label class="small fw-bold mb-1">Full Name</label><input type="text" id="profileNameInput" class="form-control" value="Mohsin J" required></div>
-                                    <div class="col-md-6"><label class="small fw-bold mb-1">Email Address</label><input type="email" id="profileEmailInput" class="form-control" value="mjdigitalworlds@gmail.com" required></div>
-                                    <div class="col-md-6"><label class="small fw-bold mb-1">Mobile Phone (2FA Enabled)</label><input type="text" id="profilePhoneInput" class="form-control" value="+91 830 666 9999" required></div>
+                                    <div class="col-md-6"><label class="small fw-bold mb-1">Full Name</label><input type="text" id="profileNameInput" class="form-control" placeholder="Your Name" required></div>
+                                    <div class="col-md-6"><label class="small fw-bold mb-1">Email Address</label><input type="email" id="profileEmailInput" class="form-control" placeholder="your@email.com" required></div>
+                                    <div class="col-md-6"><label class="small fw-bold mb-1">Mobile Phone (2FA Enabled)</label><input type="text" id="profilePhoneInput" class="form-control" placeholder="10-digit number" required></div>
                                 </div>
-                                <button type="submit" class="btn btn-brand btn-sm mt-3 px-4 py-2">
+                                
+                                <hr class="my-4">
+                                <h5 class="fw-bold mb-3"><i class="fa-solid fa-lock text-primary me-2"></i>Change Password</h5>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold mb-1">Current Password (Leave blank if not changing)</label>
+                                        <input type="password" id="profileOldPassword" class="form-control" placeholder="Current Password">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold mb-1">New Password (Min 8 chars)</label>
+                                        <input type="password" id="profileNewPassword" class="form-control" placeholder="New Password">
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-brand px-4 py-2">
                                     <i class="fa-solid fa-key me-1"></i> Verify OTP & Save Changes
                                 </button>
                             </form>
@@ -2462,15 +2476,12 @@ async function getActiveRazorpayKey() {
                             </div>
 
                             <div class="row g-3" id="addressListContainer">
-                                <div class="col-md-6">
-                                    <div class="border rounded-3 p-3 position-relative bg-white shadow-sm">
-                                        <span class="badge bg-primary position-absolute top-0 end-0 m-2">Office (Default)</span>
-                                        <h6 class="fw-bold mb-1">M J DIGITAL</h6>
-                                        <p class="small text-muted mb-1">GF5, Imran Residency, Near Silver Duplex, Chhipa Society, Danilimda, Ahmedabad, Gujarat - 380028</p>
-                                        <p class="small text-muted mb-0">Phone: +91 830 666 9999</p>
-                                    </div>
+                                <div class="col-12 text-center text-muted py-4 border rounded-3 bg-light">
+                                    <i class="fa-solid fa-location-dot fs-2 mb-2 d-block opacity-50"></i>
+                                    <p class="small mb-0">No saved addresses found. Add a new address to speed up your checkout.</p>
                                 </div>
                             </div>
+                        </div>
                         </div>
 
                         
@@ -2510,20 +2521,13 @@ async function getActiveRazorpayKey() {
 
                         <div id="p-cards" class="profile-tab-content" style="display:none;">
                             <h4 class="fw-bold mb-3">Saved Payment Cards</h4>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="p-4 rounded-3 text-white shadow" style="background: linear-gradient(135deg, #1e293b, #475569);">
-                                        <div class="d-flex justify-content-between align-items-center mb-4">
-                                            <i class="fa-brands fa-cc-visa fs-2"></i>
-                                            <span class="small fw-bold">HDFC Bank</span>
-                                        </div>
-                                        <h5 class="mb-4 letter-spacing-2">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; 4829</h5>
-                                        <div class="d-flex justify-content-between small opacity-75">
-                                            <span>M J DIGITAL</span>
-                                            <span>EXPIRES 08/28</span>
-                                        </div>
-                                    </div>
+                            <div class="row g-3" id="savedCardsContainer">
+                                <div class="col-12 text-center text-muted py-4 border rounded-3 bg-light">
+                                    <i class="fa-solid fa-credit-card fs-2 mb-2 d-block opacity-50"></i>
+                                    <p class="small mb-0">No saved cards found. Securely save your cards during checkout for faster payments.</p>
                                 </div>
+                            </div>
+                        </div>
                             </div>
                         </div>
                     </div>
@@ -8374,6 +8378,103 @@ function evaluatePasswordStrength(pass) {
                     document.getElementById('f_otp3').value = '';
                     document.getElementById('f_otp4').value = '';
                     document.getElementById('f_otp1').focus();
+                }
+            } catch (err) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                alert('Server Error: ' + err.message);
+            }
+        }
+
+        
+        let profileUpdateOtpKey = '';
+        async function handleProfileUpdateSubmit(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Sending OTP...';
+            btn.disabled = true;
+
+            const payload = {
+                action: 'update-profile',
+                name: document.getElementById('profileNameInput').value,
+                email: document.getElementById('profileEmailInput').value,
+                phone: document.getElementById('profilePhoneInput').value,
+                oldPassword: document.getElementById('profileOldPassword').value,
+                newPassword: document.getElementById('profileNewPassword').value
+            };
+
+            try {
+                const res = await fetch('/api/customer/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                btn.innerHTML = origText;
+                btn.disabled = false;
+
+                if (res.ok && data.success) {
+                    profileUpdateOtpKey = data.key;
+                    // Reuse forgot password modal UI for profile update OTP
+                    const modalEl = document.getElementById('forgotPasswordModal');
+                    if (modalEl) {
+                        forgotModalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        document.querySelector('#forgotPasswordModal h4').innerText = 'Verify Profile Update';
+                        document.getElementById('forgotStep1').style.display = 'none';
+                        document.getElementById('forgotStep2').style.display = 'block';
+                        document.getElementById('newResetPassword').style.display = 'none'; // Hide new password field for profile update
+                        document.getElementById('forgotModalMessage').innerText = data.message || 'Enter the OTP sent to your updated mobile/email to save changes.';
+                        document.querySelector('#forgotStep2 button').setAttribute('onclick', 'verifyProfileUpdateOtp(this)');
+                        document.querySelector('#forgotStep2 button').innerText = 'Verify & Save Changes';
+                        forgotModalInstance.show();
+                    }
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                alert('Network Error: ' + err.message);
+            }
+        }
+
+        async function verifyProfileUpdateOtp(btn) {
+            const code = (document.getElementById('f_otp1').value || '') + 
+                         (document.getElementById('f_otp2').value || '') + 
+                         (document.getElementById('f_otp3').value || '') + 
+                         (document.getElementById('f_otp4').value || '');
+            
+            if (code.length < 4) return alert('Please enter 4-digit OTP');
+
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+            btn.disabled = true;
+
+            try {
+                // Hitting standard verify-otp endpoint for profile update
+                const res = await fetch('/api/customer/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: profileUpdateOtpKey, otp: code, action: 'update-profile' })
+                });
+                const data = await res.json();
+                
+                btn.innerHTML = origText;
+                btn.disabled = false;
+
+                if (res.ok && data.success) {
+                    if (forgotModalInstance) forgotModalInstance.hide();
+                    alert('✅ Profile Updated Successfully!');
+                    
+                    // Reset modal back to normal Forgot Password state
+                    document.querySelector('#forgotPasswordModal h4').innerText = 'Reset Password';
+                    document.getElementById('newResetPassword').style.display = 'block';
+                    document.querySelector('#forgotStep2 button').setAttribute('onclick', 'verifyForgotOtpAndReset(this)');
+                    document.querySelector('#forgotStep2 button').innerText = 'Verify & Reset Password';
+                } else {
+                    alert('❌ Invalid OTP: ' + (data.message || 'Please try again.'));
                 }
             } catch (err) {
                 btn.innerHTML = origText;
