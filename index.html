@@ -5598,15 +5598,7 @@ window.addEventListener('popstate', function(e) {
             }
         }
 
-        function verifyOtpAndProceed() {
-            if (otpModal) otpModal.hide();
-            if (pendingAction === 'update-profile') {
-                alert('Profile Updated!');
-            } else {
-                isLoggedIn = true;
-                navigateTo('page-profile');
-            }
-        }
+        
 
         function logout() {
             isLoggedIn = false;
