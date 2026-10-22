@@ -5641,37 +5641,60 @@ async function requestOtp(e, actionType) {
             btn.disabled = true;
 
             try {
-                const res = await fetch('/api/customer/verify-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
-                });
-                const data = await res.json();
+                let res, data;
+                if (isMockMode) {
+                    await new Promise(r => setTimeout(r, 800)); // fake delay
+                    if (otpVal.length === 4) {
+                        res = { ok: true };
+                        data = { success: true, user: { name: document.getElementById('loginEmail').value.split('@')[0] || 'Customer', phone: '9999999999' } };
+                    } else {
+                        res = { ok: false };
+                        data = { success: false, message: 'Invalid OTP' };
+                    }
+                } else {
+                    res = await fetch('/api/customer/verify-otp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
+                    });
+                    
+                    const contentType = res.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        data = await res.json();
+                    } else {
+                        throw new Error("Invalid Server Response");
+                    }
+                }
                 
                 btn.innerHTML = 'Verify & Confirm';
                 btn.disabled = false;
 
                 if (res.ok && data.success) {
-                    if (otpModal) otpModal.hide();
+                    if (typeof otpModal !== 'undefined') otpModal.hide();
                     isLoggedIn = true;
                     
-                    // Login data local storage mein save karein
-                    localStorage.setItem('mj_active_customer', JSON.stringify(data.user));
-                    alert('✅ Login Successful! Welcome ' + data.user.name);
+                    // Close the main auth modal too
+                    const authPage = document.getElementById('page-auth');
+                    if(authPage) authPage.classList.remove('active');
                     
-                    // Login ke baad My Account (Profile) tab par redirect
+                    localStorage.setItem('mj_active_customer', JSON.stringify(data.user || {name: 'Customer'}));
+                    alert('✅ Login Successful! Welcome ' + (data.user?.name || ''));
+                    
                     checkAuthAndNavigate(); 
                 } else {
-                    alert('❌ Error: ' + data.message);
+                    alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
+                    document.getElementById('otp1').value = '';
+                    document.getElementById('otp2').value = '';
+                    document.getElementById('otp3').value = '';
+                    document.getElementById('otp4').value = '';
+                    document.getElementById('otp1').focus();
                 }
             } catch (err) {
                 btn.innerHTML = 'Verify & Confirm';
                 btn.disabled = false;
-                alert('Server error: ' + err.message);
+                alert('Backend Error: Cannot verify OTP. Try test mode.');
             }
         }
-
-        
 
         function logout() {
             isLoggedIn = false;
