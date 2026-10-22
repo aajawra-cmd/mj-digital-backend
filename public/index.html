@@ -8607,52 +8607,6 @@ function evaluatePasswordStrength(pass) {
             }
         }
 
-        async function verifyForgotOtpAndReset(btn) {
-            const code = (document.getElementById('f_otp1').value || '') + 
-                         (document.getElementById('f_otp2').value || '') + 
-                         (document.getElementById('f_otp3').value || '') + 
-                         (document.getElementById('f_otp4').value || '');
-            
-            const newPassword = document.getElementById('newResetPassword').value;
-
-            if (code.length < 4) return alert('Please enter 4-digit OTP');
-            if (newPassword.length < 8) return alert('Password must be at least 8 characters long');
-
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resetting...';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('/api/customer/forgot-password-reset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: forgotOtpKey, otp: code, newPassword: newPassword, identifier: document.getElementById('forgotIdentifier').value })
-                });
-                const data = await res.json();
-                
-                btn.innerHTML = origText;
-                btn.disabled = false;
-
-                if (res.ok && data.success) {
-                    if (forgotModalInstance) forgotModalInstance.hide();
-                    alert('✅ Password Reset Successful! You can now login with your new password.');
-                    document.getElementById('loginPassword').value = '';
-                } else {
-                    alert('❌ ' + (data.message || 'Invalid OTP.'));
-                    document.getElementById('f_otp1').value = '';
-                    document.getElementById('f_otp2').value = '';
-                    document.getElementById('f_otp3').value = '';
-                    document.getElementById('f_otp4').value = '';
-                    document.getElementById('f_otp1').focus();
-                }
-            } catch (err) {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                alert('Server Error: ' + err.message);
-            }
-        }
-
-        
         let isMockMode = false;
         let profileUpdateOtpKey = '';
 
