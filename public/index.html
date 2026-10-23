@@ -2225,7 +2225,7 @@ async function getActiveRazorpayKey() {
                 </div>
 
                 <!-- LOGIN FORM -->
-                <form id="loginForm" style="display: block;" onsubmit="handleAuthSubmit(event, 'login')">
+                <form id="loginForm" style="display: block;" onsubmit="handleRecaptchaSubmit(event, 'login')">
                     <div class="light-input-group">
                         <i class="fa-solid fa-user"></i>
                         <input type="text" id="loginEmail" class="light-input" placeholder="Mobile or Email" required>
@@ -2259,7 +2259,7 @@ async function getActiveRazorpayKey() {
                 </form>
 
                 <!-- SIGNUP FORM -->
-                <form id="signupForm" style="display: none;" onsubmit="handleAuthSubmit(event, 'signup')">
+                <form id="signupForm" style="display: none;" onsubmit="handleRecaptchaSubmit(event, 'signup')">
                     <div class="light-input-group">
                         <i class="fa-solid fa-id-card"></i>
                         <input type="text" id="signupName" class="light-input" placeholder="Full Legal Name" required>
@@ -2323,12 +2323,16 @@ async function getActiveRazorpayKey() {
                 alert('⚠️ Security Alert: Please verify you are not a robot (Tick the reCAPTCHA box).');
                 return;
             }
+            if (typeof handleAuthSubmit === 'function') {
+                handleAuthSubmit(e, type);
+            }
+        }
             if (typeof requestOtp === 'function') {
                 requestOtp(e, type);
             } else {
                 alert("Security verified! Backend API calling...");
             }
-        }
+ 
 </script>
         <!-- ACCOUNT DASHBOARD -->
         <div id="page-profile" class="page-view">
@@ -5553,7 +5557,7 @@ window.addEventListener('popstate', function(e) {
                     if (typeof otpModal !== 'undefined') otpModal.show();
                     
                     if(data.debugOtp || window.isMockMode) {
-                        alert(data.message || "Test Mode OTP Code: " + (data.debugOtp || '1234'));
+                        
                     }
                 } else {
                     alert('❌ Error: ' + (data.message || 'Verification failed.'));
@@ -5566,7 +5570,7 @@ window.addEventListener('popstate', function(e) {
                 
                 document.getElementById('otpModalMessage').innerText = 'Test Mode: Enter ANY 4-digit OTP to proceed';
                 if (typeof otpModal !== 'undefined') otpModal.show();
-                alert("Test Mode: Enter ANY 4-digit OTP to proceed");
+                
             }
         }
 
