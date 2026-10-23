@@ -5533,7 +5533,7 @@ window.addEventListener('popstate', function(e) {
 
                 if (!res.ok || !data.success || !contentType || contentType.indexOf("application/json") === -1) {
                     console.warn("Backend login failed. Falling back to Mock Mode.");
-                    isMockMode = true;
+                    window.isMockMode = true;
                     res = { ok: true };
                     data = { success: true, key: 'mock-key-auth', message: 'Test Mode: Enter ANY 4-digit OTP to proceed', debugOtp: '1234', user: { name: payload.name || "Test User", phone: payload.phone || "9999999999" } };
                 }
@@ -5552,14 +5552,14 @@ window.addEventListener('popstate', function(e) {
                     
                     if (typeof otpModal !== 'undefined') otpModal.show();
                     
-                    if(data.debugOtp || isMockMode) {
+                    if(data.debugOtp || window.isMockMode) {
                         alert(data.message || "Test Mode OTP Code: " + (data.debugOtp || '1234'));
                     }
                 } else {
                     alert('❌ Error: ' + (data.message || 'Verification failed.'));
                 }
             } catch (err) {
-                isMockMode = true;
+                window.isMockMode = true;
                 activeOtpKey = 'mock-key-auth';
                 btn.innerHTML = origText;
                 btn.disabled = false;
@@ -5642,7 +5642,7 @@ async function requestOtp(e, actionType) {
 
             try {
                 let res, data;
-                if (isMockMode) {
+                if (window.isMockMode) {
                     await new Promise(r => setTimeout(r, 800)); // fake delay
                     if (otpVal.length === 4) {
                         res = { ok: true };
@@ -8605,7 +8605,7 @@ function evaluatePasswordStrength(pass) {
                 }
                 
                 if (!res.ok || !data.success) {
-                    isMockMode = true;
+                    window.isMockMode = true;
                     res = { ok: true };
                     data = { success: true, key: 'mock-key-forgot', message: 'Test Mode: Enter ANY 4-digit OTP to proceed', debugOtp: '1234' };
                 }
@@ -8621,7 +8621,7 @@ function evaluatePasswordStrength(pass) {
                 
             } catch (err) {
                 console.warn("Backend failed. Enabling Mock Mode.", err);
-                isMockMode = true;
+                window.isMockMode = true;
                 forgotOtpKey = 'mock-key-forgot';
                 btn.innerHTML = origText;
                 btn.disabled = false;
@@ -8649,7 +8649,7 @@ function evaluatePasswordStrength(pass) {
 
             try {
                 let res, data;
-                if (isMockMode) {
+                if (window.isMockMode) {
                     await new Promise(r => setTimeout(r, 800)); // fake delay
                     if (code.length === 4) {
                         res = { ok: true };
@@ -8703,7 +8703,7 @@ function evaluatePasswordStrength(pass) {
             }
         }
 
-        let isMockMode = false;
+        window.isMockMode = false;
         let profileUpdateOtpKey = '';
 
         async function handleProfileUpdateSubmit(e) {
@@ -8738,7 +8738,7 @@ function evaluatePasswordStrength(pass) {
                 // MOCK FALLBACK IF INVALID ACTION OR SERVER HTML RESPONSE
                 if (!res.ok || (data.message && data.message.toLowerCase().includes('invalid action')) || !contentType || contentType.indexOf("application/json") === -1) {
                     console.warn("Backend failed. Enabling Mock Mode for UI demonstration.");
-                    isMockMode = true;
+                    window.isMockMode = true;
                     res = { ok: true };
                     data = { success: true, key: 'mock-key-1234', message: 'Test Mode: Enter ANY 4-digit OTP to proceed', debugOtp: '1234' };
                 }
@@ -8778,7 +8778,7 @@ function evaluatePasswordStrength(pass) {
                 }
             } catch (err) {
                 // HARD FALLBACK
-                isMockMode = true;
+                window.isMockMode = true;
                 btn.innerHTML = origText;
                 btn.disabled = false;
                 alert("Test Mode: Enter ANY 4-digit OTP to proceed");
@@ -8816,7 +8816,7 @@ function evaluatePasswordStrength(pass) {
 
             try {
                 let res, data;
-                if (isMockMode) {
+                if (window.isMockMode) {
                     await new Promise(r => setTimeout(r, 800)); // fake delay
                     if (code.length === 4) { // accept any 4 digit code
                         res = { ok: true };
