@@ -2327,12 +2327,6 @@ async function getActiveRazorpayKey() {
                 handleAuthSubmit(e, type);
             }
         }
-            if (typeof requestOtp === 'function') {
-                requestOtp(e, type);
-            } else {
-                alert("Security verified! Backend API calling...");
-            }
-
 </script>
         <!-- ACCOUNT DASHBOARD -->
         <div id="page-profile" class="page-view">
@@ -5758,7 +5752,7 @@ async function requestOtp(e, actionType) {
                     },
                     prefill: {
                         name: 'Mohsin J',
-                        email: 'support@mjdigital.co.in',
+                        email: 'mjdigitalworlds@gmail.com',
                         contact: '8306669999'
                     },
                     theme: {
@@ -5798,7 +5792,7 @@ window.openRazorpayModal = async function() {
             },
             prefill: {
                 name: "Mohsin J",
-                email: "support@mjdigital.co.in",
+                email: "mjdigitalworlds@gmail.com",
                 contact: "8306669999"
             },
             theme: {
@@ -8785,7 +8779,7 @@ function evaluatePasswordStrength(pass) {
                 window.isMockMode = true;
                 btn.innerHTML = origText;
                 btn.disabled = false;
-                alert("Test Mode: Enter ANY 4-digit OTP to proceed");
+                
                 profileUpdateOtpKey = 'mock-key-1234';
                 const modalEl = document.getElementById('forgotPasswordModal');
                 if (modalEl) {
