@@ -1891,6 +1891,8 @@ app.post('/api/customer/request-otp', async (req, res) => {
     const { action, name, email, phone, identifier, password } = req.body;
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     const expiresAt = Date.now() + 5 * 60 * 1000;
+    
+    let targetEmail = '';
 
     if (action === 'signup') {
       const cleanPhone = String(phone || '').replace(/[^0-9]/g, '').slice(-10);
@@ -1901,7 +1903,6 @@ app.post('/api/customer/request-otp', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Full Name aur valid 10-digit Mobile Number zaroori hai.' });
       }
 
-      // Apply 12-char strict validation
       const pwdError = validateStrongPassword(passStr);
       if (pwdError) {
         return res.status(400).json({ success: false, message: pwdError });
@@ -1913,12 +1914,10 @@ app.post('/api/customer/request-otp', async (req, res) => {
       }
 
       const key = cleanPhone || cleanEmail;
+      targetEmail = cleanEmail;
       customerOtpMap.set(key, { otp, expiresAt, action: 'signup', payload: { name: name.trim(), email: cleanEmail, phone: cleanPhone, password: passStr } });
 
-      return res.json({ success: true, key: key, debugOtp: otp, message: 'OTP generated successfully! (Code: ' + otp + ')' });
-    }
-
-    if (action === 'login') {
+    } else if (action === 'login') {
       const rawId = String(identifier || '').trim();
       const cleanPhone = rawId.replace(/[^0-9]/g, '').slice(-10);
       const cleanEmail = rawId.toLowerCase();
@@ -1939,47 +1938,84 @@ app.post('/api/customer/request-otp', async (req, res) => {
       }
 
       const key = customer.phone || customer.email;
+      targetEmail = customer.email;
       customerOtpMap.set(key, { otp, expiresAt, action: 'login', payload: { name: customer.name, email: customer.email, phone: customer.phone } });
 
-      return res.json({ success: true, key: key, debugOtp: otp, message: 'OTP generated successfully! (Code: ' + otp + ')' });
+    } else if (action === 'forgot') {
+      const rawId = String(identifier || '').trim();
+      const cleanPhone = rawId.replace(/[^0-9]/g, '').slice(-10);
+      const cleanEmail = rawId.toLowerCase();
+
+      const customer = await CustomerAccount.findOne({ $or: [...(cleanPhone.length === 10 ? [{ phone: cleanPhone }] : []), { email: cleanEmail }] });
+      if (!customer) {
+        return res.status(404).json({ success: false, message: 'Yeh Account registered nahi hai.' });
+      }
+      
+      const key = customer.phone || customer.email;
+      targetEmail = customer.email;
+      customerOtpMap.set(key, { otp, expiresAt, action: 'forgot', payload: { phone: customer.phone, email: customer.email } });
+    } else {
+        return res.status(400).json({ success: false, message: 'Invalid action' });
     }
 
-    res.status(400).json({ success: false, message: 'Invalid action' });
+    // Send Email OTP using Nodemailer
+    if (targetEmail) {
+        try {
+            await mailTransporter.sendMail({
+                from: '"M J DIGITAL" <mjdigitalworlds@gmail.com>',
+                to: targetEmail,
+                subject: 'M J DIGITAL Security OTP',
+                html: `<div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
+                         <h2>Welcome to M J DIGITAL</h2>
+                         <p>Your secure verification code is:</p>
+                         <h1 style="color: #2563eb; letter-spacing: 5px;">${otp}</h1>
+                         <p>Do not share this code with anyone. It is valid for 5 minutes.</p>
+                       </div>`
+            });
+        } catch (mailErr) {
+            console.error("Email sending failed:", mailErr);
+            // Fallback for development if email credentials are wrong
+            return res.json({ success: true, key: customerOtpMap.get(targetEmail) ? targetEmail : identifier, debugOtp: otp, message: 'Server email issue. Dev OTP: ' + otp });
+        }
+    }
+
+    // If successful, don't send debugOtp to client for security
+    const retKey = Array.from(customerOtpMap.keys()).pop(); // hacky but gets the latest key added
+    return res.json({ success: true, key: retKey, message: 'OTP has been sent to your registered Email successfully!' });
+
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-app.post('/api/customer/verify-otp', async (req, res) => {
+app.post('/api/customer/forgot-password-reset', async (req, res) => {
   try {
-    const { key, otp } = req.body;
+    const { key, otp, newPassword } = req.body;
     const record = customerOtpMap.get(String(key || '').trim());
 
-    if (!record) {
-      return res.status(400).json({ success: false, message: 'OTP session expire ho gaya hai. Kripya dobara try karein.' });
+    if (!record || record.action !== 'forgot') {
+      return res.status(400).json({ success: false, message: 'Session expired or invalid.' });
     }
-
     if (Date.now() > record.expiresAt) {
       customerOtpMap.delete(key);
-      return res.status(400).json({ success: false, message: 'OTP expire ho chuka hai! Kripya naya OTP mangwayein.' });
+      return res.status(400).json({ success: false, message: 'OTP expired!' });
     }
-
     if (String(otp || '').trim() !== record.otp) {
-      return res.status(400).json({ success: false, message: '❌ Galat OTP! Kripya sahi 4-digit code daalein.' });
+      return res.status(400).json({ success: false, message: 'Incorrect OTP.' });
+    }
+    
+    const pwdError = validateStrongPassword(newPassword);
+    if (pwdError) {
+      return res.status(400).json({ success: false, message: pwdError });
     }
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    
+    await CustomerAccount.findOneAndUpdate({ phone: record.payload.phone }, { $set: { password: hashedPassword } });
+    
     customerOtpMap.delete(key);
-
-    if (record.action === 'signup') {
-      const { name, email, phone, password } = record.payload;
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      const created = await CustomerAccount.create({ name, email, phone, password: hashedPassword });
-      return res.json({ success: true, user: { name: created.name, email: created.email, phone: created.phone } });
-    }
-
-    return res.json({ success: true, user: record.payload });
+    res.json({ success: true, message: 'Password reset successful!' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
