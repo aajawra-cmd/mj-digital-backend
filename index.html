@@ -5668,19 +5668,40 @@ async function requestOtp(e, actionType) {
                 btn.disabled = false;
 
                 if (res.ok && data.success) {
-                    if (typeof otpModal !== 'undefined') otpModal.hide();
+                    try { if (typeof otpModal !== 'undefined' && otpModal) otpModal.hide(); } catch(e){}
+                    
+                    // Bulletproof manual modal hide for Hostinger Caching issues
+                    const otpModalEl = document.getElementById('otpVerificationModal');
+                    if(otpModalEl) {
+                        otpModalEl.classList.remove('show');
+                        otpModalEl.style.display = 'none';
+                    }
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    backdrops.forEach(b => b.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+
                     isLoggedIn = true;
                     
                     const authPage = document.getElementById('page-auth');
-                    if(authPage) authPage.classList.remove('active');
+                    if(authPage) {
+                        authPage.classList.remove('active');
+                        authPage.style.display = 'none';
+                    }
                     
                     const activeUser = data.user || {name: 'Customer'};
                     localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
                     
-                    // CRITICAL FIX: INSTANTLY UPDATE NAVBAR
-                    if (typeof applyUserSessionToUI === 'function') applyUserSessionToUI();
+                    if (typeof applyUserSessionToUI === 'function') {
+                        try { applyUserSessionToUI(); } catch(e){}
+                    }
                     
-                    checkAuthAndNavigate(); 
+                    try {
+                        checkAuthAndNavigate();
+                    } catch(e) {
+                        window.location.reload(); // Hard fallback if navigation script fails
+                    }
                 } else {
                     alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
                     document.getElementById('otp1').value = '';
