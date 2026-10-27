@@ -5513,7 +5513,7 @@ window.addEventListener('popstate', function(e) {
 
             const btn = e.target.querySelector('button[type="submit"]');
             const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Connecting (Max 50s)...';
             btn.disabled = true;
 
             try {
@@ -5527,13 +5527,6 @@ window.addEventListener('popstate', function(e) {
                 const contentType = res.headers.get("content-type");
                 if (contentType && contentType.indexOf("application/json") !== -1) {
                     data = await res.json();
-                }
-
-                if (!res.ok || !data.success || !contentType || contentType.indexOf("application/json") === -1) {
-                    console.warn("Backend login failed. Falling back to Mock Mode.");
-                    window.isMockMode = true;
-                    res = { ok: true };
-                    data = { success: true, key: 'mock-key-auth', message: 'Test Mode: Enter ANY 4-digit OTP to proceed', debugOtp: '1234', user: { name: payload.name || "Test User", phone: payload.phone || "9999999999" } };
                 }
 
                 btn.innerHTML = origText;
@@ -5550,21 +5543,16 @@ window.addEventListener('popstate', function(e) {
                     
                     if (typeof otpModal !== 'undefined') otpModal.show();
                     
-                    if(data.debugOtp || window.isMockMode) {
-                        
+                    if(data.debugOtp) {
+                        alert("⚠️ Email Config Alert \n\n" + data.message + "\n\nUse OTP: " + data.debugOtp);
                     }
                 } else {
                     alert('❌ Error: ' + (data.message || 'Verification failed.'));
                 }
             } catch (err) {
-                window.isMockMode = true;
-                activeOtpKey = 'mock-key-auth';
                 btn.innerHTML = origText;
                 btn.disabled = false;
-                
-                document.getElementById('otpModalMessage').innerText = 'Test Mode: Enter ANY 4-digit OTP to proceed';
-                if (typeof otpModal !== 'undefined') otpModal.show();
-                
+                alert('⚠️ Server is waking up from sleep mode (Render Free Tier limit). Please wait 45 seconds and click Submit again.');
             }
         }
 
@@ -5639,29 +5627,16 @@ async function requestOtp(e, actionType) {
             btn.disabled = true;
 
             try {
-                let res, data;
-                if (window.isMockMode) {
-                    await new Promise(r => setTimeout(r, 800)); // fake delay
-                    if (otpVal.length === 4) {
-                        res = { ok: true };
-                        data = { success: true, user: { name: document.getElementById('loginEmail').value.split('@')[0] || 'Customer', phone: '9999999999' } };
-                    } else {
-                        res = { ok: false };
-                        data = { success: false, message: 'Invalid OTP' };
-                    }
-                } else {
-                    res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/verify-otp', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
-                    });
-                    
-                    const contentType = res.headers.get("content-type");
-                    if (contentType && contentType.indexOf("application/json") !== -1) {
-                        data = await res.json();
-                    } else {
-                        throw new Error("Invalid Server Response");
-                    }
+                let res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
+                });
+                
+                let data = {};
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    data = await res.json();
                 }
                 
                 btn.innerHTML = 'Verify & Confirm';
@@ -5671,7 +5646,6 @@ async function requestOtp(e, actionType) {
                     if (typeof otpModal !== 'undefined') otpModal.hide();
                     isLoggedIn = true;
                     
-                    // Close the main auth modal too
                     const authPage = document.getElementById('page-auth');
                     if(authPage) authPage.classList.remove('active');
                     
@@ -5690,7 +5664,7 @@ async function requestOtp(e, actionType) {
             } catch (err) {
                 btn.innerHTML = 'Verify & Confirm';
                 btn.disabled = false;
-                
+                alert('Network Error connecting to server.');
             }
         }
 
