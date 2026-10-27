@@ -1893,6 +1893,7 @@ app.post('/api/customer/request-otp', async (req, res) => {
     const expiresAt = Date.now() + 5 * 60 * 1000;
     
     let targetEmail = '';
+    let finalKey = '';
 
     if (action === 'signup') {
       const cleanPhone = String(phone || '').replace(/[^0-9]/g, '').slice(-10);
@@ -1913,9 +1914,9 @@ app.post('/api/customer/request-otp', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Yeh Mobile ya Email pehle se registered hai! Kripya Sign In karein.' });
       }
 
-      const key = cleanPhone || cleanEmail;
+      finalKey = cleanPhone || cleanEmail;
       targetEmail = cleanEmail;
-      customerOtpMap.set(key, { otp, expiresAt, action: 'signup', payload: { name: name.trim(), email: cleanEmail, phone: cleanPhone, password: passStr } });
+      customerOtpMap.set(finalKey, { otp, expiresAt, action: 'signup', payload: { name: name.trim(), email: cleanEmail, phone: cleanPhone, password: passStr } });
 
     } else if (action === 'login') {
       const rawId = String(identifier || '').trim();
@@ -1937,9 +1938,9 @@ app.post('/api/customer/request-otp', async (req, res) => {
         return res.status(401).json({ success: false, message: '❌ Password galat hai! Kripya sahi password daalein.' });
       }
 
-      const key = customer.phone || customer.email;
+      finalKey = customer.phone || customer.email;
       targetEmail = customer.email;
-      customerOtpMap.set(key, { otp, expiresAt, action: 'login', payload: { name: customer.name, email: customer.email, phone: customer.phone } });
+      customerOtpMap.set(finalKey, { otp, expiresAt, action: 'login', payload: { name: customer.name, email: customer.email, phone: customer.phone } });
 
     } else if (action === 'forgot') {
       const rawId = String(identifier || '').trim();
@@ -1951,9 +1952,9 @@ app.post('/api/customer/request-otp', async (req, res) => {
         return res.status(404).json({ success: false, message: 'Yeh Account registered nahi hai.' });
       }
       
-      const key = customer.phone || customer.email;
+      finalKey = customer.phone || customer.email;
       targetEmail = customer.email;
-      customerOtpMap.set(key, { otp, expiresAt, action: 'forgot', payload: { phone: customer.phone, email: customer.email } });
+      customerOtpMap.set(finalKey, { otp, expiresAt, action: 'forgot', payload: { phone: customer.phone, email: customer.email } });
     } else {
         return res.status(400).json({ success: false, message: 'Invalid action' });
     }
@@ -1972,16 +1973,16 @@ app.post('/api/customer/request-otp', async (req, res) => {
                          <p>Do not share this code with anyone. It is valid for 5 minutes.</p>
                        </div>`
             });
+            return res.json({ success: true, key: finalKey, message: 'OTP has been sent to your registered Email successfully!' });
         } catch (mailErr) {
             console.error("Email sending failed:", mailErr);
             // Fallback for development if email credentials are wrong
-            return res.json({ success: true, key: customerOtpMap.get(targetEmail) ? targetEmail : identifier, debugOtp: otp, message: 'Server email issue. Dev OTP: ' + otp });
+            return res.json({ success: true, key: finalKey, debugOtp: otp, message: 'Server email issue. Dev OTP: ' + otp });
         }
+    } else {
+        // Fallback for numbers without email
+        return res.json({ success: true, key: finalKey, debugOtp: otp, message: 'Server issue. Dev OTP: ' + otp });
     }
-
-    // If successful, don't send debugOtp to client for security
-    const retKey = Array.from(customerOtpMap.keys()).pop(); // hacky but gets the latest key added
-    return res.json({ success: true, key: retKey, message: 'OTP has been sent to your registered Email successfully!' });
 
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
