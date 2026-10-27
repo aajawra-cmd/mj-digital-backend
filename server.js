@@ -1854,10 +1854,6 @@ app.put('/api/cms/policies/:key', async (req, res) => {
 // ==========================================
 // SECURE CUSTOMER AUTH ENGINE (12+ CHARS & COMPLEXITY)
 // ==========================================
-
-// ==========================================
-// SECURE CUSTOMER AUTH ENGINE (12+ CHARS & COMPLEXITY)
-// ==========================================
 const otpRecordSchema = new mongoose.Schema({
   key: { type: String, required: true, unique: true },
   otp: { type: String, required: true },
@@ -1868,7 +1864,6 @@ const otpRecordSchema = new mongoose.Schema({
 const OtpRecord = mongoose.models.OtpRecord || mongoose.model('OtpRecord', otpRecordSchema);
 
 const customerAccountSchema = new mongoose.Schema({
-
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, lowercase: true, trim: true },
   phone: { type: String, required: true, unique: true, index: true },
@@ -1877,24 +1872,13 @@ const customerAccountSchema = new mongoose.Schema({
 
 const CustomerAccount = mongoose.models.CustomerAccount || mongoose.model('CustomerAccount', customerAccountSchema);
 
-// Strict Password Validation Helper
 function validateStrongPassword(pwd) {
   const password = String(pwd || '');
-  if (password.length < 12) {
-    return 'Password kam se kam 12 characters ka hona chahiye.';
-  }
-  if (!/[A-Z]/.test(password)) {
-    return 'Password mein kam se kam ek Uppercase letter (A-Z) hona chahiye.';
-  }
-  if (!/[a-z]/.test(password)) {
-    return 'Password mein kam se kam ek Lowercase letter (a-z) hona chahiye.';
-  }
-  if (!/[0-9]/.test(password)) {
-    return 'Password mein kam se kam ek Number (0-9) hona chahiye.';
-  }
-  if (!/[$!@#%^&*(),.?":{}|<>]/.test(password)) {
-    return 'Password mein kam se kam ek Special Character ($!@#%^&* etc.) hona chahiye.';
-  }
+  if (password.length < 12) return 'Password kam se kam 12 characters ka hona chahiye.';
+  if (!/[A-Z]/.test(password)) return 'Password mein kam se kam ek Uppercase letter (A-Z) hona chahiye.';
+  if (!/[a-z]/.test(password)) return 'Password mein kam se kam ek Lowercase letter (a-z) hona chahiye.';
+  if (!/[0-9]/.test(password)) return 'Password mein kam se kam ek Number (0-9) hona chahiye.';
+  if (!/[$!@#%^&*(),.?":{}|<>]/.test(password)) return 'Password mein kam se kam ek Special Character ($!@#%^&* etc.) hona chahiye.';
   return null;
 }
 
@@ -1902,8 +1886,6 @@ app.post('/api/customer/request-otp', async (req, res) => {
   try {
     const { action, name, email, phone, identifier, password } = req.body;
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000;
-    
     let targetEmail = '';
     let finalKey = '';
 
@@ -1917,9 +1899,7 @@ app.post('/api/customer/request-otp', async (req, res) => {
       }
 
       const pwdError = validateStrongPassword(passStr);
-      if (pwdError) {
-        return res.status(400).json({ success: false, message: pwdError });
-      }
+      if (pwdError) return res.status(400).json({ success: false, message: pwdError });
 
       const existing = await CustomerAccount.findOne({ $or: [{ phone: cleanPhone }, ...(cleanEmail ? [{ email: cleanEmail }] : [])] });
       if (existing) {
@@ -1942,7 +1922,7 @@ app.post('/api/customer/request-otp', async (req, res) => {
 
       const customer = await CustomerAccount.findOne({ $or: [...(cleanPhone.length === 10 ? [{ phone: cleanPhone }] : []), { email: cleanEmail }] });
       if (!customer) {
-        return res.status(404).json({ success: false, notRegistered: true, message: '⚠️ Yeh Mobile/Email registered nahi hai! Kripya pehle Sign Up karein.' });
+        return res.status(404).json({ success: false, message: '⚠️ Yeh Mobile/Email registered nahi hai! Kripya pehle Sign Up karein.' });
       }
 
       const isMatch = await bcrypt.compare(passStr, customer.password);
@@ -1971,7 +1951,6 @@ app.post('/api/customer/request-otp', async (req, res) => {
         return res.status(400).json({ success: false, message: 'Invalid action' });
     }
 
-    // Send Email OTP using Nodemailer
     if (targetEmail) {
         try {
             await mailTransporter.sendMail({
@@ -1988,19 +1967,15 @@ app.post('/api/customer/request-otp', async (req, res) => {
             return res.json({ success: true, key: finalKey, message: 'OTP has been sent to your registered Email successfully!' });
         } catch (mailErr) {
             console.error("Email sending failed:", mailErr);
-            // Fallback for development if email credentials are wrong
             return res.json({ success: true, key: finalKey, debugOtp: otp, message: 'Server email issue. Dev OTP: ' + otp });
         }
     } else {
-        // Fallback for numbers without email
         return res.json({ success: true, key: finalKey, debugOtp: otp, message: 'Server issue. Dev OTP: ' + otp });
     }
-
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-
 
 app.post('/api/customer/verify-otp', async (req, res) => {
   try {
@@ -2009,7 +1984,7 @@ app.post('/api/customer/verify-otp', async (req, res) => {
     const record = await OtpRecord.findOne({ key: cleanKey });
 
     if (!record) {
-      return res.status(400).json({ success: false, message: 'Session expired or invalid.' });
+      return res.status(400).json({ success: false, message: 'Session expired or invalid. Please try again.' });
     }
     if (String(otp || '').trim() !== record.otp) {
       return res.status(400).json({ success: false, message: 'Incorrect OTP.' });
@@ -2032,11 +2007,11 @@ app.post('/api/customer/verify-otp', async (req, res) => {
 
     await OtpRecord.deleteOne({ key: cleanKey });
     
-    if (!user) {
+    if (!user && record.action !== 'forgot') {
       return res.status(500).json({ success: false, message: 'Failed to retrieve or create user.' });
     }
 
-    res.json({ success: true, message: 'Verified successfully!', user: { name: user.name, phone: user.phone, email: user.email } });
+    res.json({ success: true, message: 'Verified successfully!', user: user ? { name: user.name, phone: user.phone, email: user.email } : {} });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -2045,14 +2020,11 @@ app.post('/api/customer/verify-otp', async (req, res) => {
 app.post('/api/customer/forgot-password-reset', async (req, res) => {
   try {
     const { key, otp, newPassword } = req.body;
-    const record = customerOtpMap.get(String(key || '').trim());
+    const cleanKey = String(key || '').trim();
+    const record = await OtpRecord.findOne({ key: cleanKey });
 
     if (!record || record.action !== 'forgot') {
       return res.status(400).json({ success: false, message: 'Session expired or invalid.' });
-    }
-    if (Date.now() > record.expiresAt) {
-      await OtpRecord.deleteOne({ key: cleanKey });
-      return res.status(400).json({ success: false, message: 'OTP expired!' });
     }
     if (String(otp || '').trim() !== record.otp) {
       return res.status(400).json({ success: false, message: 'Incorrect OTP.' });
