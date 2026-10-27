@@ -5626,7 +5626,7 @@ async function requestOtp(e, actionType) {
         }
 
         // 2. Backend server par OTP verify karna
-        async function verifyOtpAndProceed() {
+                async function verifyOtpAndProceed() {
             const otpVal = document.getElementById('otp1').value + 
                            document.getElementById('otp2').value + 
                            document.getElementById('otp3').value + 
@@ -5641,7 +5641,7 @@ async function requestOtp(e, actionType) {
             try {
                 let res, data;
                 if (window.isMockMode || activeOtpKey === 'mock-key-auth') {
-                    await new Promise(r => setTimeout(r, 600)); // fast fake delay
+                    await new Promise(r => setTimeout(r, 400));
                     if (otpVal.length === 4) {
                         res = { ok: true };
                         let fallbackName = (document.getElementById('loginEmail')?.value || document.getElementById('signupName')?.value || 'Customer').split('@')[0];
@@ -5668,16 +5668,12 @@ async function requestOtp(e, actionType) {
                 btn.disabled = false;
 
                 if (res.ok && data.success) {
-                    try { if (typeof otpModal !== 'undefined' && otpModal) otpModal.hide(); } catch(e){}
-                    
-                    // Bulletproof manual modal hide for Hostinger Caching issues
-                    const otpModalEl = document.getElementById('otpVerificationModal');
-                    if(otpModalEl) {
-                        otpModalEl.classList.remove('show');
-                        otpModalEl.style.display = 'none';
-                    }
-                    const backdrops = document.querySelectorAll('.modal-backdrop');
-                    backdrops.forEach(b => b.remove());
+                    // FORCE DOM CLEANUP FOR MODALS
+                    document.querySelectorAll('.modal').forEach(m => {
+                        m.classList.remove('show');
+                        m.style.display = 'none';
+                    });
+                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
                     document.body.classList.remove('modal-open');
                     document.body.style.overflow = '';
                     document.body.style.paddingRight = '';
@@ -5693,15 +5689,31 @@ async function requestOtp(e, actionType) {
                     const activeUser = data.user || {name: 'Customer'};
                     localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
                     
-                    if (typeof applyUserSessionToUI === 'function') {
-                        try { applyUserSessionToUI(); } catch(e){}
+                    // FORCE NAVBAR UPDATE INLINE
+                    const navBtn = document.getElementById('profileNavBtn');
+                    if (navBtn) {
+                        const span = navBtn.querySelector('span');
+                        if (span) {
+                            span.innerText = activeUser.name ? activeUser.name.split(' ')[0] : 'Account';
+                        }
                     }
                     
-                    try {
-                        checkAuthAndNavigate();
-                    } catch(e) {
-                        window.location.reload(); // Hard fallback if navigation script fails
+                    // NAVIGATE TO PROFILE PAGE
+                    document.querySelectorAll('.page-view').forEach(p => {
+                        p.classList.remove('active');
+                        p.style.display = 'none';
+                    });
+                    const profPage = document.getElementById('page-profile');
+                    if(profPage) {
+                        profPage.classList.add('active');
+                        profPage.style.display = 'block';
                     }
+                    
+                    // HARD RESET FIX: If DOM is stuck, reload the page which will read localStorage automatically
+                    setTimeout(() => {
+                        window.location.href = window.location.pathname + "?login=success";
+                    }, 100);
+                    
                 } else {
                     alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
                     document.getElementById('otp1').value = '';
