@@ -1989,6 +1989,50 @@ app.post('/api/customer/request-otp', async (req, res) => {
   }
 });
 
+
+app.post('/api/customer/verify-otp', async (req, res) => {
+  try {
+    const { key, otp } = req.body;
+    const record = customerOtpMap.get(String(key || '').trim());
+
+    if (!record) {
+      return res.status(400).json({ success: false, message: 'Session expired or invalid.' });
+    }
+    if (Date.now() > record.expiresAt) {
+      customerOtpMap.delete(key);
+      return res.status(400).json({ success: false, message: 'OTP expired!' });
+    }
+    if (String(otp || '').trim() !== record.otp) {
+      return res.status(400).json({ success: false, message: 'Incorrect OTP.' });
+    }
+
+    let user = null;
+    
+    if (record.action === 'signup') {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(record.payload.password, salt);
+      user = await CustomerAccount.create({
+        name: record.payload.name,
+        email: record.payload.email,
+        phone: record.payload.phone,
+        password: hashedPassword
+      });
+    } else if (record.action === 'login') {
+      user = await CustomerAccount.findOne({ phone: record.payload.phone });
+    }
+
+    customerOtpMap.delete(key);
+    
+    if (!user) {
+      return res.status(500).json({ success: false, message: 'Failed to retrieve or create user.' });
+    }
+
+    res.json({ success: true, message: 'Verified successfully!', user: { name: user.name, phone: user.phone, email: user.email } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 app.post('/api/customer/forgot-password-reset', async (req, res) => {
   try {
     const { key, otp, newPassword } = req.body;
