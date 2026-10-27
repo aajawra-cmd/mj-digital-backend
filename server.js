@@ -1854,9 +1854,21 @@ app.put('/api/cms/policies/:key', async (req, res) => {
 // ==========================================
 // SECURE CUSTOMER AUTH ENGINE (12+ CHARS & COMPLEXITY)
 // ==========================================
-const customerOtpMap = new Map();
+
+// ==========================================
+// SECURE CUSTOMER AUTH ENGINE (12+ CHARS & COMPLEXITY)
+// ==========================================
+const otpRecordSchema = new mongoose.Schema({
+  key: { type: String, required: true, unique: true },
+  otp: { type: String, required: true },
+  action: { type: String, required: true },
+  payload: { type: mongoose.Schema.Types.Mixed },
+  createdAt: { type: Date, expires: 300, default: Date.now } // Auto-delete after 5 minutes
+});
+const OtpRecord = mongoose.models.OtpRecord || mongoose.model('OtpRecord', otpRecordSchema);
 
 const customerAccountSchema = new mongoose.Schema({
+
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, lowercase: true, trim: true },
   phone: { type: String, required: true, unique: true, index: true },
@@ -1916,7 +1928,7 @@ app.post('/api/customer/request-otp', async (req, res) => {
 
       finalKey = cleanPhone || cleanEmail;
       targetEmail = cleanEmail;
-      customerOtpMap.set(finalKey, { otp, expiresAt, action: 'signup', payload: { name: name.trim(), email: cleanEmail, phone: cleanPhone, password: passStr } });
+      await OtpRecord.findOneAndUpdate({ key: finalKey }, { otp, action: 'signup', payload: { name: name.trim(), email: cleanEmail, phone: cleanPhone, password: passStr }, createdAt: Date.now() }, { upsert: true });
 
     } else if (action === 'login') {
       const rawId = String(identifier || '').trim();
@@ -1940,7 +1952,7 @@ app.post('/api/customer/request-otp', async (req, res) => {
 
       finalKey = customer.phone || customer.email;
       targetEmail = customer.email;
-      customerOtpMap.set(finalKey, { otp, expiresAt, action: 'login', payload: { name: customer.name, email: customer.email, phone: customer.phone } });
+      await OtpRecord.findOneAndUpdate({ key: finalKey }, { otp, action: 'login', payload: { name: customer.name, email: customer.email, phone: customer.phone }, createdAt: Date.now() }, { upsert: true });
 
     } else if (action === 'forgot') {
       const rawId = String(identifier || '').trim();
@@ -1954,7 +1966,7 @@ app.post('/api/customer/request-otp', async (req, res) => {
       
       finalKey = customer.phone || customer.email;
       targetEmail = customer.email;
-      customerOtpMap.set(finalKey, { otp, expiresAt, action: 'forgot', payload: { phone: customer.phone, email: customer.email } });
+      await OtpRecord.findOneAndUpdate({ key: finalKey }, { otp, action: 'forgot', payload: { phone: customer.phone, email: customer.email }, createdAt: Date.now() }, { upsert: true });
     } else {
         return res.status(400).json({ success: false, message: 'Invalid action' });
     }
@@ -1993,14 +2005,11 @@ app.post('/api/customer/request-otp', async (req, res) => {
 app.post('/api/customer/verify-otp', async (req, res) => {
   try {
     const { key, otp } = req.body;
-    const record = customerOtpMap.get(String(key || '').trim());
+    const cleanKey = String(key || '').trim();
+    const record = await OtpRecord.findOne({ key: cleanKey });
 
     if (!record) {
       return res.status(400).json({ success: false, message: 'Session expired or invalid.' });
-    }
-    if (Date.now() > record.expiresAt) {
-      customerOtpMap.delete(key);
-      return res.status(400).json({ success: false, message: 'OTP expired!' });
     }
     if (String(otp || '').trim() !== record.otp) {
       return res.status(400).json({ success: false, message: 'Incorrect OTP.' });
@@ -2021,7 +2030,7 @@ app.post('/api/customer/verify-otp', async (req, res) => {
       user = await CustomerAccount.findOne({ phone: record.payload.phone });
     }
 
-    customerOtpMap.delete(key);
+    await OtpRecord.deleteOne({ key: cleanKey });
     
     if (!user) {
       return res.status(500).json({ success: false, message: 'Failed to retrieve or create user.' });
@@ -2042,7 +2051,7 @@ app.post('/api/customer/forgot-password-reset', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Session expired or invalid.' });
     }
     if (Date.now() > record.expiresAt) {
-      customerOtpMap.delete(key);
+      await OtpRecord.deleteOne({ key: cleanKey });
       return res.status(400).json({ success: false, message: 'OTP expired!' });
     }
     if (String(otp || '').trim() !== record.otp) {
@@ -2059,7 +2068,7 @@ app.post('/api/customer/forgot-password-reset', async (req, res) => {
     
     await CustomerAccount.findOneAndUpdate({ phone: record.payload.phone }, { $set: { password: hashedPassword } });
     
-    customerOtpMap.delete(key);
+    await OtpRecord.deleteOne({ key: cleanKey });
     res.json({ success: true, message: 'Password reset successful!' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

@@ -7,7 +7,7 @@
 window.ACTIVE_RAZORPAY_KEY = "";
 async function initRazorpayKey() {
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/payment/key');
+    const res = await fetch('/api/payment/key');
     const data = await res.json();
     if (data && data.key) {
       window.ACTIVE_RAZORPAY_KEY = data.key;
@@ -25,7 +25,7 @@ function getActiveRazorpayKeySync() {
 <script>
 async function getActiveRazorpayKey() {
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/payment/key');
+                const res = await fetch('/api/payment/key');
                 const data = await res.json();
                 if (data && data.key) return data.key;
             } catch(e) {}
@@ -35,7 +35,7 @@ async function getActiveRazorpayKey() {
     const container = document.getElementById('amazonOrdersContainer');
     if (!container) return;
     try {
-      const res = await fetch('https://mj-digital-backend-3.onrender.com/api/orders');
+      const res = await fetch('/api/orders');
       if (res.ok) {
         const rawOrders = await res.json();
         window.userOrders = Array.isArray(rawOrders) ? rawOrders : (rawOrders.data || rawOrders.orders || []);
@@ -3125,7 +3125,7 @@ function routeCurrentPath() {
     if (path.includes('item') || path.includes('view')) {
         Promise.all([
             fetchStoreItems(true),
-            fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages?_t=' + Date.now()).then(r => r.json()).catch(() => ({}))
+            fetch('/api/travel-packages?_t=' + Date.now()).then(r => r.json()).catch(() => ({}))
         ]).then(([prods, travRes]) => {
             const travs = Array.isArray(travRes) ? travRes : (travRes.data || []);
             travs.forEach(t => { catalogItemsCache[t._id] = t; });
@@ -3160,7 +3160,7 @@ window.addEventListener('popstate', function(e) {
 
         async function fetchStoreItems(forceRefresh = true) {
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products?_t=' + Date.now());
+                const res = await fetch('/api/products?_t=' + Date.now());
                 if (res.ok) {
                     const data = await res.json();
                     const rawItems = Array.isArray(data) ? data : (data.data || []);
@@ -3182,7 +3182,7 @@ window.addEventListener('popstate', function(e) {
 
         async function fetchLiveActiveTravels() {
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages?_t=' + Date.now());
+                const res = await fetch('/api/travel-packages?_t=' + Date.now());
                 if (res.ok) {
                     const data = await res.json();
                     const rawList = Array.isArray(data) ? data : (data.data || []);
@@ -3269,7 +3269,7 @@ window.addEventListener('popstate', function(e) {
 
             let travels = [];
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages?_t=' + Date.now());
+                const res = await fetch('/api/travel-packages?_t=' + Date.now());
                 if (res.ok) {
                     const data = await res.json();
                     const rawTravels = Array.isArray(data) ? data : (data.data || []);
@@ -3305,7 +3305,7 @@ window.addEventListener('popstate', function(e) {
 
             let travels = [];
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages?_t=' + Date.now());
+                const res = await fetch('/api/travel-packages?_t=' + Date.now());
                 if (res.ok) {
                     const data = await res.json();
                     const rawTravels = Array.isArray(data) ? data : (data.data || []);
@@ -3366,7 +3366,7 @@ window.addEventListener('popstate', function(e) {
 
             try {
                 // Fetch all live products from database so no item is missed due to spelling/plural category names
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products?_t=' + Date.now());
+                const res = await fetch('/api/products?_t=' + Date.now());
                 const json = await res.json();
                 let allItems = (Array.isArray(json) ? json : (json.data || [])).filter(it => String(it.status || 'Active').trim().toLowerCase() !== 'inactive');
 
@@ -3555,7 +3555,7 @@ window.addEventListener('popstate', function(e) {
             if (!grid) return;
 
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages?_t=' + Date.now());
+                const res = await fetch('/api/travel-packages?_t=' + Date.now());
                 if (res.ok) {
                     const result = await res.json();
                     const remoteData = Array.isArray(result) ? result : (result.data || []);
@@ -4692,7 +4692,7 @@ window.addEventListener('popstate', function(e) {
                         }]
                     };
 
-                    return fetch('https://mj-digital-backend-3.onrender.com/api/orders', {
+                    return fetch('/api/orders', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -4708,7 +4708,7 @@ window.addEventListener('popstate', function(e) {
                     triggerCustomerWhatsAppReceipt(createdOrders, phone, name);
                     finishCheckout();
                 } else {
-                    const orderRes = await fetch('https://mj-digital-backend-3.onrender.com/api/create-order', {
+                    const orderRes = await fetch('/api/create-order', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ amount: totalPayable, gateway: gateway })
@@ -4911,7 +4911,7 @@ window.addEventListener('popstate', function(e) {
             if (!container) return;
 
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/orders');
+                const res = await fetch('/api/orders');
                 const rawOrders = await res.json();
                 const orders = Array.isArray(rawOrders) ? rawOrders : (rawOrders.data || rawOrders.orders || []);
 
@@ -5136,7 +5136,7 @@ window.addEventListener('popstate', function(e) {
             if (isTravel) {
                 let travels = [];
                 try {
-                    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/travel-packages?_t=' + Date.now());
+                    const res = await fetch('/api/travel-packages?_t=' + Date.now());
                     const data = await res.json();
                     travels = Array.isArray(data) ? data : (data.data || []);
                 } catch(e) {
@@ -5238,7 +5238,7 @@ window.addEventListener('popstate', function(e) {
 
         async function loadMainSitePolicies() {
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/cms/policies');
+                const res = await fetch('/api/cms/policies');
                 if (!res.ok) return;
                 const result = await res.json();
                 const policies = Array.isArray(result) ? result : (result.data || []);
@@ -5259,7 +5259,7 @@ window.addEventListener('popstate', function(e) {
 
         async function syncLiveStoreSettings() {
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/settings');
+                const res = await fetch('/api/settings');
                 const result = await res.json();
                 if (!res.ok || !result.success || !result.data) return;
                 const s = result.data;
@@ -5517,7 +5517,7 @@ window.addEventListener('popstate', function(e) {
             btn.disabled = true;
 
             try {
-                let res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/request-otp', {
+                let res = await fetch('/api/customer/request-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -5589,7 +5589,7 @@ async function requestOtp(e, actionType) {
             btn.disabled = true;
 
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/request-otp', {
+                const res = await fetch('/api/customer/request-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -5650,7 +5650,7 @@ async function requestOtp(e, actionType) {
                         data = { success: false, message: 'Invalid OTP' };
                     }
                 } else {
-                    res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/verify-otp', {
+                    res = await fetch('/api/customer/verify-otp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
@@ -6350,7 +6350,7 @@ async function handleFullPageUtilitySubmit(e) {
         };
 
         try {
-            const res = await fetch('https://mj-digital-backend-3.onrender.com/api/orders', {
+            const res = await fetch('/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -6541,7 +6541,7 @@ function getCustomerActiveName() {
 async function fetchLiveWalletFromServer() {
   try {
     const phone = getCustomerActivePhone();
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/wallet?phone=' + encodeURIComponent(phone) + '&_t=' + Date.now());
+    const res = await fetch('/api/wallet?phone=' + encodeURIComponent(phone) + '&_t=' + Date.now());
     const data = await res.json();
     if (res.ok && data.success) {
       fpCurrentWalletBalance = Number(data.balance || 0);
@@ -7073,7 +7073,7 @@ executeFullPageWalletTopup = async function(customAmt) {
     amt,
     'M J Wallet Top-Up ₹' + amt,
     async (txnId, gatewayUsed) => {
-      const res = await fetch('https://mj-digital-backend-3.onrender.com/api/wallet/topup', {
+      const res = await fetch('/api/wallet/topup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -7119,7 +7119,7 @@ handleFullPageUtilitySubmit = async function(e) {
     const payMode = document.querySelector('input[name="fpPaySource"]:checked')?.value || 'upi_qr';
     if (payMode === 'gateway') {
       openRazorpayForUtility(amt, 'M J Wallet Top-Up ₹' + amt, async (txnId, gw) => {
-        const res = await fetch('https://mj-digital-backend-3.onrender.com/api/wallet/topup', {
+        const res = await fetch('/api/wallet/topup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -7157,7 +7157,7 @@ handleFullPageUtilitySubmit = async function(e) {
   }
 
   async function finalizeUtilityPaymentOnServer(modeUsed, txnRef) {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/wallet/pay-utility', {
+    const res = await fetch('/api/wallet/pay-utility', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -7507,7 +7507,7 @@ window.handleFullPageUtilitySubmit = async function(e) {
     }
     try {
       const txnRef = 'WAL-' + Date.now().toString().slice(-8);
-      const res = await fetch('https://mj-digital-backend-3.onrender.com/api/wallet/pay-utility', {
+      const res = await fetch('/api/wallet/pay-utility', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -7593,7 +7593,7 @@ window.handleFullPageCheckoutSubmit = async function(e) {
     if (!meta) return false;
 
     if (meta.isWalletTopup) {
-      const res = await fetch('https://mj-digital-backend-3.onrender.com/api/wallet/topup', {
+      const res = await fetch('/api/wallet/topup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -7622,7 +7622,7 @@ window.handleFullPageCheckoutSubmit = async function(e) {
         return true;
       }
     } else {
-      const res = await fetch('https://mj-digital-backend-3.onrender.com/api/wallet/pay-utility', {
+      const res = await fetch('/api/wallet/pay-utility', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -7693,7 +7693,7 @@ window.handleFullPageCheckoutSubmit = async function(e) {
         }]
       };
 
-      return fetch('https://mj-digital-backend-3.onrender.com/api/orders', {
+      return fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -8018,7 +8018,7 @@ async function handleCustomerAccountDeletion(e) {
   }
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/delete-account', {
+    const res = await fetch('/api/customer/delete-account', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone, remark: finalRemark })
@@ -8080,7 +8080,7 @@ async function handleBulkCsvUploadSubmit(event) {
   if (btn) { btn.disabled = true; btn.innerText = 'Importing to Database...'; }
 
   try {
-    const res = await fetch('https://mj-digital-backend-3.onrender.com/api/products/import-csv', {
+    const res = await fetch('/api/products/import-csv', {
       method: 'POST',
       headers: {
         ...(typeof getAdminAuthHeaders === 'function' ? getAdminAuthHeaders() : {})
@@ -8365,7 +8365,7 @@ window.renderVariantPillsHTML = function(item, configs, opts) {
 
       // Check on Backend MongoDB first
       try {
-        const res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/login', {
+        const res = await fetch('/api/customer/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ identifier, password })
@@ -8443,7 +8443,7 @@ window.renderVariantPillsHTML = function(item, configs, opts) {
     if (pendingAction === 'signup' && window.pendingSignupPayload) {
       const payload = window.pendingSignupPayload;
       try {
-        const res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/signup', {
+        const res = await fetch('/api/customer/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -8590,7 +8590,7 @@ function evaluatePasswordStrength(pass) {
             btn.disabled = true;
 
             try {
-                let res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/request-otp', {
+                let res = await fetch('/api/customer/request-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'forgot', identifier: identifier })
@@ -8657,7 +8657,7 @@ function evaluatePasswordStrength(pass) {
                         data = { success: false, message: 'Invalid OTP' };
                     }
                 } else {
-                    res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/forgot-password-reset', {
+                    res = await fetch('/api/customer/forgot-password-reset', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ key: typeof forgotOtpKey !== 'undefined' ? forgotOtpKey : '', otp: code, newPassword: newPassword, identifier: document.getElementById('forgotIdentifier').value })
@@ -8721,7 +8721,7 @@ function evaluatePasswordStrength(pass) {
             };
 
             try {
-                let res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/request-otp', {
+                let res = await fetch('/api/customer/request-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -8824,7 +8824,7 @@ function evaluatePasswordStrength(pass) {
                         data = { success: false, message: 'Invalid OTP' };
                     }
                 } else {
-                    res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/verify-otp', {
+                    res = await fetch('/api/customer/verify-otp', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ key: profileUpdateOtpKey, otp: code, action: 'update-profile' })
