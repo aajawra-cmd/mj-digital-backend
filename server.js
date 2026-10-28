@@ -98,8 +98,6 @@ app.get(['/invoice', '/invoice.html', '/account/invoice', '/account/invoice.html
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-
-
 // ==========================================
 // 1. MIDDLEWARES & STATIC FOLDERS
 // ==========================================
@@ -154,8 +152,8 @@ app.get(['/invoice.html', '/account/invoice.html'], (req, res) => {
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
-// Admin Panel Route
-// ADMIN PANEL DIRECT ROUTE (POINTING TO ORIGINAL MJ_DIGITAL)
+
+// ADMIN PANEL DIRECT ROUTE
 app.get(['/admin', '/admin.html'], (req, res) => {
   const adminFile = path.join(__dirname, 'mj_digital', 'admin.html');
   if (fs.existsSync(adminFile)) {
@@ -191,7 +189,6 @@ function fileToPersistentUrl(file) {
   try {
     if (file && file.path && fs.existsSync(file.path)) {
       const mime = file.mimetype || 'image/jpeg';
-      // If image is under 8MB, store as persistent data URI so Render restarts never lose it
       if (mime.startsWith('image/') && file.size <= 8 * 1024 * 1024) {
         const b64 = fs.readFileSync(file.path).toString('base64');
         return 'data:' + mime + ';base64,' + b64;
@@ -1075,9 +1072,6 @@ app.put('/api/settings', verifyAdminToken, async (req, res) => {
 });
 
 // ==========================================
-
-// ==========================================
-// ==========================================
 // MEDIA ASSET LIBRARY API
 // ==========================================
 const mediaAssetSchema = new mongoose.Schema({
@@ -1919,11 +1913,11 @@ function validateStrongPassword(pwd) {
   return null;
 }
 
-// Yahan otpRateLimiter laga diya gaya hai
 app.post('/api/customer/request-otp', otpRateLimiter, async (req, res) => {
   try {
     const { action, name, email, phone, identifier, password } = req.body;
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    // OTP ko 6-digit (100000 se 999999) kar diya gaya hai
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     let targetEmail = '';
     let finalKey = '';
 
@@ -2015,7 +2009,6 @@ app.post('/api/customer/request-otp', otpRateLimiter, async (req, res) => {
   }
 });
 
-// Yahan otpIpBlocker laga diya gaya hai, aur failed attempts ka logic add kar diya hai
 app.post('/api/customer/verify-otp', otpIpBlocker, async (req, res) => {
   try {
     const { key, otp } = req.body;
@@ -2027,7 +2020,6 @@ app.post('/api/customer/verify-otp', otpIpBlocker, async (req, res) => {
     }
 
     if (String(otp || '').trim() !== record.otp) {
-      // Galat OTP par block logic
       const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
       const failedRecord = otpFailedMap.get(ip) || { count: 0 };
       failedRecord.count += 1;
@@ -2040,7 +2032,6 @@ app.post('/api/customer/verify-otp', otpIpBlocker, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Incorrect OTP.' });
     }
 
-    // Sahi OTP par IP unblock karein
     const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
     otpFailedMap.delete(ip);
 
@@ -2120,7 +2111,6 @@ const adminUserSchema = new mongoose.Schema({
 
 const AdminUser = mongoose.models.AdminUser || mongoose.model('AdminUser', adminUserSchema);
 
-// Initial Default Admin Creator if doesn't exist
 async function ensureAdminExists() {
   try {
     const existing = await AdminUser.findOne();
@@ -2142,7 +2132,6 @@ async function ensureAdminExists() {
 }
 setTimeout(ensureAdminExists, 2000);
 
-// 1. ADMIN LOGIN - STEP 1 (VERIFY CREDENTIALS & GENERATE OTP)
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -2157,14 +2146,12 @@ app.post('/api/admin/login', async (req, res) => {
       $or: [{ username: cleanUser }, { phone: cleanUser }, { email: cleanUser.toLowerCase() }]
     });
 
-    // Agar database me match na ho ya naya hashed password mismatch ho, toh master recovery verify karein
     let isMatch = false;
     if (admin) {
       isMatch = await bcrypt.compare(cleanPass, admin.password);
     }
 
     if (!admin || !isMatch) {
-      // Master Super Admin Fallback
       if (cleanUser === '8306669999' || cleanUser === 'admin@mjdigital.in') {
         const token = jwt.sign({ id: 'master_super_admin', username: '8306669999' }, JWT_SECRET, { expiresIn: '30d' });
         return res.json({ success: true, requires2FA: false, token, username: '8306669999' });
@@ -2173,7 +2160,8 @@ app.post('/api/admin/login', async (req, res) => {
     }
 
     if (admin.twoFactorEnabled) {
-      const otp = Math.floor(1000 + Math.random() * 9000).toString();
+      // Yahan bhi OTP ko 6-digit (100000 se 999999) kar diya gaya hai
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
       admin.otpSecret = otp;
       admin.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
       await admin.save();
@@ -2191,7 +2179,7 @@ app.post('/api/admin/login', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-// 2. ADMIN LOGIN - STEP 2 (VERIFY 2FA OTP)
+
 app.post('/api/admin/verify-2fa', async (req, res) => {
   try {
     const { adminId, otp } = req.body;
@@ -2208,7 +2196,6 @@ app.post('/api/admin/verify-2fa', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Galat ya expired OTP!' });
     }
 
-    // Clear used OTP
     admin.otpSecret = '';
     await admin.save();
 
@@ -2219,7 +2206,6 @@ app.post('/api/admin/verify-2fa', async (req, res) => {
   }
 });
 
-// 3. ADMIN UPDATE USERNAME & PASSWORD (FROM DASHBOARD)
 app.put('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
   try {
     const { currentPassword, newUsername, newPassword, phone, email, twoFactorEnabled } = req.body;
@@ -2264,7 +2250,6 @@ app.put('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
   }
 });
 
-// 4. GET CURRENT ADMIN PROFILE
 app.get('/api/admin/profile', verifyAdminToken, async (req, res) => {
   try {
     const admin = await AdminUser.findById(req.admin.id).select('-password -otpSecret');
@@ -2273,6 +2258,5 @@ app.get('/api/admin/profile', verifyAdminToken, async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-
 
 module.exports = app;

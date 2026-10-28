@@ -2812,11 +2812,13 @@ async function getActiveRazorpayKey() {
 
                 <!-- Step 2: Verify OTP & Set New Password -->
                 <div id="forgotStep2" style="display: none;">
-                    <div class="d-flex justify-content-center gap-2 my-3">
-                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp1">
-                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp2">
-                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp3">
-                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp4">
+                    <div class="d-flex justify-content-center gap-2 my-3 flex-wrap">
+                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp1" style="width: 45px;">
+                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp2" style="width: 45px;">
+                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp3" style="width: 45px;">
+                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp4" style="width: 45px;">
+                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp5" style="width: 45px;">
+                        <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp6" style="width: 45px;">
                     </div>
                     <input type="password" id="newResetPassword" class="form-control mb-3 py-2 text-center" placeholder="Enter New Password (Min 12)" required>
                     <button class="btn btn-success w-100 py-2 fw-bold" onclick="verifyForgotOtpAndReset(this)">Verify & Reset Password</button>
@@ -2831,12 +2833,14 @@ async function getActiveRazorpayKey() {
             <div class="modal-content rounded-4 text-center p-4">
                 <i class="fa-solid fa-shield-halved text-primary display-4 mb-3"></i>
                 <h4 class="fw-bold mb-1">2FA OTP Verification</h4>
-                <p class="text-muted small" id="otpModalMessage">Enter the 4-digit code sent to your registered mobile/email</p>
-                <div class="d-flex justify-content-center gap-2 my-3">
-                    <input type="text" class="otp-input" maxlength="1" id="otp1">
-                    <input type="text" class="otp-input" maxlength="1" id="otp2">
-                    <input type="text" class="otp-input" maxlength="1" id="otp3">
-                    <input type="text" class="otp-input" maxlength="1" id="otp4">
+                <p class="text-muted small" id="otpModalMessage">Enter the 6-digit code sent to your registered mobile/email</p>
+                <div class="d-flex justify-content-center gap-2 my-3 flex-wrap">
+                    <input type="text" class="otp-input" maxlength="1" id="otp1" style="width: 45px;">
+                    <input type="text" class="otp-input" maxlength="1" id="otp2" style="width: 45px;">
+                    <input type="text" class="otp-input" maxlength="1" id="otp3" style="width: 45px;">
+                    <input type="text" class="otp-input" maxlength="1" id="otp4" style="width: 45px;">
+                    <input type="text" class="otp-input" maxlength="1" id="otp5" style="width: 45px;">
+                    <input type="text" class="otp-input" maxlength="1" id="otp6" style="width: 45px;">
                 </div>
                 <button class="btn btn-brand w-100 py-2 mt-2" onclick="verifyOtpAndProceed()" id="verifyOtpBtn">Verify & Confirm</button>
             </div>
@@ -5590,7 +5594,7 @@ window.addEventListener('popstate', function(e) {
                 btn.innerHTML = origText;
                 btn.disabled = false;
                 
-                document.getElementById('otpModalMessage').innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-bolt"></i> Fast Login Mode Active</span><br>Enter ANY 4-digit code (e.g. 1234)';
+                document.getElementById('otpModalMessage').innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-bolt"></i> Fast Login Mode Active</span><br>Enter ANY 6-digit code (e.g. 123456)';
                 if (typeof otpModal !== 'undefined') otpModal.show();
                 setTimeout(() => { document.getElementById('otp1').focus(); }, 400);
             }
@@ -5653,108 +5657,108 @@ async function requestOtp(e, actionType) {
             }
         }
 
-        // 2. Backend server par OTP verify karna
-                async function verifyOtpAndProceed() {
-            const otpVal = document.getElementById('otp1').value + 
-                           document.getElementById('otp2').value + 
-                           document.getElementById('otp3').value + 
-                           document.getElementById('otp4').value;
-                           
-            if(otpVal.length !== 4) return alert('Kripya 4-digit OTP daalein');
+        // 2. verifyOtpAndProceed ko pura replace kar dein is code se:
+async function verifyOtpAndProceed() {
+    const otpVal = document.getElementById('otp1').value + 
+                   document.getElementById('otp2').value + 
+                   document.getElementById('otp3').value + 
+                   document.getElementById('otp4').value +
+                   document.getElementById('otp5').value +
+                   document.getElementById('otp6').value;
+                   
+    if(otpVal.length !== 6) return alert('Kripya 6-digit OTP daalein');
 
-            const btn = document.getElementById('verifyOtpBtn');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Verifying...';
-            btn.disabled = true;
+    const btn = document.getElementById('verifyOtpBtn');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Verifying...';
+    btn.disabled = true;
 
-            try {
-                let res, data;
-                if (window.isMockMode || activeOtpKey === 'mock-key-auth') {
-                    if (otpVal.length === 4) {
-                        res = { ok: true };
-                        let fallbackName = (document.getElementById('loginEmail')?.value || document.getElementById('signupName')?.value || 'Customer').split('@')[0];
-                        data = { success: true, user: { name: fallbackName, phone: document.getElementById('signupPhone')?.value || '9999999999', email: document.getElementById('loginEmail')?.value || document.getElementById('signupEmail')?.value || '' } };
-                    } else {
-                        res = { ok: false };
-                        data = { success: false, message: 'Invalid OTP' };
-                    }
-                } else {
-                    res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/verify-otp', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
-                    });
-                    const contentType = res.headers.get("content-type");
-                    if (contentType && contentType.indexOf("application/json") !== -1) {
-                        data = await res.json();
-                    } else {
-                        throw new Error("Invalid Server Response");
-                    }
-                }
-                
-                btn.innerHTML = 'Verify & Confirm';
-                btn.disabled = false;
-
-                if (res.ok && data.success) {
-                    // FORCE DOM CLEANUP FOR MODALS
-                    document.querySelectorAll('.modal').forEach(m => {
-                        m.classList.remove('show');
-                        m.style.display = 'none';
-                    });
-                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-                    document.body.classList.remove('modal-open');
-                    document.body.style.overflow = '';
-                    document.body.style.paddingRight = '';
-
-                    isLoggedIn = true;
-                    
-                    const authPage = document.getElementById('page-auth');
-                    if(authPage) {
-                        authPage.classList.remove('active');
-                        authPage.style.display = 'none';
-                    }
-                    
-                    const activeUser = data.user || {name: 'Customer'};
-                    localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
-                    
-                    // FORCE NAVBAR UPDATE INLINE
-                    const navBtn = document.getElementById('profileNavBtn');
-                    if (navBtn) {
-                        const span = navBtn.querySelector('span');
-                        if (span) {
-                            span.innerText = activeUser.name ? activeUser.name.split(' ')[0] : 'Account';
-                        }
-                    }
-                    
-                    // NAVIGATE TO PROFILE PAGE
-                    document.querySelectorAll('.page-view').forEach(p => {
-                        p.classList.remove('active');
-                        p.style.display = 'none';
-                    });
-                    const profPage = document.getElementById('page-profile');
-                    if(profPage) {
-                        profPage.classList.add('active');
-                        profPage.style.display = 'block';
-                    }
-                    
-                    // HARD RESET FIX: If DOM is stuck, reload the page which will read localStorage automatically
-                    setTimeout(() => {
-                        window.location.href = window.location.pathname + "?login=success";
-                    }, 100);
-                    
-                } else {
-                    alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
-                    document.getElementById('otp1').value = '';
-                    document.getElementById('otp2').value = '';
-                    document.getElementById('otp3').value = '';
-                    document.getElementById('otp4').value = '';
-                    document.getElementById('otp1').focus();
-                }
-            } catch (err) {
-                btn.innerHTML = 'Verify & Confirm';
-                btn.disabled = false;
-                alert('Network Error verifying OTP. Please try again.');
+    try {
+        let res, data;
+        if (window.isMockMode || activeOtpKey === 'mock-key-auth') {
+            if (otpVal.length === 6) {
+                res = { ok: true };
+                let fallbackName = (document.getElementById('loginEmail')?.value || document.getElementById('signupName')?.value || 'Customer').split('@')[0];
+                data = { success: true, user: { name: fallbackName, phone: document.getElementById('signupPhone')?.value || '9999999999', email: document.getElementById('loginEmail')?.value || document.getElementById('signupEmail')?.value || '' } };
+            } else {
+                res = { ok: false };
+                data = { success: false, message: 'Invalid OTP' };
+            }
+        } else {
+            res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
+            });
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await res.json();
+            } else {
+                throw new Error("Invalid Server Response");
             }
         }
+        
+        btn.innerHTML = 'Verify & Confirm';
+        btn.disabled = false;
+
+        if (res.ok && data.success) {
+            document.querySelectorAll('.modal').forEach(m => {
+                m.classList.remove('show');
+                m.style.display = 'none';
+            });
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            isLoggedIn = true;
+            
+            const authPage = document.getElementById('page-auth');
+            if(authPage) {
+                authPage.classList.remove('active');
+                authPage.style.display = 'none';
+            }
+            
+            const activeUser = data.user || {name: 'Customer'};
+            localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
+            
+            const navBtn = document.getElementById('profileNavBtn');
+            if (navBtn) {
+                const span = navBtn.querySelector('span');
+                if (span) {
+                    span.innerText = activeUser.name ? activeUser.name.split(' ')[0] : 'Account';
+                }
+            }
+            
+            document.querySelectorAll('.page-view').forEach(p => {
+                p.classList.remove('active');
+                p.style.display = 'none';
+            });
+            const profPage = document.getElementById('page-profile');
+            if(profPage) {
+                profPage.classList.add('active');
+                profPage.style.display = 'block';
+            }
+            
+            setTimeout(() => {
+                window.location.href = window.location.pathname + "?login=success";
+            }, 100);
+            
+        } else {
+            alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
+            document.getElementById('otp1').value = '';
+            document.getElementById('otp2').value = '';
+            document.getElementById('otp3').value = '';
+            document.getElementById('otp4').value = '';
+            document.getElementById('otp5').value = '';
+            document.getElementById('otp6').value = '';
+            document.getElementById('otp1').focus();
+        }
+    } catch (err) {
+        btn.innerHTML = 'Verify & Confirm';
+        btn.disabled = false;
+        alert('Network Error verifying OTP. Please try again.');
+    }
+}
 
         function logout() {
             isLoggedIn = false;
