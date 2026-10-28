@@ -1852,6 +1852,43 @@ app.put('/api/cms/policies/:key', async (req, res) => {
 });
 
 // ==========================================
+// CUSTOMER OTP SECURITY (RATE LIMIT & IP BLOCK)
+// ==========================================
+const otpRequestMap = new Map();
+const otpFailedMap = new Map();
+
+function otpRateLimiter(req, res, next) {
+  const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000; // 15 minute
+
+  const record = otpRequestMap.get(ip) || { count: 0, resetAt: now + windowMs };
+  if (now > record.resetAt) {
+    record.count = 0;
+    record.resetAt = now + windowMs;
+  }
+  record.count += 1;
+  otpRequestMap.set(ip, record);
+
+  if (record.count > 3) {
+    return res.status(429).json({ success: false, message: 'Too many OTP requests. Kripya 15 minute baad try karein.' });
+  }
+  next();
+}
+
+function otpIpBlocker(req, res, next) {
+  const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+  const now = Date.now();
+  
+  const record = otpFailedMap.get(ip);
+  if (record && record.blockedUntil && now < record.blockedUntil) {
+     const remain = Math.ceil((record.blockedUntil - now) / 60000);
+     return res.status(403).json({ success: false, message: `Security Alert: Aapka IP block hai. Kripya ${remain} minute baad try karein.` });
+  }
+  next();
+}
+
+// ==========================================
 // SECURE CUSTOMER AUTH ENGINE (12+ CHARS & COMPLEXITY)
 // ==========================================
 const otpRecordSchema = new mongoose.Schema({
@@ -1882,7 +1919,8 @@ function validateStrongPassword(pwd) {
   return null;
 }
 
-app.post('/api/customer/request-otp', async (req, res) => {
+// Yahan otpRateLimiter laga diya gaya hai
+app.post('/api/customer/request-otp', otpRateLimiter, async (req, res) => {
   try {
     const { action, name, email, phone, identifier, password } = req.body;
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
@@ -1977,7 +2015,8 @@ app.post('/api/customer/request-otp', async (req, res) => {
   }
 });
 
-app.post('/api/customer/verify-otp', async (req, res) => {
+// Yahan otpIpBlocker laga diya gaya hai, aur failed attempts ka logic add kar diya hai
+app.post('/api/customer/verify-otp', otpIpBlocker, async (req, res) => {
   try {
     const { key, otp } = req.body;
     const cleanKey = String(key || '').trim();
@@ -1986,9 +2025,24 @@ app.post('/api/customer/verify-otp', async (req, res) => {
     if (!record) {
       return res.status(400).json({ success: false, message: 'Session expired or invalid. Please try again.' });
     }
+
     if (String(otp || '').trim() !== record.otp) {
+      // Galat OTP par block logic
+      const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+      const failedRecord = otpFailedMap.get(ip) || { count: 0 };
+      failedRecord.count += 1;
+      
+      if (failedRecord.count >= 5) {
+          failedRecord.blockedUntil = Date.now() + (60 * 60 * 1000); // 1 ghanta block
+      }
+      otpFailedMap.set(ip, failedRecord);
+
       return res.status(400).json({ success: false, message: 'Incorrect OTP.' });
     }
+
+    // Sahi OTP par IP unblock karein
+    const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+    otpFailedMap.delete(ip);
 
     let user = null;
     
