@@ -5546,12 +5546,11 @@ window.addEventListener('popstate', function(e) {
             const btn = e.target.querySelector('button[type="submit"]');
             const origText = btn.innerHTML;
             
-            // Loader text updated
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Waking Server & Sending...';
             btn.disabled = true;
 
             const controller = new AbortController();
-            // ✅ RENDER FIX: Timeout increased to 60000ms (60 seconds)
+            // Render server wake-up ke liye 60 seconds ka time
             const timeoutId = setTimeout(() => controller.abort(), 60000); 
 
             try {
@@ -5563,16 +5562,17 @@ window.addEventListener('popstate', function(e) {
                 });
                 clearTimeout(timeoutId);
                 
-                let data = {};
-                const contentType = res.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    data = await res.json();
+                let data = await res.json();
+
+                // ✅ REAL FIX: Agar user nahi mila ya password galat hai, toh yahi rok do aur error dikhao
+                if (!res.ok || !data.success) {
+                    alert("⚠️ Error: " + (data.message || "Invalid Details. Check Email/Password."));
+                    btn.innerHTML = origText;
+                    btn.disabled = false;
+                    return; // Isse mock mode trigger nahi hoga
                 }
 
-                if (!res.ok || !data.success || !contentType || contentType.indexOf("application/json") === -1) {
-                    throw new Error(data.message || "Backend error");
-                }
-
+                // Agar sab sahi hai, toh OTP Modal dikhao
                 btn.innerHTML = origText;
                 btn.disabled = false;
                 window.isMockMode = false;
@@ -5580,7 +5580,7 @@ window.addEventListener('popstate', function(e) {
                 activeOtpKey = data.key;
                 document.getElementById('otpModalMessage').innerText = data.message;
                 
-                // ✅ 6-DIGIT FIX: Clear all 6 OTP boxes
+                // 6 OTP boxes ko clear karna
                 for(let i=1; i<=6; i++) {
                     let otpBox = document.getElementById('otp' + i);
                     if(otpBox) otpBox.value = '';
@@ -5588,27 +5588,30 @@ window.addEventListener('popstate', function(e) {
                 
                 if (typeof otpModal !== 'undefined') otpModal.show();
                 
-                if(data.debugOtp) {
-                    // Silent failover
-                }
             } catch (err) {
                 clearTimeout(timeoutId);
-                window.isMockMode = true;
-                activeOtpKey = 'mock-key-auth';
-                btn.innerHTML = origText;
-                btn.disabled = false;
                 
-                // Mock Mode UI
-                document.getElementById('otpModalMessage').innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-bolt"></i> Fast Login Mode Active</span><br>Enter ANY 6-digit code (e.g. 123456)';
-                
-                // ✅ 6-DIGIT FIX: Clear all 6 OTP boxes
-                for(let i=1; i<=6; i++) {
-                    let otpBox = document.getElementById('otp' + i);
-                    if(otpBox) otpBox.value = '';
-                }
+                // Ye tabhi chalega jab sach me server down ho ya internet na ho
+                if (err.name === 'AbortError' || err.message.includes('fetch')) {
+                    window.isMockMode = true;
+                    activeOtpKey = 'mock-key-auth';
+                    btn.innerHTML = origText;
+                    btn.disabled = false;
+                    
+                    document.getElementById('otpModalMessage').innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-bolt"></i> Fast Login Mode Active</span><br>Enter ANY 6-digit code (e.g. 123456)';
+                    
+                    for(let i=1; i<=6; i++) {
+                        let otpBox = document.getElementById('otp' + i);
+                        if(otpBox) otpBox.value = '';
+                    }
 
-                if (typeof otpModal !== 'undefined') otpModal.show();
-                setTimeout(() => { document.getElementById('otp1').focus(); }, 400);
+                    if (typeof otpModal !== 'undefined') otpModal.show();
+                    setTimeout(() => { document.getElementById('otp1').focus(); }, 400);
+                } else {
+                    alert("⚠️ Error: " + err.message);
+                    btn.innerHTML = origText;
+                    btn.disabled = false;
+                }
             }
         }
 
