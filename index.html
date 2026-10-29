@@ -5669,7 +5669,10 @@ window.addEventListener('popstate', function(e) {
                     if (otpModal) otpModal.show();
                     
                     // TESTING KE LIYE: 
-                    if(data.debugOtp) alert("Test Mode OTP Code: " + data.debugOtp);
+                    if(data.debugOtp) {
+                    // ⚠️ EMAIL FAIL HONE PAR AB OTP SCREEN PAR DIKHEGA
+                    alert("⚠️ Brevo SMTP Error!\n\nEmail fail ho gaya hai (Render Variables ya Brevo sender issue). Kripya Render ke Logs check karein.\n\nAbhi Login/Signup karne ke liye ye OTP use karein:\n\n👉 " + data.debugOtp);
+                   }
 
                 } else {
                     alert('Error: ' + data.message);
