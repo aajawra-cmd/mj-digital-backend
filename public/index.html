@@ -5622,7 +5622,7 @@ window.addEventListener('popstate', function(e) {
         }
 
         // ==========================================
-        // 2. OTP Verify karna aur HARD Redirect (100% Fix)
+        // 2. OTP Verify karna aur Smart Soft Redirect
         // ==========================================
         async function verifyOtpAndProceed() {
             // 6 digits collect karna
@@ -5646,22 +5646,50 @@ window.addEventListener('popstate', function(e) {
                 btn.disabled = false;
 
                 if (res.ok && data.success) {
-                    // 1. User ka data system mein save karna
+                    // 1. Modals ko force close karna (Bootstrap dependency)
+                    if (typeof bootstrap !== 'undefined') {
+                        const modalEl = document.getElementById('otpVerificationModal');
+                        if (modalEl) {
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+                        }
+                    }
+
+                    // Fallback cleanup for modals
+                    document.querySelectorAll('.modal').forEach(m => {
+                        m.classList.remove('show');
+                        m.style.display = 'none';
+                    });
+                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+
+                    // 2. Auth Page hide karna
+                    const authPage = document.getElementById('page-auth');
+                    if(authPage) {
+                        authPage.classList.remove('active');
+                        authPage.style.display = 'none';
+                    }
+
+                    // 3. User ko system mein Login karna
+                    isLoggedIn = true;
                     const activeUser = data.user || {name: 'Customer'};
                     localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
                     
-                    // 🚀 100% GUARANTEED FIX: Hard Browser Redirect
-                    // Ye page ko refresh karke ekdum naye URL par bhej dega
+                    if (typeof applyUserSessionToUI === 'function') {
+                        applyUserSessionToUI(); 
+                    }
+                    
+                    // 4. SMART ROUTING (Soft Redirect)
                     setTimeout(() => {
                         if (pendingAction === 'checkout') {
-                            pendingAction = '';
-                            // Agar Cart se aaya tha, toh seedha Checkout URL par le jao
-                            window.location.href = '/checkout'; 
+                            pendingAction = ''; // Isko reset karo
+                            checkoutFromCart(); // Seedha checkout kholo
                         } else {
-                            // Agar normal login tha, toh seedha Home URL par le jao
-                            window.location.href = '/'; 
+                            navigateTo('page-home'); // Direct login/signup par home bhejo
                         }
-                    }, 200);
+                    }, 100);
                     
                 } else {
                     alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
