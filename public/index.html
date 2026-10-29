@@ -5575,142 +5575,120 @@ window.addEventListener('popstate', function(e) {
             const btn = e.target.querySelector('button[type="submit"]');
             const origText = btn.innerHTML;
             
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Waking Server & Sending...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Processing...';
             btn.disabled = true;
-
-            const controller = new AbortController();
-            // Render server wake-up ke liye 60 seconds ka time
-            const timeoutId = setTimeout(() => controller.abort(), 60000); 
 
             try {
                 let res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/request-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    signal: controller.signal
+                    body: JSON.stringify(payload)
                 });
-                clearTimeout(timeoutId);
                 
                 let data = await res.json();
 
-                // ✅ REAL FIX: Agar user nahi mila ya password galat hai, toh yahi rok do aur error dikhao
+                // Agar password galat hai ya user nahi mila
                 if (!res.ok || !data.success) {
                     alert("⚠️ Error: " + (data.message || "Invalid Details. Check Email/Password."));
                     btn.innerHTML = origText;
                     btn.disabled = false;
-                    return; // Isse mock mode trigger nahi hoga
+                    return; 
                 }
 
-                // Agar sab sahi hai, toh OTP Modal dikhao
+                // Agar sab sahi hai, toh OTP screen kholo
                 btn.innerHTML = origText;
                 btn.disabled = false;
                 window.isMockMode = false;
-
                 activeOtpKey = data.key;
                 document.getElementById('otpModalMessage').innerText = data.message;
                 
-                // 6 OTP boxes ko clear karna
                 for(let i=1; i<=6; i++) {
                     let otpBox = document.getElementById('otp' + i);
                     if(otpBox) otpBox.value = '';
                 }
                 
                 if (typeof otpModal !== 'undefined') otpModal.show();
+
+                // Agar Email fail hota hai toh popup mein OTP dikhega
+                if(data.debugOtp) {
+                    alert("⚠️ Email issue detected. Dev OTP: " + data.debugOtp);
+                }
                 
             } catch (err) {
-                clearTimeout(timeoutId);
-                
-                // Ye tabhi chalega jab sach me server down ho ya internet na ho
-                if (err.name === 'AbortError' || err.message.includes('fetch')) {
-                    window.isMockMode = true;
-                    activeOtpKey = 'mock-key-auth';
-                    btn.innerHTML = origText;
-                    btn.disabled = false;
-                    
-                    document.getElementById('otpModalMessage').innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-bolt"></i> Fast Login Mode Active</span><br>Enter ANY 6-digit code (e.g. 123456)';
-                    
-                    for(let i=1; i<=6; i++) {
-                        let otpBox = document.getElementById('otp' + i);
-                        if(otpBox) otpBox.value = '';
-                    }
-
-                    if (typeof otpModal !== 'undefined') otpModal.show();
-                    setTimeout(() => { document.getElementById('otp1').focus(); }, 400);
-                } else {
-                    alert("⚠️ Error: " + err.message);
-                    btn.innerHTML = origText;
-                    btn.disabled = false;
-                }
+                btn.innerHTML = origText;
+                btn.disabled = false;
+                alert("⚠️ Network Error. Server timeout ya connection check karein.");
             }
         }
 
         // ==========================================
-        // 2. Alternate OTP Request Function
+        // 2. OTP Verify karna aur Smart Redirect
         // ==========================================
-        async function requestOtp(e, actionType) {
-            e.preventDefault();
-            
-            let payload = { action: actionType };
-            
-            if (actionType === 'login') {
-                payload.identifier = document.getElementById('loginEmail').value;
-                payload.password = document.getElementById('loginPassword').value;
-            } else if (actionType === 'signup') {
-                payload.name = document.getElementById('signupName').value;
-                payload.email = document.getElementById('signupEmail').value;
-                payload.phone = document.getElementById('signupPhone').value;
-                payload.password = document.getElementById('signupPassword').value;
-            }
+        async function verifyOtpAndProceed() {
+            // 6 digits collect karna
+            const otpVal = [1,2,3,4,5,6].map(i => document.getElementById('otp'+i)?.value || '').join('');
+                           
+            if(otpVal.length !== 6) return alert('Kripya 6-digit OTP poora daalein.');
 
-            const btn = e.target.querySelector('button[type="submit"]');
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Sending...';
+            const btn = document.getElementById('verifyOtpBtn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Verifying...';
             btn.disabled = true;
 
-            const controller = new AbortController();
-            // ✅ RENDER FIX: Timeout increased to 60000ms (60 seconds)
-            const timeoutId = setTimeout(() => controller.abort(), 60000); 
-
             try {
-                const res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/request-otp', {
+                let res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    signal: controller.signal
+                    body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
                 });
-                clearTimeout(timeoutId);
-
-                const data = await res.json();
                 
-                btn.innerHTML = origText;
+                let data = await res.json();
+                btn.innerHTML = 'Verify & Confirm';
                 btn.disabled = false;
 
                 if (res.ok && data.success) {
-                    activeOtpKey = data.key;
-                    document.getElementById('otpModalMessage').innerText = data.message;
+                    // 1. Modal ko safely band karna (Screen freeze theek karne ke liye)
+                    if (typeof otpModal !== 'undefined') {
+                        otpModal.hide();
+                    }
+
+                    // 2. Auth Page hide karna
+                    const authPage = document.getElementById('page-auth');
+                    if(authPage) {
+                        authPage.classList.remove('active');
+                        authPage.style.display = 'none';
+                    }
+
+                    // 3. User ko system mein Login karna
+                    isLoggedIn = true;
+                    const activeUser = data.user || {name: 'Customer'};
+                    localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
                     
-                    // ✅ 6-DIGIT FIX: Empty ALL 6 OTP boxes before opening
+                    if (typeof applyUserSessionToUI === 'function') {
+                        applyUserSessionToUI(); 
+                    }
+                    
+                    // 4. SMART ROUTING (Thoda delay taaki modal theek se band ho jaye)
+                    setTimeout(() => {
+                        if (pendingAction === 'checkout') {
+                            pendingAction = ''; // Isko reset karo
+                            checkoutFromCart(); // Seedha checkout kholo
+                        } else {
+                            navigateTo('page-home'); // Direct login par home bhejo
+                        }
+                    }, 400);
+                    
+                } else {
+                    alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
                     for(let i=1; i<=6; i++) {
                         let otpBox = document.getElementById('otp' + i);
                         if(otpBox) otpBox.value = '';
                     }
-                    
-                    if (otpModal) otpModal.show();
-                    
-                    // TESTING KE LIYE: 
-                    if(data.debugOtp) {
-                    // ⚠️ EMAIL FAIL HONE PAR AB OTP SCREEN PAR DIKHEGA
-                    alert("⚠️ Brevo SMTP Error!\n\nEmail fail ho gaya hai (Render Variables ya Brevo sender issue). Kripya Render ke Logs check karein.\n\nAbhi Login/Signup karne ke liye ye OTP use karein:\n\n👉 " + data.debugOtp);
-                   }
-
-                } else {
-                    alert('Error: ' + data.message);
+                    document.getElementById('otp1').focus();
                 }
             } catch (err) {
-                clearTimeout(timeoutId);
-                btn.innerHTML = origText;
+                btn.innerHTML = 'Verify & Confirm';
                 btn.disabled = false;
-                alert('Server connect error or Timeout (Render starting up): ' + err.message);
+                alert('Network Error verifying OTP. Please try again.');
             }
         }
 
