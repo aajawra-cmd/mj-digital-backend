@@ -5526,8 +5526,9 @@ window.addEventListener('popstate', function(e) {
 
         let activeOtpKey = '';
 
+        // ==========================================
         // 1. Backend server se OTP request karna
-        
+        // ==========================================
         async function handleAuthSubmit(e, actionType) {
             e.preventDefault();
             
@@ -5544,11 +5545,14 @@ window.addEventListener('popstate', function(e) {
 
             const btn = e.target.querySelector('button[type="submit"]');
             const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Authenticating...';
+            
+            // Loader text updated
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Waking Server & Sending...';
             btn.disabled = true;
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased timeout for Gmail SMTP
+            // ✅ RENDER FIX: Timeout increased to 60000ms (60 seconds)
+            const timeoutId = setTimeout(() => controller.abort(), 60000); 
 
             try {
                 let res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/request-otp', {
@@ -5576,31 +5580,42 @@ window.addEventListener('popstate', function(e) {
                 activeOtpKey = data.key;
                 document.getElementById('otpModalMessage').innerText = data.message;
                 
-                document.getElementById('otp1').value = '';
-                document.getElementById('otp2').value = '';
-                document.getElementById('otp3').value = '';
-                document.getElementById('otp4').value = '';
+                // ✅ 6-DIGIT FIX: Clear all 6 OTP boxes
+                for(let i=1; i<=6; i++) {
+                    let otpBox = document.getElementById('otp' + i);
+                    if(otpBox) otpBox.value = '';
+                }
                 
                 if (typeof otpModal !== 'undefined') otpModal.show();
                 
                 if(data.debugOtp) {
-                    // Silent failover to prevent intrusive alerts, just show in UI
+                    // Silent failover
                 }
             } catch (err) {
-                // INSTANT FAILOVER IF SERVER SLEEPING (RENDER FREE TIER FIX)
                 clearTimeout(timeoutId);
                 window.isMockMode = true;
                 activeOtpKey = 'mock-key-auth';
                 btn.innerHTML = origText;
                 btn.disabled = false;
                 
+                // Mock Mode UI
                 document.getElementById('otpModalMessage').innerHTML = '<span class="text-danger fw-bold"><i class="fa-solid fa-bolt"></i> Fast Login Mode Active</span><br>Enter ANY 6-digit code (e.g. 123456)';
+                
+                // ✅ 6-DIGIT FIX: Clear all 6 OTP boxes
+                for(let i=1; i<=6; i++) {
+                    let otpBox = document.getElementById('otp' + i);
+                    if(otpBox) otpBox.value = '';
+                }
+
                 if (typeof otpModal !== 'undefined') otpModal.show();
                 setTimeout(() => { document.getElementById('otp1').focus(); }, 400);
             }
         }
 
-async function requestOtp(e, actionType) {
+        // ==========================================
+        // 2. Alternate OTP Request Function
+        // ==========================================
+        async function requestOtp(e, actionType) {
             e.preventDefault();
             
             let payload = { action: actionType };
@@ -5620,12 +5635,19 @@ async function requestOtp(e, actionType) {
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Sending...';
             btn.disabled = true;
 
+            const controller = new AbortController();
+            // ✅ RENDER FIX: Timeout increased to 60000ms (60 seconds)
+            const timeoutId = setTimeout(() => controller.abort(), 60000); 
+
             try {
                 const res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/request-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
+
                 const data = await res.json();
                 
                 btn.innerHTML = origText;
@@ -5635,25 +5657,25 @@ async function requestOtp(e, actionType) {
                     activeOtpKey = data.key;
                     document.getElementById('otpModalMessage').innerText = data.message;
                     
-                    // Empty OTP boxes before opening
-                    document.getElementById('otp1').value = '';
-                    document.getElementById('otp2').value = '';
-                    document.getElementById('otp3').value = '';
-                    document.getElementById('otp4').value = '';
+                    // ✅ 6-DIGIT FIX: Empty ALL 6 OTP boxes before opening
+                    for(let i=1; i<=6; i++) {
+                        let otpBox = document.getElementById('otp' + i);
+                        if(otpBox) otpBox.value = '';
+                    }
                     
                     if (otpModal) otpModal.show();
                     
-                    // TESTING KE LIYE: Jab tak aapki Fast2SMS API key nahi lagti, 
-                    // screen par ek alert aayega jisme 4-digit code dikhega testing ke liye
+                    // TESTING KE LIYE: 
                     if(data.debugOtp) alert("Test Mode OTP Code: " + data.debugOtp);
 
                 } else {
                     alert('Error: ' + data.message);
                 }
             } catch (err) {
+                clearTimeout(timeoutId);
                 btn.innerHTML = origText;
                 btn.disabled = false;
-                alert('Server connect error: ' + err.message);
+                alert('Server connect error or Timeout (Render starting up): ' + err.message);
             }
         }
 
