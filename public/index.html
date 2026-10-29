@@ -5622,7 +5622,7 @@ window.addEventListener('popstate', function(e) {
         }
 
         // ==========================================
-        // 2. OTP Verify karna aur Smart Redirect
+        // 2. OTP Verify karna aur HARD Redirect (100% Fix)
         // ==========================================
         async function verifyOtpAndProceed() {
             // 6 digits collect karna
@@ -5646,36 +5646,22 @@ window.addEventListener('popstate', function(e) {
                 btn.disabled = false;
 
                 if (res.ok && data.success) {
-                    // 1. Modal ko safely band karna (Screen freeze theek karne ke liye)
-                    if (typeof otpModal !== 'undefined') {
-                        otpModal.hide();
-                    }
-
-                    // 2. Auth Page hide karna
-                    const authPage = document.getElementById('page-auth');
-                    if(authPage) {
-                        authPage.classList.remove('active');
-                        authPage.style.display = 'none';
-                    }
-
-                    // 3. User ko system mein Login karna
-                    isLoggedIn = true;
+                    // 1. User ka data system mein save karna
                     const activeUser = data.user || {name: 'Customer'};
                     localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
                     
-                    if (typeof applyUserSessionToUI === 'function') {
-                        applyUserSessionToUI(); 
-                    }
-                    
-                    // 4. SMART ROUTING (Thoda delay taaki modal theek se band ho jaye)
+                    // 🚀 100% GUARANTEED FIX: Hard Browser Redirect
+                    // Ye page ko refresh karke ekdum naye URL par bhej dega
                     setTimeout(() => {
                         if (pendingAction === 'checkout') {
-                            pendingAction = ''; // Isko reset karo
-                            checkoutFromCart(); // Seedha checkout kholo
+                            pendingAction = '';
+                            // Agar Cart se aaya tha, toh seedha Checkout URL par le jao
+                            window.location.href = '/checkout'; 
                         } else {
-                            navigateTo('page-home'); // Direct login par home bhejo
+                            // Agar normal login tha, toh seedha Home URL par le jao
+                            window.location.href = '/'; 
                         }
-                    }, 400);
+                    }, 200);
                     
                 } else {
                     alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
