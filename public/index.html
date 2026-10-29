@@ -5795,10 +5795,20 @@ async function verifyOtpAndProceed() {
 }
 
         function logout() {
-            isLoggedIn = false;
-            
-            if (typeof routeCurrentPath === 'function') routeCurrentPath();
-        }
+    isLoggedIn = false;
+    window.pendingVerifiedUser = null;
+    localStorage.removeItem('mj_active_customer');
+    localStorage.removeItem('mj_wallet_bal');
+    userOrders = [];
+    window.mjWalletTransactions = [];
+    fpCurrentWalletBalance = 0;
+    currentWalletBalance = 0;
+    if (typeof syncAllWalletElements === 'function') syncAllWalletElements();
+
+    applyUserSessionToUI();
+    navigateTo('page-auth');
+    try { history.pushState({ pageId: 'page-auth' }, '', '/'); } catch (e) {}
+}
 
         function switchProfileTab(tabId, el) {
             document.querySelectorAll('.profile-tab-content').forEach(c => c.style.display = 'none');
