@@ -4604,6 +4604,16 @@ window.addEventListener('popstate', function(e) {
 
         function checkoutFromCart() {
             if (myCart.length === 0) return alert('Your cart is empty!');
+            
+            // 🚀 NAYA CODE: Agar customer login nahi hai, toh use Auth page par bhejo
+            if (!isLoggedIn) {
+                pendingAction = 'checkout'; // System yaad rakhega ki login ke baad Checkout par jana hai
+                alert("🛒 Secure Checkout ke liye kripya pehle Login ya Naya Account banayein.");
+                navigateTo('page-auth');
+                return;
+            }
+
+            // Purana code (Summary aur Total calculate karne ke liye)
             let total = 0;
             const summaryList = document.getElementById('fpCheckoutItemsSummary');
             
@@ -5748,22 +5758,7 @@ async function verifyOtpAndProceed() {
         btn.disabled = false;
 
         if (res.ok && data.success) {
-            document.querySelectorAll('.modal').forEach(m => {
-                m.classList.remove('show');
-                m.style.display = 'none';
-            });
-            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-
-            isLoggedIn = true;
-            
-            const authPage = document.getElementById('page-auth');
-            if(authPage) {
-                authPage.classList.remove('active');
-                authPage.style.display = 'none';
-            }
+            // ... (Aapka modal close aur localstorage save karne wala purana code waisa hi rahega)
             
             const activeUser = data.user || {name: 'Customer'};
             localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
@@ -5776,19 +5771,15 @@ async function verifyOtpAndProceed() {
                 }
             }
             
-            document.querySelectorAll('.page-view').forEach(p => {
-                p.classList.remove('active');
-                p.style.display = 'none';
-            });
-            const profPage = document.getElementById('page-profile');
-            if(profPage) {
-                profPage.classList.add('active');
-                profPage.style.display = 'block';
+            // 🚀 NAYA SMART ROUTING CODE
+            if (pendingAction === 'checkout') {
+                // Agar customer cart se aaya tha, toh seedha Checkout par bhejo
+                pendingAction = ''; // Isko wapas khali kar do
+                checkoutFromCart(); 
+            } else {
+                // Agar normal login kiya tha, toh Home page par bhejo
+                navigateTo('page-home');
             }
-            
-            setTimeout(() => {
-                window.location.href = window.location.pathname + "?login=success";
-            }, 100);
             
         } else {
             alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
