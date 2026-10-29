@@ -5480,15 +5480,34 @@ window.addEventListener('popstate', function(e) {
         // Universal Auto-Tab and Card Formatter
         document.addEventListener('DOMContentLoaded', () => {
             // Setup Auto Tabs for OTP
+            // Setup Auto Tabs for OTP
             const setupOtpTabs = (selector) => {
                 const inputs = document.querySelectorAll(selector);
                 inputs.forEach((input, index) => {
-                    input.addEventListener('input', function() {
+                    input.addEventListener('input', function(e) {
                         this.value = this.value.replace(/[^0-9]/g, '');
-                        if (this.value !== '' && index < inputs.length - 1) inputs[index + 1].focus();
+                        // Sirf tab aage badhe jab number likha ho
+                        if (this.value !== '' && index < inputs.length - 1) {
+                            inputs[index + 1].focus();
+                        }
                     });
                     input.addEventListener('keydown', function(e) {
-                        if (e.key === 'Backspace' && this.value === '' && index > 0) inputs[index - 1].focus();
+                        if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                            inputs[index - 1].focus();
+                        }
+                    });
+                    // NAYA FIX: Paste karne par 6-digits ek sath bhar jayein
+                    input.addEventListener('paste', function(e) {
+                        e.preventDefault();
+                        const pasteData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+                        for (let i = 0; i < pasteData.length; i++) {
+                            if (inputs[i]) {
+                                inputs[i].value = pasteData[i];
+                            }
+                        }
+                        if (inputs[pasteData.length - 1]) {
+                            inputs[pasteData.length - 1].focus();
+                        }
                     });
                 });
             };
@@ -8675,125 +8694,88 @@ function evaluatePasswordStrength(pass) {
 
         
 
-        async function requestForgotOtp(btn) {
-            const identifier = document.getElementById('forgotIdentifier').value;
-            if (!identifier) return alert('Please enter Mobile or Email');
+        async function requestForgotOtp(btnEl) {
+    const emailOrPhone = document.getElementById('forgotIdentifier').value;
+    if (!emailOrPhone) return alert('Kripya apna mobile ya email daalein.');
+
+    const origText = btnEl.innerHTML;
+    btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Sending OTP...';
+    btnEl.disabled = true;
+
+    try {
+        const res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/request-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'forgot', identifier: emailOrPhone })
+        });
+        const data = await res.json();
+        btnEl.innerHTML = origText;
+        btnEl.disabled = false;
+
+        if (res.ok && data.success) {
+            activeOtpKey = data.key;
+            document.getElementById('forgotModalMessage').innerText = data.message;
+            document.getElementById('forgotStep1').style.display = 'none';
+            document.getElementById('forgotStep2').style.display = 'block';
             
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
-            btn.disabled = true;
-
-            try {
-                let res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/request-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'forgot', identifier: identifier })
-                });
-
-                let data = {};
-                const contentType = res.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    data = await res.json();
-                }
-                
-                if (!res.ok || !data.success) {
-                    window.isMockMode = true;
-                    res = { ok: true };
-                    data = { success: true, key: 'mock-key-forgot', message: 'Test Mode: Enter ANY 4-digit OTP to proceed', debugOtp: '1234' };
-                }
-
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                forgotOtpKey = data.key;
-                
-                document.getElementById('forgotStep1').style.display = 'none';
-                document.getElementById('forgotStep2').style.display = 'block';
-                document.getElementById('forgotModalMessage').innerText = data.message || 'OTP sent successfully. Enter OTP and new password.';
-                setTimeout(() => document.getElementById('f_otp1').focus(), 400);
-                
-            } catch (err) {
-                console.warn("Backend failed. Enabling Mock Mode.", err);
-                window.isMockMode = true;
-                forgotOtpKey = 'mock-key-forgot';
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                document.getElementById('forgotStep1').style.display = 'none';
-                document.getElementById('forgotStep2').style.display = 'block';
-                document.getElementById('forgotModalMessage').innerText = 'Test Mode: Enter ANY 4-digit OTP to proceed';
-                setTimeout(() => document.getElementById('f_otp1').focus(), 400);
+            // Clear all 6 boxes
+            for(let i=1; i<=6; i++) {
+                let fBox = document.getElementById('f_otp' + i);
+                if(fBox) fBox.value = '';
             }
+        } else {
+            alert('Error: ' + data.message);
         }
+    } catch (err) {
+        btnEl.innerHTML = origText;
+        btnEl.disabled = false;
+        alert('Server connect error.');
+    }
+}
 
-        async function verifyForgotOtpAndReset(btn) {
-            const code = (document.getElementById('f_otp1').value || '') + 
-                         (document.getElementById('f_otp2').value || '') + 
-                         (document.getElementById('f_otp3').value || '') + 
-                         (document.getElementById('f_otp4').value || '');
+        async function verifyForgotOtpAndReset(btnEl) {
+    const newPassword = document.getElementById('newResetPassword').value;
+    const otpVal = document.getElementById('f_otp1').value + 
+                   document.getElementById('f_otp2').value + 
+                   document.getElementById('f_otp3').value + 
+                   document.getElementById('f_otp4').value +
+                   document.getElementById('f_otp5').value +
+                   document.getElementById('f_otp6').value;
+
+    if (otpVal.length !== 6) return alert('Kripya 6-digit OTP poora daalein.');
+    if (!newPassword || newPassword.length < 12) return alert('Naya password kam se kam 12 characters ka hona chahiye.');
+
+    const origText = btnEl.innerHTML;
+    btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Verifying...';
+    btnEl.disabled = true;
+
+    try {
+        const res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/forgot-password-reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: activeOtpKey, otp: otpVal, newPassword: newPassword })
+        });
+        const data = await res.json();
+        
+        btnEl.innerHTML = origText;
+        btnEl.disabled = false;
+
+        if (res.ok && data.success) {
+            alert('🎉 Password successfully reset ho gaya hai! Kripya naye password se login karein.');
+            const forgotModal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+            if (forgotModal) forgotModal.hide();
             
-            const newPassword = document.getElementById('newResetPassword').value;
-
-            if (code.length < 4) return alert('Please enter 4-digit OTP');
-            if (newPassword.length < 8) return alert('Password must be at least 8 characters long');
-
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Resetting...';
-            btn.disabled = true;
-
-            try {
-                let res, data;
-                if (window.isMockMode) {
-                    await new Promise(r => setTimeout(r, 800)); // fake delay
-                    if (code.length === 4) {
-                        res = { ok: true };
-                        data = { success: true };
-                    } else {
-                        res = { ok: false };
-                        data = { success: false, message: 'Invalid OTP' };
-                    }
-                } else {
-                    res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/forgot-password-reset', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ key: typeof forgotOtpKey !== 'undefined' ? forgotOtpKey : '', otp: code, newPassword: newPassword, identifier: document.getElementById('forgotIdentifier').value })
-                    });
-                    
-                    const contentType = res.headers.get("content-type");
-                    if (contentType && contentType.indexOf("application/json") !== -1) {
-                        data = await res.json();
-                    } else {
-                        throw new Error("Invalid Server Response");
-                    }
-                }
-                
-                btn.innerHTML = origText;
-                btn.disabled = false;
-
-                if (res.ok && data.success) {
-                    const loginModalEl = document.getElementById('forgotPasswordModal');
-                    if (loginModalEl) {
-                        const inst = bootstrap.Modal.getInstance(loginModalEl);
-                        if (inst) inst.hide();
-                    }
-                    if (typeof forgotModalInstance !== 'undefined' && forgotModalInstance) {
-                        forgotModalInstance.hide();
-                    }
-
-                    alert('✅ Password Reset Successful! You can now login with your new password.');
-                    document.getElementById('loginPassword').value = '';
-                } else {
-                    alert('❌ ' + (data.message || 'Invalid OTP.'));
-                    document.getElementById('f_otp1').value = '';
-                    document.getElementById('f_otp2').value = '';
-                    document.getElementById('f_otp3').value = '';
-                    document.getElementById('f_otp4').value = '';
-                    document.getElementById('f_otp1').focus();
-                }
-            } catch (err) {
-                btn.innerHTML = origText;
-                btn.disabled = false;
-                alert('Backend Error: Server is returning HTML instead of JSON.');
-            }
+            document.getElementById('forgotStep1').style.display = 'block';
+            document.getElementById('forgotStep2').style.display = 'none';
+        } else {
+            alert('Error: ' + (data.message || 'OTP galat hai.'));
         }
+    } catch (err) {
+        btnEl.innerHTML = origText;
+        btnEl.disabled = false;
+        alert('Network Error.');
+    }
+}
 
         window.isMockMode = false;
         let profileUpdateOtpKey = '';
