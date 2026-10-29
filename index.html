@@ -2902,36 +2902,41 @@ async function getActiveRazorpayKey() {
 
         // Force UI to correctly show "Sign In" as active immediately on page load
         function applyUserSessionToUI() {
-    let user = null;
-    try {
-        const raw = localStorage.getItem('mj_active_customer');
-        if (raw) user = JSON.parse(raw);
-    } catch(e){}
+            let user = null;
+            try {
+                const raw = localStorage.getItem('mj_active_customer');
+                if (raw) user = JSON.parse(raw);
+            } catch(e){}
     
-    isLoggedIn = Boolean(user && (user.phone || user.email || user.name));
+            isLoggedIn = Boolean(user && (user.phone || user.email || user.name));
 
-    const navBtn = document.getElementById('profileNavBtn');
-    if (navBtn) {
-        const span = navBtn.querySelector('span');
-        if (span) {
-            span.innerText = isLoggedIn ? (user.name ? user.name.split(' ')[0] : 'Account') : 'Sign In';
+            const navBtn = document.getElementById('profileNavBtn');
+            if (navBtn) {
+                const span = navBtn.querySelector('span');
+                if (span) {
+                    span.innerText = isLoggedIn ? (user.name ? user.name.split(' ')[0] : 'Account') : 'Sign In';
+                }
+            }
+
+            if (isLoggedIn && user) {
+                const cleanPhone = String(user.phone || '').replace(/[^0-9]/g, '').slice(-10);
+                if (document.getElementById('profileNameInput')) document.getElementById('profileNameInput').value = user.name || 'Customer';
+                if (document.getElementById('profileEmailInput')) document.getElementById('profileEmailInput').value = user.email || '';
+                if (document.getElementById('profilePhoneInput')) document.getElementById('profilePhoneInput').value = cleanPhone ? ('+91 ' + cleanPhone) : '';
+                if (document.getElementById('fpCheckoutName')) document.getElementById('fpCheckoutName').value = user.name || '';
+                if (document.getElementById('fpCheckoutPhone')) document.getElementById('fpCheckoutPhone').value = cleanPhone ? ('+91 ' + cleanPhone) : '';
+            }
         }
-    }
 
-    if (isLoggedIn && user) {
-        const cleanPhone = String(user.phone || '').replace(/[^0-9]/g, '').slice(-10);
-        if (document.getElementById('profileNameInput')) document.getElementById('profileNameInput').value = user.name || 'Customer';
-        if (document.getElementById('profileEmailInput')) document.getElementById('profileEmailInput').value = user.email || '';
-        if (document.getElementById('profilePhoneInput')) document.getElementById('profilePhoneInput').value = cleanPhone ? ('+91 ' + cleanPhone) : '';
-        if (document.getElementById('fpCheckoutName')) document.getElementById('fpCheckoutName').value = user.name || '';
-        if (document.getElementById('fpCheckoutPhone')) document.getElementById('fpCheckoutPhone').value = cleanPhone ? ('+91 ' + cleanPhone) : '';
-    }
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-    setTimeout(() => { toggleAuthMode('login'); }, 50);
-    applyUserSessionToUI(); // CRITICAL: Updates Navbar to logged-in user!
-});
+        document.addEventListener("DOMContentLoaded", function() {
+            applyUserSessionToUI(); // Pehle user check karega
+    
+            // Agar user logged in NAHI hai aur explicitly auth page par hai, tabhi login dikhaye
+            const authPage = document.getElementById('page-auth');
+            if (!isLoggedIn && (window.location.pathname.includes('/auth') || (authPage && authPage.classList.contains('active')))) {
+                setTimeout(() => { toggleAuthMode('login'); }, 50);
+            }
+        });
 
         
         let myCart = [];
@@ -5622,10 +5627,9 @@ window.addEventListener('popstate', function(e) {
         }
 
         // ==========================================
-        // 2. OTP Verify karna aur HARD Redirect (100% Fix)
+        // 2. OTP Verify karna aur Final Solid Redirect
         // ==========================================
         async function verifyOtpAndProceed() {
-            // 6 digits collect karna
             const otpVal = [1,2,3,4,5,6].map(i => document.getElementById('otp'+i)?.value || '').join('');
                            
             if(otpVal.length !== 6) return alert('Kripya 6-digit OTP poora daalein.');
@@ -5646,22 +5650,35 @@ window.addEventListener('popstate', function(e) {
                 btn.disabled = false;
 
                 if (res.ok && data.success) {
-                    // 1. User ka data system mein save karna
+                    // Modal Cleanup
+                    if (typeof bootstrap !== 'undefined') {
+                        const modalEl = document.getElementById('otpVerificationModal');
+                        if (modalEl) {
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+                        }
+                    }
+                    
+                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+
+                    // User Data Save
+                    isLoggedIn = true;
                     const activeUser = data.user || {name: 'Customer'};
                     localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
                     
-                    // 🚀 100% GUARANTEED FIX: Hard Browser Redirect
-                    // Ye page ko refresh karke ekdum naye URL par bhej dega
+                    // The Ultimate Fix: Hard Redirect for a clean slate
                     setTimeout(() => {
                         if (pendingAction === 'checkout') {
                             pendingAction = '';
-                            // Agar Cart se aaya tha, toh seedha Checkout URL par le jao
                             window.location.href = '/checkout'; 
                         } else {
-                            // Agar normal login tha, toh seedha Home URL par le jao
-                            window.location.href = '/'; 
+                            // Seedha profile page pe bhej do jaisa standard hota hai
+                            window.location.href = '/account/orders'; 
                         }
-                    }, 200);
+                    }, 100);
                     
                 } else {
                     alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
