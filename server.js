@@ -221,7 +221,7 @@ const razorpay = new Razorpay({
 const mailTransporter = nodemailer.createTransport({
   host: 'smtp-relay.brevo.com',
   port: 587,
-  secure: false, // Port 587 ke liye ye false rehna zaroori hai
+  secure: false, // Ye false hona chahiye
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
