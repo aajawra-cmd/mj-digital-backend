@@ -5758,28 +5758,43 @@ async function verifyOtpAndProceed() {
         btn.disabled = false;
 
         if (res.ok && data.success) {
-            // ... (Aapka modal close aur localstorage save karne wala purana code waisa hi rahega)
-            
+            // 1. Sabhi modals aur auth screen ko hide karna
+            document.querySelectorAll('.modal').forEach(m => {
+                m.classList.remove('show');
+                m.style.display = 'none';
+            });
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            const authPage = document.getElementById('page-auth');
+            if(authPage) {
+                authPage.classList.remove('active');
+                authPage.style.display = 'none';
+            }
+
+            // 2. User ko system mein login karna
+            isLoggedIn = true;
             const activeUser = data.user || {name: 'Customer'};
             localStorage.setItem('mj_active_customer', JSON.stringify(activeUser));
             
-            const navBtn = document.getElementById('profileNavBtn');
-            if (navBtn) {
-                const span = navBtn.querySelector('span');
-                if (span) {
-                    span.innerText = activeUser.name ? activeUser.name.split(' ')[0] : 'Account';
+            // Navbar button update karna (Account/Name likha aayega)
+            if (typeof applyUserSessionToUI === 'function') {
+                applyUserSessionToUI(); 
+            }
+
+            // 3. SMART ROUTING (Amazon/Flipkart Style)
+            setTimeout(() => {
+                if (pendingAction === 'checkout') {
+                    // Agar bag se order kar raha tha, toh seedha checkout kholo
+                    pendingAction = ''; 
+                    checkoutFromCart(); 
+                } else {
+                    // Normal login kiya hai toh Home Page par bhejo
+                    navigateTo('page-home');
                 }
-            }
-            
-            // 🚀 NAYA SMART ROUTING CODE
-            if (pendingAction === 'checkout') {
-                // Agar customer cart se aaya tha, toh seedha Checkout par bhejo
-                pendingAction = ''; // Isko wapas khali kar do
-                checkoutFromCart(); 
-            } else {
-                // Agar normal login kiya tha, toh Home page par bhejo
-                navigateTo('page-home');
-            }
+            }, 100);
             
         } else {
             alert('❌ Error: ' + (data.message || 'Invalid OTP.'));
