@@ -8566,7 +8566,7 @@ function evaluatePasswordStrength(pass) {
                     console.warn("Backend failed. Enabling Mock Mode for UI demonstration.");
                     window.isMockMode = true;
                     res = { ok: true };
-                    data = { success: true, key: 'mock-key-1234', message: 'Test Mode: Enter ANY 4-digit OTP to proceed', debugOtp: '1234' };
+                    data = { success: true, key: 'mock-key-1234', message: 'Test Mode: Enter ANY 6-digit OTP to proceed', debugOtp: '123456' };
                 }
                 
                 btn.innerHTML = origText;
@@ -8592,7 +8592,7 @@ function evaluatePasswordStrength(pass) {
                         }
                         
                         // Clear OTP boxes
-                        ['f_otp1','f_otp2','f_otp3','f_otp4'].forEach(id => {
+                        ['f_otp1','f_otp2','f_otp3','f_otp4','f_otp5','f_otp6'].forEach(id => {
                             const el = document.getElementById(id);
                             if(el) el.value = '';
                         });
@@ -8617,7 +8617,7 @@ function evaluatePasswordStrength(pass) {
                     document.getElementById('forgotStep2').style.display = 'block';
                     const newPwdField = document.getElementById('newResetPassword');
                     if (newPwdField) newPwdField.style.display = 'none'; 
-                    document.getElementById('forgotModalMessage').innerText = 'Test Mode: Enter ANY 4-digit OTP to proceed';
+                    document.getElementById('forgotModalMessage').innerText = 'Test Mode: Enter ANY 6-digit OTP to proceed';
                     const verifyBtn = document.querySelector('#forgotStep2 button.btn-success');
                     if (verifyBtn) {
                         verifyBtn.setAttribute('onclick', 'verifyProfileUpdateOtp(this)');
@@ -8632,9 +8632,11 @@ function evaluatePasswordStrength(pass) {
             const code = (document.getElementById('f_otp1').value || '') + 
                          (document.getElementById('f_otp2').value || '') + 
                          (document.getElementById('f_otp3').value || '') + 
-                         (document.getElementById('f_otp4').value || '');
+                         (document.getElementById('f_otp4').value || '') +
+                         (document.getElementById('f_otp5').value || '') +
+                         (document.getElementById('f_otp6').value || '');
             
-            if (code.length < 4) return alert('Please enter 4-digit OTP');
+            if (code.length !== 6) return alert('Please enter 6-digit OTP');
 
             const origText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
@@ -8644,7 +8646,7 @@ function evaluatePasswordStrength(pass) {
                 let res, data;
                 if (window.isMockMode) {
                     await new Promise(r => setTimeout(r, 800)); // fake delay
-                    if (code.length === 4) { // accept any 4 digit code
+                    if (code.length === 6) { // accept any 6 digit code
                         res = { ok: true };
                         data = { success: true };
                     } else {
@@ -8685,7 +8687,7 @@ function evaluatePasswordStrength(pass) {
                     }
                 } else {
                     alert('❌ Invalid OTP: ' + (data.message || 'Please try again.'));
-                    ['f_otp1','f_otp2','f_otp3','f_otp4'].forEach(id => {
+                    ['f_otp1','f_otp2','f_otp3','f_otp4','f_otp5','f_otp6'].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.value = '';
                     });
