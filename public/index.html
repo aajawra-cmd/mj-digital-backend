@@ -2232,7 +2232,7 @@ async function getActiveRazorpayKey() {
                     </div>
                     <div class="light-input-group mb-2">
                         <i class="fa-solid fa-lock"></i>
-                        <input type="password" id="loginPassword" class="light-input" placeholder="Secure Password" required>
+                        <input type="password" id="loginPassword" class="light-input" placeholder="Secure Password" required> <i class="fa-solid fa-eye pwd-toggle-eye" onclick="togglePasswordVisibility('loginPassword', this)" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #64748b; cursor: pointer; transition: color 0.3s; left: auto; font-size: 16px; z-index: 10;"></i>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-3 px-1" style="font-size: 13px;">
@@ -2275,7 +2275,7 @@ async function getActiveRazorpayKey() {
                     <div class="mb-4">
                         <div class="light-input-group mb-2">
                             <i class="fa-solid fa-key"></i>
-                            <input type="password" id="signupPassword" class="light-input" placeholder="Create Password (Min 12)" minlength="12" required oninput="evaluatePasswordStrength(this.value)">
+                            <input type="password" id="signupPassword" class="light-input" placeholder="Create Password (Min 12)" minlength="12" required oninput="evaluatePasswordStrength(this.value)"> <i class="fa-solid fa-eye pwd-toggle-eye" onclick="togglePasswordVisibility('signupPassword', this)" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #64748b; cursor: pointer; transition: color 0.3s; left: auto; font-size: 16px; z-index: 10;"></i>
                         </div>
                         <div class="d-flex gap-1" style="height: 5px;">
                             <div id="meter-1" class="flex-grow-1 rounded-pill bg-secondary opacity-25"></div>
@@ -2464,11 +2464,11 @@ async function getActiveRazorpayKey() {
                                 <div class="row g-3 mb-4">
                                     <div class="col-md-6">
                                         <label class="small fw-bold mb-1">Current Password (Leave blank if not changing)</label>
-                                        <input type="password" id="profileOldPassword" class="form-control" placeholder="Current Password">
+                                        <div class="position-relative"><input type="password" id="profileOldPassword" class="form-control" placeholder="Current Password"><i class="fa-solid fa-eye pwd-toggle-eye" onclick="togglePasswordVisibility('profileOldPassword', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b; z-index: 10;"></i></div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="small fw-bold mb-1">New Password (Min 12 chars)</label>
-                                        <input type="password" id="profileNewPassword" class="form-control" placeholder="New Password">
+                                        <div class="position-relative"><input type="password" id="profileNewPassword" class="form-control" placeholder="New Password"><i class="fa-solid fa-eye pwd-toggle-eye" onclick="togglePasswordVisibility('profileNewPassword', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b; z-index: 10;"></i></div>
                                     </div>
                                 </div>
 
@@ -2574,7 +2574,7 @@ async function getActiveRazorpayKey() {
                                         <div class="col-12"><label class="small fw-bold mb-1">Name on Card</label><input type="text" id="newCardName" class="form-control" placeholder="Mohsin J" required></div>
                                         <div class="col-12"><label class="small fw-bold mb-1">Card Number</label><input type="text" id="newCardNum" class="form-control" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" required></div>
                                         <div class="col-6"><label class="small fw-bold mb-1">Expiry</label><input type="text" id="newCardExp" class="form-control" placeholder="MM/YY" maxlength="5" required></div>
-                                        <div class="col-6"><label class="small fw-bold mb-1">CVV</label><input type="password" id="newCardCvv" class="form-control" placeholder="***" maxlength="3" required></div>
+                                        <div class="col-6"><label class="small fw-bold mb-1">CVV</label><div class="position-relative"><input type="password" id="newCardCvv" class="form-control" placeholder="***" maxlength="3" required><i class="fa-solid fa-eye pwd-toggle-eye" onclick="togglePasswordVisibility('newCardCvv', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b; z-index: 10;"></i></div></div>
                                     </div>
                                     <div class="d-flex gap-2 mt-4">
                                         <button type="submit" class="btn btn-brand px-4 py-2">Save Card</button>
@@ -2820,7 +2820,7 @@ async function getActiveRazorpayKey() {
                         <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp5" style="width: 45px;">
                         <input type="text" class="otp-input forgot-otp" maxlength="1" id="f_otp6" style="width: 45px;">
                     </div>
-                    <input type="password" id="newResetPassword" class="form-control mb-3 py-2 text-center" placeholder="Enter New Password (Min 12)" required>
+                    <div class="position-relative"><input type="password" id="newResetPassword" class="form-control mb-3 py-2 text-center" placeholder="Enter New Password (Min 12)" required><i class="fa-solid fa-eye pwd-toggle-eye" onclick="togglePasswordVisibility('newResetPassword', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b; z-index: 10;"></i></div>
                     <button class="btn btn-success w-100 py-2 fw-bold" onclick="verifyForgotOtpAndReset(this)">Verify & Reset Password</button>
                 </div>
             </div>
@@ -8733,6 +8733,34 @@ document.addEventListener("DOMContentLoaded", function() {
     document.head.appendChild(styleFix);
     
 });
+</script>
+
+
+<script>
+function togglePasswordVisibility(inputId, iconEl) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
+    // Toggle the actual type
+    if (input.getAttribute('type') === 'password') {
+        input.setAttribute('type', 'text');
+        
+        // Handle font awesome icon switch if present (eye to eye-slash)
+        if(iconEl && iconEl.classList.contains('fa-eye')) {
+            iconEl.classList.remove('fa-eye');
+            iconEl.classList.add('fa-eye-slash');
+            iconEl.style.color = '#2563eb'; // highlight color
+        }
+    } else {
+        input.setAttribute('type', 'password');
+        
+        if(iconEl && iconEl.classList.contains('fa-eye-slash')) {
+            iconEl.classList.remove('fa-eye-slash');
+            iconEl.classList.add('fa-eye');
+            iconEl.style.color = '#64748b'; // default color
+        }
+    }
+}
 </script>
 
 </body>
