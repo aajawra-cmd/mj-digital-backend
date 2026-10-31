@@ -2141,16 +2141,10 @@ async function getActiveRazorpayKey() {
             display: flex !important;
             align-items: center;
             justify-content: center;
-            position: fixed;
-            top: 76px;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #f8fafc !important;
-            z-index: 1040;
-            margin: 0 !important;
-            padding: 20px;
-            overflow-y: auto;
+            background-color: transparent !important;
+            margin-top: 40px !important;
+            margin-bottom: 40px !important;
+            min-height: 60vh;
         }
 
         .light-auth-card {
@@ -3091,6 +3085,13 @@ const PAGE_ROUTE_MAP = {
 
 function navigateTo(pageId, navEl = null, updateUrl = true) {
     cleanStuckBackdrops();
+    // Fix: Auto-close mobile navbar on click
+    const navbarToggler = document.querySelector('.navbar-toggler');
+    const navbarCollapse = document.getElementById('navbarNav');
+    if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+        navbarToggler.click(); // or bootstrap.Collapse.getInstance(navbarCollapse).hide();
+    }
+
 
     document.querySelectorAll('.page-view').forEach(p => {
         p.classList.remove('active');
