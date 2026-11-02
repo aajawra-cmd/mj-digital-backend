@@ -5743,27 +5743,16 @@ async function verifyOtpAndProceed() {
 
     try {
         let res, data;
-        if (window.isMockMode || activeOtpKey === 'mock-key-auth') {
-            if (otpVal.length === 6) {
-                res = { ok: true };
-                let fallbackName = (document.getElementById('loginEmail')?.value || document.getElementById('signupName')?.value || 'Customer').split('@')[0];
-                data = { success: true, user: { name: fallbackName, phone: document.getElementById('signupPhone')?.value || '9999999999', email: document.getElementById('loginEmail')?.value || document.getElementById('signupEmail')?.value || '' } };
-            } else {
-                res = { ok: false };
-                data = { success: false, message: 'Invalid OTP' };
-            }
+        res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/verify-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
+        });
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            data = await res.json();
         } else {
-            res = await fetch('https://mj-digital-backend-3.onrender.com/api/customer/verify-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key: activeOtpKey, otp: otpVal })
-            });
-            const contentType = res.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                data = await res.json();
-            } else {
-                throw new Error("Invalid Server Response");
-            }
+            throw new Error("Invalid Server Response");
         }
         
         btn.innerHTML = 'Verify & Confirm';
@@ -8592,12 +8581,8 @@ function evaluatePasswordStrength(pass) {
                     data = await res.json();
                 }
                 
-                // MOCK FALLBACK IF INVALID ACTION OR SERVER HTML RESPONSE
-                if (!res.ok || (data.message && data.message.toLowerCase().includes('invalid action')) || !contentType || contentType.indexOf("application/json") === -1) {
-                    console.warn("Backend failed. Enabling Mock Mode for UI demonstration.");
-                    window.isMockMode = true;
-                    res = { ok: true };
-                    data = { success: true, key: 'mock-key-1234', message: 'Test Mode: Enter ANY 6-digit OTP to proceed', debugOtp: '123456' };
+                if (!res.ok || !contentType || contentType.indexOf("application/json") === -1) {
+                    throw new Error(data.message || "Invalid Server Response");
                 }
                 
                 btn.innerHTML = origText;
