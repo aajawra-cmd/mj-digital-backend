@@ -2141,10 +2141,16 @@ async function getActiveRazorpayKey() {
             display: flex !important;
             align-items: center;
             justify-content: center;
-            background-color: transparent !important;
-            margin-top: 40px !important;
-            margin-bottom: 40px !important;
-            min-height: 60vh;
+            position: fixed;
+            top: 76px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #f8fafc !important;
+            z-index: 1040;
+            margin: 0 !important;
+            padding: 20px;
+            overflow-y: auto;
         }
 
         .light-auth-card {
@@ -3085,13 +3091,6 @@ const PAGE_ROUTE_MAP = {
 
 function navigateTo(pageId, navEl = null, updateUrl = true) {
     cleanStuckBackdrops();
-    // Fix: Auto-close mobile navbar on click
-    const navbarToggler = document.querySelector('.navbar-toggler');
-    const navbarCollapse = document.getElementById('navbarNav');
-    if (navbarCollapse && navbarCollapse.classList.contains('show')) {
-        navbarToggler.click(); // or bootstrap.Collapse.getInstance(navbarCollapse).hide();
-    }
-
 
     document.querySelectorAll('.page-view').forEach(p => {
         p.classList.remove('active');
@@ -3155,6 +3154,8 @@ function navigateTo(pageId, navEl = null, updateUrl = true) {
         if (typeof loadOrdersTable === 'function') loadOrdersTable();
     } else if (pageId === 'page-utility-hub') {
         if (typeof switchUtilityTab === 'function') switchUtilityTab(typeof fpCurrentService !== 'undefined' ? fpCurrentService : 'mobile');
+    } else if (pageId === 'page-checkout') {
+        if (typeof checkoutFromCart === 'function') checkoutFromCart(true);
     }
 }
 
@@ -4612,12 +4613,13 @@ window.addEventListener('popstate', function(e) {
             checkoutFromCart();
         }
 
-        function checkoutFromCart() {
-            if (myCart.length === 0) return alert('Your cart is empty!');
+        function checkoutFromCart(isAutoLoad = false) {
+            if (myCart.length === 0) { if (!isAutoLoad) alert('Your cart is empty!'); if(isAutoLoad) navigateTo('page-cart'); return; }
             
             // 🚀 NAYA CODE: Agar customer login nahi hai, toh use Auth page par bhejo
             if (!isLoggedIn) {
-                pendingAction = 'checkout'; // System yaad rakhega ki login ke baad Checkout par jana hai
+                pendingAction = 'checkout';
+                if (isAutoLoad) return navigateTo('page-auth'); // System yaad rakhega ki login ke baad Checkout par jana hai
                 alert("🛒 Secure Checkout ke liye kripya pehle Login ya Naya Account banayein.");
                 navigateTo('page-auth');
                 return;
@@ -4645,7 +4647,7 @@ window.addEventListener('popstate', function(e) {
                 type: hasTravel ? 'Travel' : 'Product'
             };
 
-            navigateTo('page-checkout');
+            if (!isAutoLoad) navigateTo('page-checkout');
         }
 
         async function handleFullPageCheckoutSubmit(e) {
