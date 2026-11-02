@@ -4325,9 +4325,9 @@ window.addEventListener('popstate', function(e) {
                 }
             } else {
                 if (isTravel) {
-                    cart.push({ id, title, price, img, type: 'Travel', adults: 1, children: 0, qty: 1 });
+                    cart.push({ id, title, price, img, type: 'Travel', category: item.category || 'Travel', adults: 1, children: 0, qty: 1 });
                 } else {
-                    cart.push({ id, title, price, img, type: 'Product', qty: 1 });
+                    cart.push({ id, title, price, img, type: 'Product', category: item.category || 'Product', qty: 1 });
                 }
             }
 
@@ -4598,7 +4598,7 @@ window.addEventListener('popstate', function(e) {
             const title = item ? (item.title || item.name) : 'Product Item';
             const price = item ? (item.discountPrice ? item.discountPrice : item.price) : 0;
             const img = item?.images?.[0] || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300';
-            myCart = [{ id, title, price, img, type: 'Product', qty: 1 }];
+            myCart = [{ id, title, price, img, type: 'Product', category: item?.category || 'Product', qty: 1 }];
             if (typeof updateCartBadge === 'function') updateCartBadge();
             checkoutFromCart();
         }
@@ -4608,7 +4608,7 @@ window.addEventListener('popstate', function(e) {
             const title = item ? item.title : 'Tour Package';
             const price = item ? (item.pricingTiers?.standard?.price || item.price || 45000) : 45000;
             const img = item?.images?.[0] || 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500';
-            myCart = [{ id, title, price, img, type: 'Travel', adults: 1, children: 0, qty: 1 }];
+            myCart = [{ id, title, price, img, type: 'Travel', category: item?.category || 'Travel', adults: 1, children: 0, qty: 1 }];
             if (typeof updateCartBadge === 'function') updateCartBadge();
             checkoutFromCart();
         }
@@ -4690,20 +4690,34 @@ window.addEventListener('popstate', function(e) {
             function getTaxInfoForItem(item) {
                 const title = String(item.title || '').toLowerCase();
                 const type = String(item.type || '').toLowerCase();
+                const cat = String(item.category || '').toLowerCase();
 
-                if (type.includes('travel') || title.includes('tour') || title.includes('bali') || title.includes('kashmir')) {
-                    return { hsn: '998559', gstRate: 5, category: 'Travel Package', orderType: 'Travel' };
+                let detectedCat = 'Product';
+                let hsn = '998559';
+                let gstRate = 18;
+
+                if (type.includes('travel') || cat.includes('travel') || title.includes('tour') || title.includes('bali')) {
+                    return { hsn: '998559', gstRate: 5, category: 'Travel', orderType: 'Travel' };
                 }
-                if (title.includes('service') || title.includes('it-') || title.includes('web')) {
+                if (cat.includes('service') || title.includes('registration') || title.includes('incorporation') || title.includes('design') || title.includes('seo')) {
                     return { hsn: '998313', gstRate: 18, category: 'Services', orderType: 'Services' };
                 }
-                if (title.includes('t-shirt') || title.includes('shirt') || title.includes('fashion')) {
+                if (cat.includes('fashion') || title.includes('t-shirt') || title.includes('shirt')) {
                     return { hsn: '610910', gstRate: 5, category: 'Fashion', orderType: 'Fashion' };
                 }
-                if (title.includes('phone') || title.includes('mobile') || title.includes('macbook') || title.includes('headphone')) {
+                if (cat.includes('electronic') || cat.includes('mobile') || title.includes('phone') || title.includes('laptop') || title.includes('monitor')) {
                     return { hsn: '851713', gstRate: 18, category: 'Electronics', orderType: 'Electronics' };
                 }
-                return { hsn: '998559', gstRate: 18, category: 'Product', orderType: 'Product' };
+                
+                // Fallback using raw category if present
+                if (item.category) {
+                    if (item.category.toLowerCase().includes('mobile')) detectedCat = 'Mobile';
+                    else if (item.category.toLowerCase().includes('electronic')) detectedCat = 'Electronics';
+                    else if (item.category.toLowerCase().includes('fashion')) detectedCat = 'Fashion';
+                    else if (item.category.toLowerCase().includes('service')) detectedCat = 'Services';
+                    else detectedCat = item.category;
+                }
+                return { hsn: hsn, gstRate: gstRate, category: detectedCat, orderType: detectedCat };
             }
 
             async function saveSplitOrdersToDatabase(payStatus, ordStatus, transactionId = '') {
@@ -4978,14 +4992,23 @@ window.addEventListener('popstate', function(e) {
                     const rawType = String(ord.orderType || ord.type || '').toLowerCase();
                     const rawCat = String(ord.itemDetails?.category || ord.category || '').toLowerCase();
                     const titleLower = String(ord.itemDetails?.title || ord.title || '').toLowerCase();
-                    const isTravel = rawType.includes('travel') || rawType.includes('tour') || titleLower.includes('tour') || titleLower.includes('package') || titleLower.includes('zeeland');
-
-                    let detectedType = 'Product';
-                    if (isTravel) detectedType = 'Travel';
-                    else if (rawType.includes('mobile') || rawCat.includes('mobile') || titleLower.includes('phone') || titleLower.includes('iphone') || titleLower.includes('pro')) detectedType = 'Mobile';
-                    else if (rawType.includes('electronic') || rawCat.includes('electronic') || titleLower.includes('laptop') || titleLower.includes('gadget') || titleLower.includes('mac') || titleLower.includes('apple')) detectedType = 'Electronics';
-                    else if (rawType.includes('fashion') || rawCat.includes('fashion') || titleLower.includes('tshirt') || titleLower.includes('shirt')) detectedType = 'Fashion';
-                    else if (rawType.includes('service') || rawCat.includes('service')) detectedType = 'Services';
+                    let detectedType = ord.orderType || ord.type || 'Product';
+                    if (rawType.includes('utility')) detectedType = 'Utility';
+                    else if (rawCat.includes('service') || rawType.includes('service') || titleLower.includes('registration') || titleLower.includes('incorporation') || titleLower.includes('seo') || titleLower.includes('design')) detectedType = 'Services';
+                    else if (rawType.includes('travel') || rawCat.includes('travel') || titleLower.includes('tour') || (titleLower.includes('package') && !titleLower.includes('design'))) detectedType = 'Travel';
+                    else if (rawCat.includes('mobile') || rawType.includes('mobile') || titleLower.includes('phone') || titleLower.includes('iphone')) detectedType = 'Mobile';
+                    else if (rawCat.includes('electronic') || rawType.includes('electronic') || titleLower.includes('laptop') || titleLower.includes('monitor') || titleLower.includes('mac')) detectedType = 'Electronics';
+                    else if (rawCat.includes('fashion') || rawType.includes('fashion') || titleLower.includes('shirt')) detectedType = 'Fashion';
+                    
+                    // Fallback to strict DB category if available
+                    if (ord.itemDetails && ord.itemDetails.category) {
+                        const c = ord.itemDetails.category.toLowerCase();
+                        if (c.includes('service')) detectedType = 'Services';
+                        else if (c.includes('travel')) detectedType = 'Travel';
+                        else if (c.includes('mobile')) detectedType = 'Mobile';
+                        else if (c.includes('electronic')) detectedType = 'Electronics';
+                        else if (c.includes('fashion')) detectedType = 'Fashion';
+                    }
 
                     let badge = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
                     if (ord.status === 'Confirmed') badge = 'bg-info-subtle text-info-emphasis border border-info-subtle';
@@ -5226,6 +5249,7 @@ window.addEventListener('popstate', function(e) {
                     price: Number(targetPrice),
                     img: img,
                     type: isTravel ? 'Travel' : 'Product',
+                    category: matchedItem.category || 'Product',
                     qty: 1,
                     adults: 1,
                     children: 0
