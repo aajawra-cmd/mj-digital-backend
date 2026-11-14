@@ -2276,6 +2276,10 @@ async function getActiveRazorpayKey() {
                         <i class="fa-solid fa-mobile-screen"></i>
                         <input type="tel" id="signupPhone" class="light-input" placeholder="10-digit Mobile Number" maxlength="10" required>
                     </div>
+                    <div class="light-input-group" title="Date of Birth (Minimum 18 years)">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        <input type="date" id="signupDob" class="light-input" style="color: #64748b;" onfocus="this.style.color='#0f172a'" required>
+                    </div>
                     <div class="mb-4">
                         <div class="light-input-group mb-2">
                             <i class="fa-solid fa-key"></i>
@@ -5602,10 +5606,29 @@ window.addEventListener('popstate', function(e) {
                 payload.identifier = document.getElementById('loginEmail').value;
                 payload.password = document.getElementById('loginPassword').value;
             } else if (actionType === 'signup') {
+                const dobVal = document.getElementById('signupDob').value;
+                if (!dobVal) {
+                    alert("⚠️ Kripya apni Date of Birth (DOB) select karein.");
+                    return;
+                }
+                const birthDate = new Date(dobVal);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                
+                if (age < 18) {
+                    alert("⚠️ Registration Failed: You must be at least 18 years old to create an account and use financial/wallet services.");
+                    return;
+                }
+                
                 payload.name = document.getElementById('signupName').value;
                 payload.email = document.getElementById('signupEmail').value;
                 payload.phone = document.getElementById('signupPhone').value;
                 payload.password = document.getElementById('signupPassword').value;
+                payload.dob = dobVal;
             }
 
             const btn = e.target.querySelector('button[type="submit"]');
