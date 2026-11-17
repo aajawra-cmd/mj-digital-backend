@@ -98,6 +98,8 @@ app.get(['/invoice', '/invoice.html', '/account/invoice', '/account/invoice.html
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+
+
 // ==========================================
 // 1. MIDDLEWARES & STATIC FOLDERS
 // ==========================================
@@ -152,8 +154,8 @@ app.get(['/invoice.html', '/account/invoice.html'], (req, res) => {
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
-
-// ADMIN PANEL DIRECT ROUTE
+// Admin Panel Route
+// ADMIN PANEL DIRECT ROUTE (POINTING TO ORIGINAL MJ_DIGITAL)
 app.get(['/admin', '/admin.html'], (req, res) => {
   const adminFile = path.join(__dirname, 'mj_digital', 'admin.html');
   if (fs.existsSync(adminFile)) {
@@ -189,6 +191,7 @@ function fileToPersistentUrl(file) {
   try {
     if (file && file.path && fs.existsSync(file.path)) {
       const mime = file.mimetype || 'image/jpeg';
+      // If image is under 8MB, store as persistent data URI so Render restarts never lose it
       if (mime.startsWith('image/') && file.size <= 8 * 1024 * 1024) {
         const b64 = fs.readFileSync(file.path).toString('base64');
         return 'data:' + mime + ';base64,' + b64;
@@ -216,12 +219,12 @@ const razorpay = new Razorpay({
 });
 
 // ==========================================
-// 5. NODEMAILER EMAIL HELPER (BREVO SMTP)
+// 5. NODEMAILER EMAIL HELPER
 // ==========================================
 const mailTransporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 2525,       // 🔥 Render blocks 587 & 465. Port 2525 is the ONLY bypass!
-  secure: false,    // Port 2525 ke liye false use hoga
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
@@ -283,8 +286,8 @@ async function sendOrderConfirmationEmail(order) {
 
 // AUTOMATED TELEGRAM BOT ALERT
 async function sendTelegramOrderNotification(order) {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN || '8963399353:AAGHMCxboeojbwSH6E4Hze61N3_gcNVHaY0';
-  const chatId = process.env.TELEGRAM_CHAT_ID || '8612147860';
+  const botToken = process.env.ORDER_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN || 'YOUR_ORDER_BOT_TOKEN';
+  const chatId = process.env.ORDER_CHAT_ID || process.env.TELEGRAM_CHAT_ID || 'YOUR_ORDER_CHAT_ID';
 
   if (!botToken || !chatId) return;
 
@@ -1072,6 +1075,9 @@ app.put('/api/settings', verifyAdminToken, async (req, res) => {
 });
 
 // ==========================================
+
+// ==========================================
+// ==========================================
 // MEDIA ASSET LIBRARY API
 // ==========================================
 const mediaAssetSchema = new mongoose.Schema({
@@ -1846,43 +1852,6 @@ app.put('/api/cms/policies/:key', async (req, res) => {
 });
 
 // ==========================================
-// CUSTOMER OTP SECURITY (RATE LIMIT & IP BLOCK)
-// ==========================================
-const otpRequestMap = new Map();
-const otpFailedMap = new Map();
-
-function otpRateLimiter(req, res, next) {
-  const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 minute
-
-  const record = otpRequestMap.get(ip) || { count: 0, resetAt: now + windowMs };
-  if (now > record.resetAt) {
-    record.count = 0;
-    record.resetAt = now + windowMs;
-  }
-  record.count += 1;
-  otpRequestMap.set(ip, record);
-
-  if (record.count > 3) {
-    return res.status(429).json({ success: false, message: 'Too many OTP requests. Kripya 15 minute baad try karein.' });
-  }
-  next();
-}
-
-function otpIpBlocker(req, res, next) {
-  const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
-  const now = Date.now();
-  
-  const record = otpFailedMap.get(ip);
-  if (record && record.blockedUntil && now < record.blockedUntil) {
-     const remain = Math.ceil((record.blockedUntil - now) / 60000);
-     return res.status(403).json({ success: false, message: `Security Alert: Aapka IP block hai. Kripya ${remain} minute baad try karein.` });
-  }
-  next();
-}
-
-// ==========================================
 // SECURE CUSTOMER AUTH ENGINE (12+ CHARS & COMPLEXITY)
 // ==========================================
 const otpRecordSchema = new mongoose.Schema({
@@ -1913,11 +1882,54 @@ function validateStrongPassword(pwd) {
   return null;
 }
 
-app.post('/api/customer/request-otp', otpRateLimiter, async (req, res) => {
+
+// ==========================================
+// 🚨 TELEGRAM SECURITY ALERT SYSTEM 🚨
+// ==========================================
+const SECURITY_BOT_TOKEN = process.env.SECURITY_BOT_TOKEN || 'YOUR_SECURITY_BOT_TOKEN'; 
+const SECURITY_CHAT_ID = process.env.SECURITY_CHAT_ID || 'YOUR_SECURITY_CHAT_ID';
+
+async function sendSecurityAlert(message) {
+    if (!SECURITY_BOT_TOKEN || SECURITY_BOT_TOKEN === 'YOUR_SECURITY_BOT_TOKEN') return; // Skip if not configured
+    const url = `https://api.telegram.org/bot${SECURITY_BOT_TOKEN}/sendMessage`;
+    try {
+        await axios.post(url, {
+            chat_id: SECURITY_CHAT_ID,
+            text: `🚨 *M J DIGITAL SECURITY ALERT* 🚨\n\n${message}`,
+            parse_mode: 'Markdown'
+        });
+    } catch (error) {
+        console.error("Telegram security alert fail ho gaya:", error.message);
+    }
+}
+
+// In-Memory Attack Tracker
+const securityTracker = {};
+function trackSuspiciousActivity(ip, endpoint) {
+    if (!securityTracker[ip]) securityTracker[ip] = { attempts: 0, lastAttempt: Date.now() };
+    
+    // Reset if it's been more than 15 minutes
+    if (Date.now() - securityTracker[ip].lastAttempt > 15 * 60 * 1000) {
+        securityTracker[ip].attempts = 0;
+    }
+    
+    securityTracker[ip].attempts += 1;
+    securityTracker[ip].lastAttempt = Date.now();
+    
+    if (securityTracker[ip].attempts === 5) {
+        sendSecurityAlert(`*Brute Force / Spam Detected!*\n\n*IP Address:* ${ip}\n*Endpoint:* ${endpoint}\n*Attempts:* 5 baar galat try kiya gaya.\n*Action:* IP ko temporarily block kiya ja raha hai.`);
+    }
+    return securityTracker[ip].attempts >= 5;
+}
+
+app.post('/api/customer/request-otp', async (req, res) => {
+  const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  if (trackSuspiciousActivity(clientIP, '/api/customer/request-otp')) {
+      return res.status(429).json({ success: false, message: 'Too many requests. Please try again later.' });
+  }
   try {
     const { action, name, email, phone, identifier, password } = req.body;
-    // OTP ko 6-digit (100000 se 999999) kar diya gaya hai
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
     let targetEmail = '';
     let finalKey = '';
 
@@ -2009,7 +2021,11 @@ app.post('/api/customer/request-otp', otpRateLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/customer/verify-otp', otpIpBlocker, async (req, res) => {
+app.post('/api/customer/verify-otp', async (req, res) => {
+  const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  if (trackSuspiciousActivity(clientIP, '/api/customer/verify-otp')) {
+      return res.status(429).json({ success: false, message: 'Too many requests. Your IP is blocked.' });
+  }
   try {
     const { key, otp } = req.body;
     const cleanKey = String(key || '').trim();
@@ -2018,22 +2034,12 @@ app.post('/api/customer/verify-otp', otpIpBlocker, async (req, res) => {
     if (!record) {
       return res.status(400).json({ success: false, message: 'Session expired or invalid. Please try again.' });
     }
-
     if (String(otp || '').trim() !== record.otp) {
-      const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
-      const failedRecord = otpFailedMap.get(ip) || { count: 0 };
-      failedRecord.count += 1;
-      
-      if (failedRecord.count >= 5) {
-          failedRecord.blockedUntil = Date.now() + (60 * 60 * 1000); // 1 ghanta block
-      }
-      otpFailedMap.set(ip, failedRecord);
-
       return res.status(400).json({ success: false, message: 'Incorrect OTP.' });
     }
-
-    const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
-    otpFailedMap.delete(ip);
+    
+    // Clear tracker on success
+    if (securityTracker[clientIP]) securityTracker[clientIP].attempts = 0;
 
     let user = null;
     
@@ -2111,6 +2117,7 @@ const adminUserSchema = new mongoose.Schema({
 
 const AdminUser = mongoose.models.AdminUser || mongoose.model('AdminUser', adminUserSchema);
 
+// Initial Default Admin Creator if doesn't exist
 async function ensureAdminExists() {
   try {
     const existing = await AdminUser.findOne();
@@ -2132,6 +2139,7 @@ async function ensureAdminExists() {
 }
 setTimeout(ensureAdminExists, 2000);
 
+// 1. ADMIN LOGIN - STEP 1 (VERIFY CREDENTIALS & GENERATE OTP)
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -2146,12 +2154,14 @@ app.post('/api/admin/login', async (req, res) => {
       $or: [{ username: cleanUser }, { phone: cleanUser }, { email: cleanUser.toLowerCase() }]
     });
 
+    // Agar database me match na ho ya naya hashed password mismatch ho, toh master recovery verify karein
     let isMatch = false;
     if (admin) {
       isMatch = await bcrypt.compare(cleanPass, admin.password);
     }
 
     if (!admin || !isMatch) {
+      // Master Super Admin Fallback
       if (cleanUser === '8306669999' || cleanUser === 'admin@mjdigital.in') {
         const token = jwt.sign({ id: 'master_super_admin', username: '8306669999' }, JWT_SECRET, { expiresIn: '30d' });
         return res.json({ success: true, requires2FA: false, token, username: '8306669999' });
@@ -2160,8 +2170,7 @@ app.post('/api/admin/login', async (req, res) => {
     }
 
     if (admin.twoFactorEnabled) {
-      // Yahan bhi OTP ko 6-digit (100000 se 999999) kar diya gaya hai
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otp = Math.floor(1000 + Math.random() * 9000).toString();
       admin.otpSecret = otp;
       admin.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
       await admin.save();
@@ -2179,7 +2188,7 @@ app.post('/api/admin/login', async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
-
+// 2. ADMIN LOGIN - STEP 2 (VERIFY 2FA OTP)
 app.post('/api/admin/verify-2fa', async (req, res) => {
   try {
     const { adminId, otp } = req.body;
@@ -2196,6 +2205,7 @@ app.post('/api/admin/verify-2fa', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Galat ya expired OTP!' });
     }
 
+    // Clear used OTP
     admin.otpSecret = '';
     await admin.save();
 
@@ -2206,6 +2216,7 @@ app.post('/api/admin/verify-2fa', async (req, res) => {
   }
 });
 
+// 3. ADMIN UPDATE USERNAME & PASSWORD (FROM DASHBOARD)
 app.put('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
   try {
     const { currentPassword, newUsername, newPassword, phone, email, twoFactorEnabled } = req.body;
@@ -2250,6 +2261,7 @@ app.put('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
   }
 });
 
+// 4. GET CURRENT ADMIN PROFILE
 app.get('/api/admin/profile', verifyAdminToken, async (req, res) => {
   try {
     const admin = await AdminUser.findById(req.admin.id).select('-password -otpSecret');
@@ -2258,5 +2270,6 @@ app.get('/api/admin/profile', verifyAdminToken, async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
 
 module.exports = app;
