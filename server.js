@@ -132,6 +132,23 @@ app.use('/api', (req, res, next) => {
 });
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// ==========================================
+// SECRET ADMIN URL PROTECTION (BLOCKS /admin & /admin.html)
+// ==========================================
+const ADMIN_SECRET_PATH = process.env.ADMIN_SECRET_PATH || '/mj-vault-8306';
+
+app.all(['/admin', '/admin.html', '/mj_digital/admin.html'], (req, res) => {
+  return res.status(404).send('404 Not Found');
+});
+
+app.get(ADMIN_SECRET_PATH, (req, res) => {
+  const adminFile = path.join(__dirname, 'mj_digital', 'admin.html');
+  const rootAdminFile = path.join(__dirname, 'admin.html');
+  if (fs.existsSync(adminFile)) return res.sendFile(adminFile);
+  if (fs.existsSync(rootAdminFile)) return res.sendFile(rootAdminFile);
+  return res.status(404).send('Admin panel file not found');
+});
+
 // Serve frontend static files
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'mj_digital')));
@@ -154,15 +171,7 @@ app.get(['/invoice.html', '/account/invoice.html'], (req, res) => {
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
-// Admin Panel Route
-// ADMIN PANEL DIRECT ROUTE (POINTING TO ORIGINAL MJ_DIGITAL)
-app.get(['/admin', '/admin.html'], (req, res) => {
-  const adminFile = path.join(__dirname, 'mj_digital', 'admin.html');
-  if (fs.existsSync(adminFile)) {
-    return res.sendFile(adminFile);
-  }
-  res.status(404).send('Admin file not found in mj_digital folder');
-});
+// Old /admin route removed & secured above via ADMIN_SECRET_PATH
 
 // ==========================================
 // JWT AUTH GUARD FOR SENSITIVE ADMIN ACTIONS
