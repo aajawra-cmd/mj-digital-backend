@@ -177,8 +177,34 @@ app.get('/', (req, res) => {
 // JWT AUTH GUARD FOR SENSITIVE ADMIN ACTIONS
 // ==========================================
 function verifyAdminToken(req, res, next) {
-  req.admin = { id: 'master_admin', username: '8306669999' };
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  if (token && token !== 'MJ_MASTER_SESSION_2026') {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.admin = { id: decoded.id, username: decoded.username };
+      return next();
+    } catch (e) {
+      // Invalid or expired token
+    }
+  }
+  req.admin = { id: 'master_admin', username: null };
   return next();
+}
+
+function verifyStrictAdminJWT(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  if (!token || token === 'MJ_MASTER_SESSION_2026') {
+    return res.status(401).json({ success: false, message: 'Unauthorized: Kripya dobara Admin Login karein.' });
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.admin = { id: decoded.id, username: decoded.username };
+    return next();
+  } catch (e) {
+    return res.status(401).json({ success: false, message: 'Session expire ho gaya hai. Kripya dobara Login karein.' });
+  }
 }
 
 // ==========================================
@@ -2176,50 +2202,71 @@ async function ensureAdminExists() {
 }
 setTimeout(ensureAdminExists, 2000);
 
-// 1. ADMIN LOGIN - STEP 1 (VERIFY CREDENTIALS & GENERATE OTP)
+// 1. ADMIN LOGIN - STEP 1 (STRICT USERNAME + PASSWORD, NO BACKDOOR, TELEGRAM 2FA)
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     const cleanUser = (username || '').trim();
     const cleanPass = (password || '').trim();
+    const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown';
 
     if (!cleanUser || !cleanPass) {
-      return res.status(400).json({ success: false, message: 'Username aur password daalein.' });
+      return res.status(400).json({ success: false, message: 'Admin ID aur Password dono daalein.' });
     }
 
-    let admin = await AdminUser.findOne({
-      $or: [{ username: cleanUser }, { phone: cleanUser }, { email: cleanUser.toLowerCase() }]
-    });
+    // Strict username match ONLY (phone/email fallback removed so public number cannot be guessed)
+    const admin = await AdminUser.findOne({ username: cleanUser });
 
-    // Agar database me match na ho ya naya hashed password mismatch ho, toh master recovery verify karein
     let isMatch = false;
     if (admin) {
       isMatch = await bcrypt.compare(cleanPass, admin.password);
     }
 
     if (!admin || !isMatch) {
-      // Master Super Admin Fallback
-      if (cleanUser === '8306669999' || cleanUser === 'admin@mjdigital.in') {
-        const token = jwt.sign({ id: 'master_super_admin', username: '8306669999' }, JWT_SECRET, { expiresIn: '30d' });
-        return res.json({ success: true, requires2FA: false, token, username: '8306669999' });
-      }
-      return res.status(401).json({ success: false, message: 'Invalid Admin Credentials' });
+      sendSecurityAlert(
+        `*Failed Admin Login Attempt!*
+
+` +
+        `👤 *Tried ID:* \`${cleanUser}\`
+` +
+        `🌐 *IP Address:* ${clientIP}`
+      ).catch(() => {});
+      return res.status(401).json({ success: false, message: 'Invalid Admin ID or Password' });
     }
 
     if (admin.twoFactorEnabled) {
-      const otp = Math.floor(1000 + Math.random() * 9000).toString();
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
       admin.otpSecret = otp;
-      admin.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+      admin.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
       await admin.save();
-      return res.json({
-        success: true,
-        requires2FA: true,
-        adminId: admin._id,
-        debugOtp: otp
+
+      const secCfg = getSecurityBotConfig();
+      if (secCfg.botToken && secCfg.botToken !== 'YOUR_SECURITY_BOT_TOKEN' && secCfg.chatId && secCfg.chatId !== 'YOUR_SECURITY_CHAT_ID') {
+        await sendSecurityAlert(
+          `*Admin Login 2FA OTP*
+
+` +
+          `🔐 *OTP Code:* \`${otp}\`
+` +
+          `⏳ *Validity:* 5 Minutes
+` +
+          `🌐 *IP Address:* ${clientIP}`
+        );
+        return res.json({
+          success: true,
+          requires2FA: true,
+          adminId: admin._id,
+          message: '6-digit Login OTP aapke Security Telegram Bot par bhej diya gaya hai!'
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: 'Security Telegram Bot configured nahi hai, isliye 2FA OTP nahi bheja ja saka.'
       });
     }
 
-    const token = jwt.sign({ id: admin._id, username: admin.username }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: admin._id, username: admin.username }, JWT_SECRET, { expiresIn: '7d' });
     return res.json({ success: true, requires2FA: false, token, username: admin.username });
   } catch(err) {
     res.status(500).json({ success: false, message: err.message });
@@ -2254,7 +2301,7 @@ app.post('/api/admin/verify-2fa', async (req, res) => {
 });
 
 // 3A. REQUEST TELEGRAM OTP FOR ADMIN CREDENTIALS / PASSWORD CHANGE
-app.post('/api/admin/request-change-otp', verifyAdminToken, async (req, res) => {
+app.post('/api/admin/request-change-otp', verifyStrictAdminJWT, async (req, res) => {
   try {
     let admin = null;
     if (req.admin?.id && mongoose.Types.ObjectId.isValid(req.admin.id)) {
@@ -2297,7 +2344,7 @@ app.post('/api/admin/request-change-otp', verifyAdminToken, async (req, res) => 
 });
 
 // 3B. ADMIN UPDATE USERNAME & PASSWORD (WITH MANDATORY TELEGRAM OTP VERIFICATION)
-app.put('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
+app.put('/api/admin/change-credentials', verifyStrictAdminJWT, async (req, res) => {
   try {
     const { currentPassword, newUsername, newPassword, phone, email, twoFactorEnabled, otp } = req.body;
     let admin = null;
