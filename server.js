@@ -2106,11 +2106,13 @@ app.post('/api/customer/request-otp', async (req, res) => {
             });
             return res.json({ success: true, key: finalKey, message: 'OTP has been sent to your registered Email successfully!' });
         } catch (mailErr) {
-            console.error("Email sending failed:", mailErr);
-            return res.json({ success: true, key: finalKey, debugOtp: otp, message: 'Server email issue. Dev OTP: ' + otp });
+            console.error("Email sending failed:", mailErr.response?.data || mailErr.message);
+            await OtpRecord.deleteOne({ key: finalKey }).catch(() => {});
+            return res.status(500).json({ success: false, message: 'Email bhejne mein technical samasya aayi. Kripya thodi der baad dobara koshish karein.' });
         }
     } else {
-        return res.json({ success: true, key: finalKey, debugOtp: otp, message: 'Server issue. Dev OTP: ' + otp });
+        await OtpRecord.deleteOne({ key: finalKey }).catch(() => {});
+        return res.status(400).json({ success: false, message: 'Is account ke saath koi valid Email address linked nahi hai.' });
     }
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
