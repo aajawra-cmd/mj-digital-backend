@@ -2086,8 +2086,8 @@ async function getActiveRazorpayKey() {
                                     <i class="fa-solid fa-building-columns fs-3 text-secondary ms-auto"></i>
                                 </label>
 
-                                <!-- 7. COD / Desk Pay -->
-                                <label class="payment-radio-card d-flex align-items-center gap-3">
+                                <!-- 7. COD / Desk Pay (Dynamically controlled via Admin Platform Settings) -->
+                                <label id="checkoutCodOptionCard" class="payment-radio-card align-items-center gap-3" style="display: none;">
                                     <input type="radio" name="fpPaymentGateway" value="cod" class="form-check-input mt-0">
                                     <div>
                                         <strong class="d-block text-dark">Cash on Delivery (COD) / Direct Desk Pay</strong>
@@ -2703,7 +2703,7 @@ async function getActiveRazorpayKey() {
                     </div>
                     <div class="mb-3">
                         <h6 class="fw-bold text-dark mb-1">Q: What payment options are supported?</h6>
-                        <p class="small text-muted mb-0">We support Razorpay, PhonePe, Cashfree, Paytm, PayU, CCAvenue (Cards, UPI, Netbanking) and Cash on Delivery / Desk Pay at our Danilimda counter.</p>
+                        <p class="small text-muted mb-0">We support secure online payments via UPI (GPay, PhonePe, Paytm), Razorpay, Credit/Debit Cards, and Netbanking.</p>
                     </div>
                     <div class="mb-3">
                         <h6 class="fw-bold text-dark mb-1">Q: How do I contact customer support?</h6>
@@ -5369,6 +5369,21 @@ window.addEventListener('popstate', function(e) {
                     const fAddr = document.getElementById('live-footer-address');
                     if (cAddr) cAddr.innerHTML = formatted;
                     if (fAddr) fAddr.innerHTML = formatted;
+                }
+                // Live COD ON/OFF Sync from Admin Platform Settings
+                const codCard = document.getElementById('checkoutCodOptionCard');
+                if (codCard) {
+                    const isCodEnabled = (s.codEnabled === true || s.pay_cod === true || s.paymentMethods?.cod === true);
+                    if (isCodEnabled) {
+                        codCard.style.setProperty('display', 'flex', 'important');
+                    } else {
+                        codCard.style.setProperty('display', 'none', 'important');
+                        const codRadio = codCard.querySelector('input[value="cod"]');
+                        if (codRadio && codRadio.checked) {
+                            const upiRadio = document.querySelector('input[name="fpPaymentGateway"][value="upi_qr"]');
+                            if (upiRadio) upiRadio.checked = true;
+                        }
+                    }
                 }
             } catch(err) {}
         }

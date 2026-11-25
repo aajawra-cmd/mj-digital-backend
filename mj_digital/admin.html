@@ -1071,7 +1071,7 @@ function togglePasswordEye(inputId, iconEl) {
                           <i class="fa-solid fa-hand-holding-dollar text-teal-600"></i>
                           <span class="font-semibold text-gray-800">Pay on Delivery</span>
                         </div>
-                        <input type="checkbox" id="pay_cod" checked class="accent-blue-600 cursor-pointer">
+                        <input type="checkbox" id="pay_cod" class="accent-blue-600 cursor-pointer" onchange="syncCodToggleLive(this.checked)">
                       </label>
                     </div>
                   </div>
@@ -1937,6 +1937,46 @@ window.handleSecurityCredentialsSubmit = async function(e) {
     }
   }
 };
+</script>
+
+<script id="mjAdminLiveCodToggle">
+// Live COD Toggle Sync with MongoDB /api/settings
+window.syncCodToggleLive = async function(isEnabled) {
+  try {
+    const token = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || '';
+    const res = await fetch('/api/settings', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+      },
+      body: JSON.stringify({
+        codEnabled: Boolean(isEnabled),
+        pay_cod: Boolean(isEnabled)
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(isEnabled ? '✅ Cash on Delivery (COD) ab website par LIVE (ON) ho gaya hai!' : '🔒 Cash on Delivery (COD) ab website par BAND (OFF) kar diya gaya hai!');
+    }
+  } catch (err) {
+    console.error('COD toggle sync error:', err);
+  }
+};
+
+// Load current COD state from MongoDB when Admin Panel opens
+document.addEventListener('DOMContentLoaded', async function() {
+  try {
+    const res = await fetch('/api/settings?_t=' + Date.now());
+    const data = await res.json();
+    if (res.ok && data.success && data.data) {
+      const codBox = document.getElementById('pay_cod');
+      if (codBox) {
+        codBox.checked = Boolean(data.data.codEnabled === true || data.data.pay_cod === true);
+      }
+    }
+  } catch (e) {}
+});
 </script>
 </body>
 </html>
