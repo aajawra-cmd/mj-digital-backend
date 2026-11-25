@@ -257,14 +257,48 @@ const razorpay = new Razorpay({
 // 5. NODEMAILER EMAIL HELPER
 // ==========================================
 const mailTransporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+  port: Number(process.env.SMTP_PORT || 587),
+  secure: false,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+    user: (process.env.BREVO_USER || process.env.EMAIL_USER || '').trim(),
+    pass: (process.env.BREVO_PASS || process.env.EMAIL_PASS || '').trim()
+  },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000
 });
+
+async function sendMjEmail({ to, subject, html }) {
+  const senderEmail = (process.env.SENDER_EMAIL || 'mjdigitalworlds@gmail.com').trim();
+  const brevoApiKey = (process.env.BREVO_API_KEY || '').trim();
+
+  // 1. Prefer Brevo HTTP API if configured (100% immune to Render SMTP port timeouts)
+  if (brevoApiKey) {
+    const recipients = String(to).split(',').map(e => ({ email: e.trim() })).filter(e => e.email);
+    await axios.post('https://api.brevo.com/v3/smtp/email', {
+      sender: { name: 'M J DIGITAL', email: senderEmail },
+      to: recipients,
+      subject,
+      htmlContent: html
+    }, {
+      headers: {
+        'api-key': brevoApiKey,
+        'Content-Type': 'application/json'
+      },
+      timeout: 12000
+    });
+    return true;
+  }
+
+  // 2. Fallback to Brevo SMTP (uses BREVO_USER/BREVO_PASS or EMAIL_USER/EMAIL_PASS)
+  await mailTransporter.sendMail({
+    from: `"M J DIGITAL" <${senderEmail}>`,
+    to,
+    subject,
+    html
+  });
+  return true;
+}
 
 async function sendOrderConfirmationEmail(order) {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
@@ -1992,7 +2026,7 @@ app.post('/api/customer/request-otp', async (req, res) => {
   }
   try {
     const { action, name, email, phone, identifier, password } = req.body;
-    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     let targetEmail = '';
     let finalKey = '';
 
@@ -2060,13 +2094,12 @@ app.post('/api/customer/request-otp', async (req, res) => {
 
     if (targetEmail) {
         try {
-            await mailTransporter.sendMail({
-                from: '"M J DIGITAL" <mjdigitalworlds@gmail.com>',
+            await sendMjEmail({
                 to: targetEmail,
                 subject: 'M J DIGITAL Security OTP',
                 html: `<div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">
                          <h2>Welcome to M J DIGITAL</h2>
-                         <p>Your secure verification code is:</p>
+                         <p>Your 6-digit secure verification code is:</p>
                          <h1 style="color: #2563eb; letter-spacing: 5px;">${otp}</h1>
                          <p>Do not share this code with anyone. It is valid for 5 minutes.</p>
                        </div>`
