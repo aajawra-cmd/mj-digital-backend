@@ -1895,20 +1895,48 @@ function validateStrongPassword(pwd) {
 // ==========================================
 // 🚨 TELEGRAM SECURITY ALERT SYSTEM 🚨
 // ==========================================
+const https = require('https');
+const telegramIpv4Agent = new https.Agent({ family: 4, keepAlive: true });
+
+function getSecurityBotConfig() {
+    return {
+        botToken: (process.env.SECURITY_BOT_TOKEN || '').trim(),
+        chatId: (process.env.SECURITY_CHAT_ID || '').trim()
+    };
+}
+
 const SECURITY_BOT_TOKEN = process.env.SECURITY_BOT_TOKEN || 'YOUR_SECURITY_BOT_TOKEN'; 
 const SECURITY_CHAT_ID = process.env.SECURITY_CHAT_ID || 'YOUR_SECURITY_CHAT_ID';
 
 async function sendSecurityAlert(message) {
-    if (!SECURITY_BOT_TOKEN || SECURITY_BOT_TOKEN === 'YOUR_SECURITY_BOT_TOKEN') return; // Skip if not configured
-    const url = `https://api.telegram.org/bot${SECURITY_BOT_TOKEN}/sendMessage`;
+    const { botToken, chatId } = getSecurityBotConfig();
+    if (!botToken || botToken === 'YOUR_SECURITY_BOT_TOKEN' || !chatId || chatId === 'YOUR_SECURITY_CHAT_ID') return;
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const payload = {
+        chat_id: chatId,
+        text: `🚨 *M J DIGITAL SECURITY ALERT* 🚨\n\n${message}`,
+        parse_mode: 'Markdown'
+    };
     try {
-        await axios.post(url, {
-            chat_id: SECURITY_CHAT_ID,
-            text: `🚨 *M J DIGITAL SECURITY ALERT* 🚨\n\n${message}`,
-            parse_mode: 'Markdown'
+        await axios.post(url, payload, {
+            timeout: 12000,
+            family: 4,
+            httpsAgent: telegramIpv4Agent
         });
     } catch (error) {
-        console.error("Telegram security alert fail ho gaya:", error.message);
+        // Retry without Markdown parse_mode in case special chars break parsing, or after brief pause
+        try {
+            await axios.post(url, {
+                chat_id: chatId,
+                text: `🚨 M J DIGITAL SECURITY ALERT 🚨\n\n${String(message).replace(/[*`]/g, '')}`
+            }, {
+                timeout: 12000,
+                family: 4,
+                httpsAgent: telegramIpv4Agent
+            });
+        } catch (retryErr) {
+            console.error("Telegram security alert fail ho gaya:", retryErr.message);
+        }
     }
 }
 
@@ -2243,7 +2271,8 @@ app.post('/api/admin/request-change-otp', verifyAdminToken, async (req, res) => 
       return res.status(404).json({ success: false, message: 'Admin user not found' });
     }
 
-    if (!SECURITY_BOT_TOKEN || SECURITY_BOT_TOKEN === 'YOUR_SECURITY_BOT_TOKEN' || !SECURITY_CHAT_ID || SECURITY_CHAT_ID === 'YOUR_SECURITY_CHAT_ID') {
+    const secCfg = getSecurityBotConfig();
+    if (!secCfg.botToken || secCfg.botToken === 'YOUR_SECURITY_BOT_TOKEN' || !secCfg.chatId || secCfg.chatId === 'YOUR_SECURITY_CHAT_ID') {
       return res.status(500).json({ success: false, message: 'Security Telegram Bot Render Environment mein configured nahi hai.' });
     }
 
