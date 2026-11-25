@@ -1558,9 +1558,28 @@ function togglePasswordEye(inputId, iconEl) {
             <input type="checkbox" id="sec2FaToggle" checked class="w-4 h-4 accent-blue-600 rounded cursor-pointer">
           </div>
 
+          <!-- TELEGRAM OTP VERIFICATION SECTION -->
+          <div class="p-3.5 bg-amber-50/70 rounded-2xl border border-amber-200 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <i class="fa-brands fa-telegram text-sky-500 text-sm"></i> Telegram Security OTP *
+                </p>
+                <p class="text-[10px] text-slate-500">Save karne se pehle Telegram Bot se 6-digit OTP mangwayein</p>
+              </div>
+              <button type="button" id="secSendOtpBtn" onclick="requestAdminChangeOtp()" class="shrink-0 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-[11px] font-bold shadow-sm transition">
+                Send OTP
+              </button>
+            </div>
+            <div>
+              <input type="text" id="secTelegramOtp" required maxlength="6" placeholder="Enter 6-digit Telegram OTP" class="w-full border border-amber-300 rounded-xl px-3 py-2 text-xs font-mono font-bold tracking-widest text-center bg-white focus:outline-none focus:ring-2 focus:ring-sky-500">
+              <p id="secOtpStatusMsg" class="hidden text-[10px] font-semibold mt-1 text-center"></p>
+            </div>
+          </div>
+
           <div class="pt-2 flex justify-end gap-2 border-t border-slate-100">
             <button type="button" onclick="closeChangeCredsModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">Cancel</button>
-            <button type="submit" id="secSaveBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition">Save Settings</button>
+            <button type="submit" id="secSaveBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition">Verify OTP & Save</button>
           </div>
         </form>
       </div>
@@ -1813,6 +1832,138 @@ async function processCSV() {
 }
 window.processCSV = processCSV;
 window.handleBulkCsvUploadSubmit = processCSV;
+</script>
+
+<script id="mjAdminTelegramOtpHandler">
+window.requestAdminChangeOtp = async function() {
+  const btn = document.getElementById('secSendOtpBtn');
+  const statusEl = document.getElementById('secOtpStatusMsg');
+  const origText = btn ? btn.innerText : 'Send OTP';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = 'Sending...';
+  }
+  if (statusEl) {
+    statusEl.classList.remove('hidden', 'text-emerald-600', 'text-rose-600');
+    statusEl.classList.add('text-sky-600');
+    statusEl.innerText = 'Security Telegram Bot par OTP bheja ja raha hai...';
+  }
+
+  try {
+    const token = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || '';
+    const res = await fetch('/api/admin/request-change-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+      }
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      if (statusEl) {
+        statusEl.classList.remove('text-sky-600', 'text-rose-600');
+        statusEl.classList.add('text-emerald-600');
+        statusEl.innerText = '✅ ' + (data.message || '6-digit OTP Telegram par bhej diya gaya hai!');
+      }
+      const otpInput = document.getElementById('secTelegramOtp');
+      if (otpInput) otpInput.focus();
+
+      // 30-second cooldown
+      let sec = 30;
+      const timer = setInterval(() => {
+        sec--;
+        if (btn) btn.innerText = 'Resend (' + sec + 's)';
+        if (sec <= 0) {
+          clearInterval(timer);
+          if (btn) {
+            btn.disabled = false;
+            btn.innerText = 'Resend OTP';
+          }
+        }
+      }, 1000);
+    } else {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = origText;
+      }
+      if (statusEl) {
+        statusEl.classList.remove('text-sky-600', 'text-emerald-600');
+        statusEl.classList.add('text-rose-600');
+        statusEl.innerText = '❌ ' + (data.message || 'OTP bhejne mein error aayi.');
+      }
+    }
+  } catch (err) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = origText;
+    }
+    if (statusEl) {
+      statusEl.classList.remove('text-sky-600', 'text-emerald-600');
+      statusEl.classList.add('text-rose-600');
+      statusEl.innerText = '❌ Network error: ' + err.message;
+    }
+  }
+};
+
+window.handleSecurityCredentialsSubmit = async function(e) {
+  if (e) e.preventDefault();
+
+  const currentPassword = (document.getElementById('secCurrentPass')?.value || '').trim();
+  const newUsername = (document.getElementById('secNewUsername')?.value || '').trim();
+  const newPassword = (document.getElementById('secNewPass')?.value || '').trim();
+  const twoFactorEnabled = document.getElementById('sec2FaToggle')?.checked ?? true;
+  const otp = (document.getElementById('secTelegramOtp')?.value || '').trim();
+
+  if (!otp || otp.length < 4) {
+    alert('⚠️ Pehle "Send OTP" par click karke Telegram se 6-digit OTP mangwayein aur yahan daalein.');
+    return;
+  }
+
+  const saveBtn = document.getElementById('secSaveBtn');
+  const origBtnText = saveBtn ? saveBtn.innerText : 'Verify OTP & Save';
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerText = 'Saving...';
+  }
+
+  try {
+    const token = localStorage.getItem('mj_jwt_token') || localStorage.getItem('mj_admin_token') || '';
+    const res = await fetch('/api/admin/change-credentials', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+      },
+      body: JSON.stringify({
+        currentPassword,
+        newUsername,
+        newPassword,
+        twoFactorEnabled,
+        otp
+      })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      alert('✅ ' + (data.message || 'Admin ID & Password successfully update ho gaya!'));
+      if (document.getElementById('secCurrentPass')) document.getElementById('secCurrentPass').value = '';
+      if (document.getElementById('secNewPass')) document.getElementById('secNewPass').value = '';
+      if (document.getElementById('secTelegramOtp')) document.getElementById('secTelegramOtp').value = '';
+      if (typeof closeChangeCredsModal === 'function') closeChangeCredsModal();
+    } else {
+      alert('❌ Error: ' + (data.message || 'Update fail ho gaya.'));
+    }
+  } catch (err) {
+    alert('❌ Server Error: ' + err.message);
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerText = origBtnText;
+    }
+  }
+};
 </script>
 </body>
 </html>
