@@ -2225,14 +2225,73 @@ app.post('/api/admin/verify-2fa', async (req, res) => {
   }
 });
 
-// 3. ADMIN UPDATE USERNAME & PASSWORD (FROM DASHBOARD)
-app.put('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
+// 3A. REQUEST TELEGRAM OTP FOR ADMIN CREDENTIALS / PASSWORD CHANGE
+app.post('/api/admin/request-change-otp', verifyAdminToken, async (req, res) => {
   try {
-    const { currentPassword, newUsername, newPassword, phone, email, twoFactorEnabled } = req.body;
-    const admin = await AdminUser.findById(req.admin.id);
+    let admin = null;
+    if (req.admin?.id && mongoose.Types.ObjectId.isValid(req.admin.id)) {
+      admin = await AdminUser.findById(req.admin.id);
+    }
+    if (!admin && req.admin?.username) {
+      admin = await AdminUser.findOne({ username: req.admin.username });
+    }
+    if (!admin) {
+      admin = await AdminUser.findOne();
+    }
 
     if (!admin) {
       return res.status(404).json({ success: false, message: 'Admin user not found' });
+    }
+
+    if (!SECURITY_BOT_TOKEN || SECURITY_BOT_TOKEN === 'YOUR_SECURITY_BOT_TOKEN' || !SECURITY_CHAT_ID || SECURITY_CHAT_ID === 'YOUR_SECURITY_CHAT_ID') {
+      return res.status(500).json({ success: false, message: 'Security Telegram Bot Render Environment mein configured nahi hai.' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    admin.otpSecret = otp;
+    admin.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // Valid for 5 minutes
+    await admin.save();
+
+    const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown';
+    await sendSecurityAlert(
+      `*Admin Password / ID Change OTP*\n\n` +
+      `🔐 *OTP Code:* \`${otp}\`\n` +
+      `⏳ *Validity:* 5 Minutes\n` +
+      `🌐 *IP Address:* ${clientIP}\n\n` +
+      `_Agar yeh request aapne nahi ki hai, toh turant apna admin secret URL change karein._`
+    );
+
+    res.json({ success: true, message: '6-digit OTP aapke Security Telegram Bot par bhej diya gaya hai!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 3B. ADMIN UPDATE USERNAME & PASSWORD (WITH MANDATORY TELEGRAM OTP VERIFICATION)
+app.put('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
+  try {
+    const { currentPassword, newUsername, newPassword, phone, email, twoFactorEnabled, otp } = req.body;
+    let admin = null;
+    if (req.admin?.id && mongoose.Types.ObjectId.isValid(req.admin.id)) {
+      admin = await AdminUser.findById(req.admin.id);
+    }
+    if (!admin && req.admin?.username) {
+      admin = await AdminUser.findOne({ username: req.admin.username });
+    }
+    if (!admin) {
+      admin = await AdminUser.findOne();
+    }
+
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Admin user not found' });
+    }
+
+    // Verify Telegram OTP before allowing any credential update
+    if (!otp || !String(otp).trim()) {
+      return res.status(400).json({ success: false, message: 'Telegram OTP zaroori hai! Pehle OTP mangwayein.' });
+    }
+    if (!admin.otpSecret || admin.otpSecret !== String(otp).trim() || !admin.otpExpiresAt || new Date() > admin.otpExpiresAt) {
+      return res.status(400).json({ success: false, message: 'Galat ya expired OTP! Kripya naya OTP mangwayein.' });
     }
 
     if (currentPassword) {
@@ -2263,7 +2322,13 @@ app.put('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
       admin.password = await bcrypt.hash(newPassword.trim(), salt);
     }
 
+    // Clear used OTP after successful update
+    admin.otpSecret = '';
+    admin.otpExpiresAt = null;
     await admin.save();
+
+    sendSecurityAlert(`✅ *Admin Credentials Updated!*\n\n*Admin ID:* ${admin.username}\n*Status:* Password/ID successfully change ho gaya hai.`).catch(() => {});
+
     res.json({ success: true, message: 'Credentials updated successfully!', username: admin.username });
   } catch(err) {
     res.status(500).json({ success: false, message: err.message });
@@ -2273,7 +2338,16 @@ app.put('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
 // 4. GET CURRENT ADMIN PROFILE
 app.get('/api/admin/profile', verifyAdminToken, async (req, res) => {
   try {
-    const admin = await AdminUser.findById(req.admin.id).select('-password -otpSecret');
+    let admin = null;
+    if (req.admin?.id && mongoose.Types.ObjectId.isValid(req.admin.id)) {
+      admin = await AdminUser.findById(req.admin.id).select('-password -otpSecret');
+    }
+    if (!admin && req.admin?.username) {
+      admin = await AdminUser.findOne({ username: req.admin.username }).select('-password -otpSecret');
+    }
+    if (!admin) {
+      admin = await AdminUser.findOne().select('-password -otpSecret');
+    }
     res.json({ success: true, data: admin });
   } catch(err) {
     res.status(500).json({ success: false, message: err.message });
